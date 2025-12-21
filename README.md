@@ -63,7 +63,13 @@ npm test
 
 5. Save the configuration. The app will now be ready to use.
 
-### Notification Configuration (Optional)
+## Documentation
+
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment with Docker, systemd, or PM2; reverse proxy setup; SSL/TLS configuration
+- **[Testing Guide](TESTING.md)** - Unit tests, manual testing checklists, API testing, performance and security testing
+- **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues with SSO, cookies, session persistence, and debugging steps
+
+## Configuration
 
 JellyConnect supports multi-channel notifications for user events. To enable notifications:
 
