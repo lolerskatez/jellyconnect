@@ -3,15 +3,33 @@ import crypto from 'crypto';
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
+const SALT_LENGTH = 32;
+const KEY_LENGTH = 32;
+const PBKDF2_ITERATIONS = 100000;
 
-// Get encryption key from environment or derive from NEXTAUTH_SECRET
+// Static salt for key derivation (stored in env or generated once)
+// This ensures the same key is derived each time for the same secret
+function getSalt(): Buffer {
+  const envSalt = process.env.ENCRYPTION_SALT;
+  if (envSalt) {
+    return Buffer.from(envSalt, 'base64');
+  }
+  // Fallback: derive a deterministic salt from the secret itself
+  // This is less ideal but works without additional configuration
+  const secret = process.env.ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET || '';
+  return crypto.createHash('sha256').update('jellyconnect-salt:' + secret).digest();
+}
+
+// Get encryption key using PBKDF2 for proper key derivation
 function getEncryptionKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET;
   if (!secret) {
     throw new Error('No encryption key available. Set ENCRYPTION_KEY or NEXTAUTH_SECRET.');
   }
-  // Derive a 32-byte key from the secret using SHA-256
-  return crypto.createHash('sha256').update(secret).digest();
+  
+  // Use PBKDF2 for secure key derivation
+  const salt = getSalt();
+  return crypto.pbkdf2Sync(secret, salt, PBKDF2_ITERATIONS, KEY_LENGTH, 'sha512');
 }
 
 /**
