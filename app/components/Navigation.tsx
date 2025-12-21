@@ -33,6 +33,8 @@ export default function Navigation() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            title={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (
@@ -240,6 +242,8 @@ export default function Navigation() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            title={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (

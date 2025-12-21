@@ -97,6 +97,8 @@ const NotificationPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
+            aria-label="Close notifications"
+            title="Close notifications"
           >
             <X className="h-4 w-4" />
           </button>
@@ -127,7 +129,11 @@ export const NotificationBell: React.FC = () => {
 
   return (
     <div className="relative">
-      <button onClick={() => setIsOpen(!isOpen)}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle notifications"
+        title="Show notifications"
+      >
         <NotificationIcon />
       </button>
       <NotificationPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
