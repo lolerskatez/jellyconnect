@@ -373,6 +373,37 @@ export async function GET(req: NextRequest) {
             }
           } else {
             console.log('[OIDC CALLBACK] User verified to exist in Jellyfin')
+            
+            // Auto-fix: If user exists but doesn't have stored password, update it
+            // This enables QuickConnect to work for SSO users
+            if (!user.jellyfinPasswordEncrypted) {
+              console.log('[OIDC CALLBACK] User missing encrypted password, updating...')
+              try {
+                const securePassword = generateSecurePassword()
+                
+                // Update password in Jellyfin
+                const updatePwResponse = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Password`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Emby-Token': config.apiKey,
+                  },
+                  body: JSON.stringify({
+                    NewPw: securePassword,
+                    ResetPassword: true
+                  }),
+                })
+                
+                if (updatePwResponse.ok) {
+                  user.jellyfinPasswordEncrypted = encrypt(securePassword)
+                  console.log('[OIDC CALLBACK] Password updated and encrypted for QuickConnect support')
+                } else {
+                  console.error('[OIDC CALLBACK] Failed to update password:', updatePwResponse.status)
+                }
+              } catch (pwError) {
+                console.error('[OIDC CALLBACK] Error updating password:', pwError)
+              }
+            }
           }
         }
       } catch (error) {
