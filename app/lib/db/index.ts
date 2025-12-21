@@ -17,6 +17,7 @@ interface Database {
 interface User {
   id: string;
   jellyfinId: string;
+  jellyfinUsername?: string; // Username in Jellyfin (distinct from display name)
   displayName?: string; // Display name (optional, defaults to Jellyfin username)
   email?: string;
   emailVerified?: boolean;
@@ -31,6 +32,7 @@ interface User {
   // OIDC fields
   oidcProvider?: string; // e.g., 'authentik', 'keycloak', 'gitea', 'vaultwarden'
   oidcProviderId?: string; // User ID from OIDC provider
+  oidcGroups?: string[]; // Groups/roles from OIDC provider
 }
 
 interface Invite {

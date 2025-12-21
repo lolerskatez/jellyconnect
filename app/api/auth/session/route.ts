@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAccessToken } from '@/app/lib/auth'
+import { getConfig } from '@/app/lib/config'
 
 /**
  * Check current session from cookie
@@ -29,7 +30,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
-    console.log('[SESSION] Returning user data:', payload.email)
+    // Get the user's Jellyfin policy to check if they're an admin
+    let isAdmin = false
+    try {
+      const config = getConfig()
+      if (config.jellyfinUrl && config.apiKey && payload.jellyfinId) {
+        const userResponse = await fetch(`${config.jellyfinUrl}/Users/${payload.jellyfinId}`, {
+          headers: {
+            'X-Emby-Token': config.apiKey,
+          },
+        })
+        if (userResponse.ok) {
+          const jellyfinUser = await userResponse.json()
+          isAdmin = jellyfinUser.Policy?.IsAdministrator === true
+          console.log('[SESSION] Jellyfin user policy check - isAdmin:', isAdmin)
+        }
+      }
+    } catch (error) {
+      console.error('[SESSION] Error checking Jellyfin admin status:', error)
+    }
+
+    console.log('[SESSION] Returning user data:', payload.email, 'isAdmin:', isAdmin)
     return NextResponse.json({
       user: {
         id: payload.sub,
@@ -37,6 +58,7 @@ export async function GET(req: NextRequest) {
         jellyfinId: payload.jellyfinId,
         oidcProvider: payload.oidcProvider,
         token: token,
+        isAdmin: isAdmin,
       }
     })
   } catch (error) {

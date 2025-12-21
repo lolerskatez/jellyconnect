@@ -1,4 +1,6 @@
 import { Jellyfin } from '@jellyfin/sdk';
+import { generateSecurePassword } from './secure-password';
+import { UserPolicy, JellyfinRole, getRolePolicyForJellyfin } from './oidc-group-mapping';
 
 export const jellyfin = new Jellyfin({
   clientInfo: {
@@ -88,6 +90,46 @@ export class JellyfinAuth {
       return response.data;
     } catch (error) {
       console.error('Failed to create user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a new Jellyfin user with a secure random password and optional role/policy
+   * Used for SSO first-time user creation
+   */
+  async createSSOUser(
+    username: string,
+    email: string,
+    role: JellyfinRole = 'user'
+  ): Promise<{ userId: string; username: string; password: string }> {
+    try {
+      // Generate a secure random password
+      const securePassword = generateSecurePassword();
+
+      console.log('[JELLYFIN] Creating SSO user:', username, 'with role:', role);
+
+      // Create the user
+      const createdUser = await this.createUser(username, securePassword);
+      const userId = createdUser.Id;
+
+      if (!userId) {
+        throw new Error('No user ID returned from Jellyfin');
+      }
+
+      // Apply the role policy
+      const policy = getRolePolicyForJellyfin(role);
+      await this.updateUserPolicy(userId, policy);
+
+      console.log('[JELLYFIN] SSO user created successfully:', userId, 'with role:', role);
+
+      return {
+        userId,
+        username,
+        password: securePassword
+      };
+    } catch (error) {
+      console.error('[JELLYFIN] Failed to create SSO user:', error);
       throw error;
     }
   }
