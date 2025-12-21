@@ -83,8 +83,9 @@ function LoginPageContent() {
       }
       
       const callbackUrl = searchParams.get('callbackUrl') || '/'
-      // Use NEXTAUTH_URL for redirect_uri to ensure consistency with what's registered in OIDC provider
-      const baseUrl = process.env.NEXT_PUBLIC_NEXTAUTH_URL || window.location.origin
+      // Always use window.location.origin to ensure the redirect comes back to the same server
+      // (admin on port 3000 or public on port 3001)
+      const baseUrl = window.location.origin
       const redirectUri = `${baseUrl}/api/auth/callback/oidc`
       const state = Math.random().toString(36).substring(7)
       const nonce = Math.random().toString(36).substring(7)

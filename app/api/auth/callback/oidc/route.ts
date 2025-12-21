@@ -4,8 +4,20 @@ import { getOIDCProviderConfig } from '@/app/lib/auth-settings'
 import { generateSecurePassword, generateSecureUsername } from '@/app/lib/secure-password'
 import { mapGroupsToRole, getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
 
-// Get the base URL for redirects - use NEXTAUTH_URL to ensure consistency
-function getBaseUrl(): string {
+// Get the base URL for redirects - derive from request to support both admin and public servers
+function getBaseUrl(req: NextRequest): string {
+  // Try to get from request headers (handles proxied requests)
+  const forwardedHost = req.headers.get('x-forwarded-host')
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'http'
+  const host = req.headers.get('host')
+  
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`
+  }
+  if (host) {
+    return `${forwardedProto}://${host}`
+  }
+  // Fallback to environment variable
   return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL || 'http://localhost:3000'
 }
 
@@ -15,7 +27,7 @@ function getBaseUrl(): string {
  * Receives the authorization code and exchanges it for tokens
  */
 export async function GET(req: NextRequest) {
-  const baseUrl = getBaseUrl()
+  const baseUrl = getBaseUrl(req)
   
   try {
     const searchParams = req.nextUrl.searchParams
