@@ -140,17 +140,20 @@ export async function GET(req: NextRequest) {
 
       database.users.push(newUser)
       user = newUser
-      console.log('[CALLBACK] User created:', user.email)
+      console.log('[CALLBACK] User created:', newUser.email)
     } else {
       console.log('[CALLBACK] Existing user found:', user.email)
     }
 
+    // At this point, user is always defined (either found or newly created)
+    const currentUser = user!
+
     // Create session JWT
     const { createAccessToken } = await import('@/app/lib/auth')
     const sessionToken = await createAccessToken({
-      sub: user.id,
-      email: user.email,
-      jellyfinId: user.jellyfinId,
+      sub: currentUser.id,
+      email: currentUser.email,
+      jellyfinId: currentUser.jellyfinId,
       oidcProvider: 'authentik',
     })
 
