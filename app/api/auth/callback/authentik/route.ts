@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
       }
 
       const jellyfinUser = await createUserResponse.json()
-      user = {
+      const newUser = {
         id: jellyfinUser.Id,
         jellyfinId: jellyfinUser.Id,
         email: userinfo.email,
@@ -138,7 +138,8 @@ export async function GET(req: NextRequest) {
         oidcProviderId: userinfo.sub,
       } as any
 
-      database.users.push(user)
+      database.users.push(newUser)
+      user = newUser
       console.log('[CALLBACK] User created:', user.email)
     } else {
       console.log('[CALLBACK] Existing user found:', user.email)
