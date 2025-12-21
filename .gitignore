@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Testing
+coverage/
+.jest-cache/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Data files
+jellyconnect-data.json
+config.json
+
+# Workspace specific
+jellyconnect.code-workspace
+
+# Test utilities
+test-jellyfin-login.ts
+build-output.txt
+
+# Documentation files (templates)
+OIDC_SETUP.md
+JELLYFIN_QUICKCONNECT_IMPLEMENTATION.md
