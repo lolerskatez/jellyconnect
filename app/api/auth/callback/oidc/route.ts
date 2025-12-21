@@ -278,7 +278,7 @@ export async function GET(req: NextRequest) {
         console.log('[OIDC CALLBACK] Policy applied successfully to new user with role:', role)
       }
 
-      user = {
+      const newUser = {
         id: userId,
         jellyfinId: userId,
         jellyfinUsername,
@@ -290,9 +290,10 @@ export async function GET(req: NextRequest) {
         oidcGroups: groupsArray,
       } as any
 
-      database.users.push(user)
+      database.users.push(newUser)
+      user = newUser
       console.log('[OIDC CALLBACK] User created successfully:', {
-        email: user.email,
+        email: newUser.email,
         jellyfinId: userId,
         jellyfinUsername,
         role,
@@ -307,7 +308,7 @@ export async function GET(req: NextRequest) {
       
       // Migrate legacy users (add username if missing)
       if (!user.jellyfinUsername) {
-        user.jellyfinUsername = generateSecureUsername(user.email)
+        user.jellyfinUsername = generateSecureUsername(user.email || 'user')
         console.log('[OIDC CALLBACK] Migrated legacy user - generated username:', user.jellyfinUsername)
       }
       
@@ -444,12 +445,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // At this point, user is always defined (either found or newly created)
+    const currentUser = user!
+
     // Create session JWT
     const { createAccessToken } = await import('@/app/lib/auth')
     const sessionToken = await createAccessToken({
-      sub: user.id,
-      email: user.email,
-      jellyfinId: user.jellyfinId,
+      sub: currentUser.id,
+      email: currentUser.email,
+      jellyfinId: currentUser.jellyfinId,
       oidcProvider: providerConfig.name,
     })
 

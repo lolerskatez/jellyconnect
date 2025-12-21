@@ -60,23 +60,27 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             if (sessionRes.ok) {
               const sessionData = await sessionRes.json()
               if (sessionData.user) {
-                token = sessionData.user.token
+                const sessionToken = sessionData.user.token
                 const isAdmin = sessionData.user.isAdmin === true
                 const role = isAdmin ? UserRole.ADMIN : UserRole.USER
                 const permissions = getRolePermissions(role)
                 console.log('[Providers] Session found from cookie, isAdmin:', isAdmin, 'permissions:', permissions)
-                userData = JSON.stringify({
+                const sessionUserData = JSON.stringify({
                   id: sessionData.user.id,
                   name: sessionData.user.email?.split('@')[0] || 'User',
                   email: sessionData.user.email,
                   isAdmin: isAdmin,
                   role: role,
                   permissions: permissions,
-                  token: sessionData.user.token,
+                  token: sessionToken,
                 })
                 // Store in localStorage for next visit
-                localStorage.setItem('jellyfin_token', token)
-                localStorage.setItem('user_data', userData)
+                if (sessionToken) {
+                  localStorage.setItem('jellyfin_token', sessionToken)
+                  localStorage.setItem('user_data', sessionUserData)
+                  token = sessionToken
+                  userData = sessionUserData
+                }
               }
             } else if (sessionRes.status === 401) {
               // 401 is expected when no session exists - not an error

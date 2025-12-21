@@ -90,6 +90,10 @@ interface AuthSettings {
   oidcDiscoveryUrl?: string; // OpenID Discovery URL
   oidcClientId?: string; // OIDC Client ID
   oidcClientSecret?: string; // OIDC Client Secret
+  // Explicit endpoint configuration (optional, falls back to discovery)
+  oidcAuthorizationEndpoint?: string;
+  oidcTokenEndpoint?: string;
+  oidcUserinfoEndpoint?: string;
   updatedAt: string;
 }
 
