@@ -3,6 +3,7 @@ import { database } from '@/app/lib/db'
 import { getOIDCProviderConfig } from '@/app/lib/auth-settings'
 import { generateSecurePassword, generateSecureUsername } from '@/app/lib/secure-password'
 import { mapGroupsToRole, getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
+import { encrypt } from '@/app/lib/encryption'
 
 // Get the base URL for redirects - derive from request to support both admin and public servers
 function getBaseUrl(req: NextRequest): string {
@@ -300,6 +301,8 @@ export async function GET(req: NextRequest) {
         oidcProvider: providerConfig.name,
         oidcProviderId: userinfo.sub,
         oidcGroups: groupsArray,
+        // Store encrypted Jellyfin password for QuickConnect authorization
+        jellyfinPasswordEncrypted: encrypt(securePassword),
       } as any
 
       database.users.push(newUser)
@@ -361,6 +364,8 @@ export async function GET(req: NextRequest) {
               if (newUserId) {
                 user.jellyfinId = newUserId
                 user.id = newUserId
+                // Store the new encrypted password
+                user.jellyfinPasswordEncrypted = encrypt(securePassword)
                 console.log('[OIDC CALLBACK] Recreated user in Jellyfin with new ID:', newUserId)
               }
             } else {

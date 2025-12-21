@@ -143,7 +143,7 @@ if (typeof window === 'undefined') {
   console.log('[AUTH] All providers (including fallback):', allProviders.length)
 }
 const authOptions: NextAuthOptions = {
-  debug: true,
+  debug: process.env.NODE_ENV === 'development',
   pages: {
     signIn: '/login',
   },

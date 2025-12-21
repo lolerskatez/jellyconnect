@@ -33,6 +33,8 @@ interface User {
   oidcProvider?: string; // e.g., 'authentik', 'keycloak', 'gitea', 'vaultwarden'
   oidcProviderId?: string; // User ID from OIDC provider
   oidcGroups?: string[]; // Groups/roles from OIDC provider
+  // Encrypted Jellyfin credentials for SSO users (used for QuickConnect authorization)
+  jellyfinPasswordEncrypted?: string; // Encrypted Jellyfin password
 }
 
 interface Invite {
