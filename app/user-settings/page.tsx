@@ -274,6 +274,7 @@ export default function UserSettingsPage() {
                       checked={notificationPrefs.emailNotifications}
                       onChange={() => handleNotificationChange('emailNotifications')}
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                      aria-label="Enable or disable email notifications"
                     />
                   </div>
 
@@ -287,6 +288,7 @@ export default function UserSettingsPage() {
                       checked={notificationPrefs.discordNotifications}
                       onChange={() => handleNotificationChange('discordNotifications')}
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                      aria-label="Enable or disable Discord notifications"
                     />
                   </div>
                 </div>
@@ -306,6 +308,7 @@ export default function UserSettingsPage() {
                       checked={notificationPrefs.welcomeNotifications}
                       onChange={() => handleNotificationChange('welcomeNotifications')}
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                      aria-label="Enable or disable welcome message notifications"
                     />
                   </div>
 
@@ -318,6 +321,7 @@ export default function UserSettingsPage() {
                       type="checkbox"
                       checked={notificationPrefs.expiryWarnings}
                       onChange={() => handleNotificationChange('expiryWarnings')}
+                      aria-label="Enable or disable account expiry warning notifications"
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                     />
                   </div>
@@ -331,6 +335,7 @@ export default function UserSettingsPage() {
                       type="checkbox"
                       checked={notificationPrefs.accountAlerts}
                       onChange={() => handleNotificationChange('accountAlerts')}
+                      aria-label="Enable or disable account alert notifications"
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                     />
                   </div>
@@ -344,6 +349,7 @@ export default function UserSettingsPage() {
                       type="checkbox"
                       checked={notificationPrefs.systemAlerts}
                       onChange={() => handleNotificationChange('systemAlerts')}
+                      aria-label="Enable or disable system alert notifications"
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                     />
                   </div>

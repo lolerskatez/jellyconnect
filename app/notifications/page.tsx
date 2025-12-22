@@ -331,6 +331,7 @@ export default function NotificationsPage() {
                     notificationType: e.target.value as any
                   }))}
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  aria-label="Notification type for bulk notification"
                 >
                   <option value="custom">Custom Message</option>
                   <option value="welcome">Welcome Message</option>
@@ -377,6 +378,7 @@ export default function NotificationsPage() {
                 onChange={(e) => setBulkNotification(prev => ({ ...prev, subject: e.target.value }))}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Notification subject"
+                aria-label="Notification subject line"
                 required
               />
             </div>
@@ -472,6 +474,7 @@ export default function NotificationsPage() {
                           onChange={() => toggleUserSelection(user.Id)}
                           disabled={user.Policy?.IsDisabled}
                           className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500"
+                          aria-label={`Select ${user.Name} for bulk notification`}
                         />
                       </td>
                     )}
@@ -511,6 +514,7 @@ export default function NotificationsPage() {
                         })}
                         disabled={!user.contacts.email || user.Policy?.IsDisabled}
                         className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                        aria-label={`Enable email notifications for ${user.Name}`}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -523,6 +527,7 @@ export default function NotificationsPage() {
                         })}
                         disabled={!user.contacts.discordUsername || user.Policy?.IsDisabled}
                         className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                        aria-label={`Enable Discord notifications for ${user.Name}`}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -535,6 +540,7 @@ export default function NotificationsPage() {
                         })}
                         disabled={user.Policy?.IsDisabled}
                         className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                        aria-label={`Enable expiry warning notifications for ${user.Name}`}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -575,6 +581,7 @@ export default function NotificationsPage() {
                         onChange={() => toggleUserSelection(user.Id)}
                         disabled={user.Policy?.IsDisabled}
                         className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500"
+                        aria-label={`Select ${user.Name} for bulk notification on mobile`}
                       />
                     )}
                     <span className="text-sm font-medium text-white">{user.Name}</span>

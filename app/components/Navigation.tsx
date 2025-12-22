@@ -14,23 +14,12 @@ export default function Navigation() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Debug: log on every render
-  console.log('[Navigation] Render - admin:', admin ? 'exists' : 'null', 'oidcProvider:', admin?.oidcProvider)
-
   // Determine app mode based on port after mount to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setAppMode(window.location.port === '3001' ? 'public' : 'admin')
     }
   }, [])
-
-  // Debug: log admin info for password change visibility
-  useEffect(() => {
-    console.log('[Navigation] useEffect - admin changed:', admin)
-    if (admin) {
-      console.log('[Navigation] admin.oidcProvider:', admin.oidcProvider, '| Show password change:', !admin.oidcProvider)
-    }
-  }, [admin])
 
   const handleLogout = () => {
     logout()

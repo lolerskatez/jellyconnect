@@ -293,6 +293,7 @@ export default function InvitesPage() {
                     value={createForm.profile}
                     onChange={(e) => setCreateForm({...createForm, profile: e.target.value})}
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    aria-label="User profile for invite"
                     required
                   >
                     <option value="user">User</option>
@@ -309,6 +310,7 @@ export default function InvitesPage() {
                     onChange={(e) => setCreateForm({...createForm, maxUses: e.target.value})}
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Unlimited"
+                    aria-label="Maximum number of uses for this invite"
                     min="1"
                   />
                 </div>
@@ -319,6 +321,7 @@ export default function InvitesPage() {
                     type="datetime-local"
                     value={createForm.expiresAt}
                     onChange={(e) => setCreateForm({...createForm, expiresAt: e.target.value})}
+                    aria-label="Expiration date and time for this invite"
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     required
                   />
@@ -332,6 +335,7 @@ export default function InvitesPage() {
                     value={createForm.email}
                     onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    aria-label="Email address for this invite"
                     placeholder="user@example.com"
                     required
                   />
@@ -369,6 +373,7 @@ export default function InvitesPage() {
                   <select
                     value={editForm.profile}
                     onChange={(e) => setEditForm({...editForm, profile: e.target.value})}
+                    aria-label="User profile for editing invite"
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     required
                   >
@@ -397,6 +402,7 @@ export default function InvitesPage() {
                     value={editForm.expiresAt}
                     onChange={(e) => setEditForm({...editForm, expiresAt: e.target.value})}
                     className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    aria-label="Expiration date and time for edited invite"
                   />
                 </div>
 
@@ -484,6 +490,7 @@ export default function InvitesPage() {
                       value={createdInvite.code}
                       readOnly
                       className="flex-1 bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white font-mono"
+                      aria-label="Generated invite code for copying"
                     />
                     <button
                       onClick={() => navigator.clipboard.writeText(createdInvite.code)}
@@ -519,6 +526,7 @@ export default function InvitesPage() {
             <label className="text-sm font-medium text-slate-200">Filter:</label>
             <select
               value={filter}
+              aria-label="Filter invites by status"
               onChange={(e) => setFilter(e.target.value as 'all' | 'active' | 'inactive')}
               className="bg-slate-700 border border-slate-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >

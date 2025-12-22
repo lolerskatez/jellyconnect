@@ -287,6 +287,7 @@ export default function SettingsPage() {
                       checked={enableRegistration}
                       onChange={(e) => setEnableRegistration(e.target.checked)}
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500 cursor-pointer"
+                      aria-label="Enable or disable user registration"
                     />
                   </div>
                 </div>
@@ -385,6 +386,7 @@ export default function SettingsPage() {
                       value={settings.smtp.port}
                       onChange={(e) => updateSmtpSetting('port', parseInt(e.target.value))}
                       className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      aria-label="SMTP server port number"
                     />
                   </div>
 

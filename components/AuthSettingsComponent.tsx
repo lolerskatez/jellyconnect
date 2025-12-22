@@ -160,6 +160,7 @@ export default function AuthSettingsComponent() {
                   checked={settings.oidcEnabled}
                   onChange={(e) => handleChange('oidcEnabled', e.target.checked)}
                   className="sr-only peer"
+                  aria-label="Enable or disable OIDC single sign-on"
                 />
                 <div className="w-12 h-6 bg-slate-700 peer-checked:bg-orange-500 rounded-full transition-colors"></div>
                 <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-6 transition-transform"></div>
@@ -229,6 +230,7 @@ export default function AuthSettingsComponent() {
                     readOnly
                     value={`${appUrl}/api/auth/callback/oidc`}
                     className="flex-1 px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent cursor-text"
+                    aria-label="OIDC redirect URI for your provider configuration"
                   />
                   <button
                     type="button"
