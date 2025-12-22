@@ -180,7 +180,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           isAdmin: isJellyfinAdmin,
           role,
           permissions,
-          token: data.token
+          token: data.token,
+          oidcProvider: undefined  // Explicitly undefined for local users
         }
 
         if (typeof window !== 'undefined') {
