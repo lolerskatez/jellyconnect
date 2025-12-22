@@ -304,8 +304,8 @@ export default function NotificationsPage() {
       <Navigation />
       <div className="p-4 max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Notification Management</h1>
-          <p className="text-slate-400">Manage notification settings and send bulk notifications to users</p>
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Notification Management</h1>
+          <p className="text-sm sm:text-base text-slate-400">Manage notification settings and send bulk notifications to users</p>
         </div>
 
         {error && (
@@ -319,8 +319,8 @@ export default function NotificationsPage() {
         )}
 
         {/* Bulk Notification Form */}
-        <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-xl font-bold mb-4 text-white">Send Bulk Notification</h2>
+        <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+          <h2 className="text-lg sm:text-xl font-bold mb-4 text-white">Send Bulk Notification</h2>
           <form onSubmit={sendBulkNotification} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -401,7 +401,7 @@ export default function NotificationsPage() {
             <button
               type="submit"
               disabled={saving || (!bulkNotification.sendToAll && bulkNotification.selectedUsers.length === 0)}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
+              className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
             >
               {saving ? 'Sending...' : `Send to ${bulkNotification.sendToAll ? 'All Users' : `${bulkNotification.selectedUsers.length} Selected Users`}`}
             </button>
@@ -410,22 +410,23 @@ export default function NotificationsPage() {
 
         {/* Users Table */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
-          <div className="px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h2 className="text-xl font-bold text-white">User Notification Settings</h2>
-              <p className="text-slate-400">Manage notification preferences for each user</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white">User Notification Settings</h2>
+              <p className="text-sm text-slate-400">Manage notification preferences for each user</p>
             </div>
             {hasUnsavedChanges && (
               <button
                 onClick={() => setHasUnsavedChanges(false)}
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 w-full sm:w-auto text-center"
               >
                 Settings Updated
               </button>
             )}
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700">
               <thead className="bg-slate-700">
                 <tr>
@@ -600,6 +601,150 @@ export default function NotificationsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden divide-y divide-slate-700">
+            {users.map((user) => (
+              <div key={user.Id} className={`p-4 ${user.Policy?.IsDisabled ? 'bg-slate-900 opacity-60' : ''}`}>
+                {/* User header with selection */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {!bulkNotification.sendToAll && (
+                      <input
+                        type="checkbox"
+                        checked={bulkNotification.selectedUsers.includes(user.Id)}
+                        onChange={() => toggleUserSelection(user.Id)}
+                        disabled={user.Policy?.IsDisabled}
+                        className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500"
+                      />
+                    )}
+                    <span className="text-sm font-medium text-white">{user.Name}</span>
+                    {user.Policy?.IsAdministrator && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-900 text-purple-200">
+                        Admin
+                      </span>
+                    )}
+                    {user.Policy?.IsDisabled && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-200">
+                        Disabled
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contacts */}
+                <div className="mb-3 text-xs text-slate-300 flex flex-wrap gap-1">
+                  {user.contacts.email && <span className="bg-slate-700 px-2 py-1 rounded">📧 {user.contacts.email}</span>}
+                  {user.contacts.discordId && <span className="bg-slate-700 px-2 py-1 rounded">💬 Discord</span>}
+                  {user.contacts.slackId && <span className="bg-slate-700 px-2 py-1 rounded">📱 Slack</span>}
+                  {user.contacts.telegramId && <span className="bg-slate-700 px-2 py-1 rounded">✈️ Telegram</span>}
+                  {user.contacts.webhookUrl && <span className="bg-slate-700 px-2 py-1 rounded">🔗 Webhook</span>}
+                  {!user.contacts.email && !user.contacts.discordId && !user.contacts.slackId && !user.contacts.telegramId && !user.contacts.webhookUrl && (
+                    <span className="text-slate-500">No contacts configured</span>
+                  )}
+                </div>
+
+                {/* Notification toggles in a grid */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.email ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.emailEnabled}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        emailEnabled: e.target.checked
+                      })}
+                      disabled={!user.contacts.email || user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Email</span>
+                  </label>
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.discordId ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.discordEnabled}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        discordEnabled: e.target.checked
+                      })}
+                      disabled={!user.contacts.discordId || user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Discord</span>
+                  </label>
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.slackId ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.slackEnabled}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        slackEnabled: e.target.checked
+                      })}
+                      disabled={!user.contacts.slackId || user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Slack</span>
+                  </label>
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.telegramId ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.telegramEnabled}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        telegramEnabled: e.target.checked
+                      })}
+                      disabled={!user.contacts.telegramId || user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Telegram</span>
+                  </label>
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.webhookUrl ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.webhookEnabled}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        webhookEnabled: e.target.checked
+                      })}
+                      disabled={!user.contacts.webhookUrl || user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Webhook</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={user.notificationSettings.expiryWarnings}
+                      onChange={(e) => updateUserNotificationSettings(user.Id, {
+                        ...user.notificationSettings,
+                        expiryWarnings: e.target.checked
+                      })}
+                      disabled={user.Policy?.IsDisabled}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-300">Expiry</span>
+                  </label>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => sendTestNotification(user.Id)}
+                    disabled={user.Policy?.IsDisabled}
+                    className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Send Test
+                  </button>
+                  <button
+                    onClick={() => window.open(`/users/${user.Id}`, '_blank')}
+                    className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

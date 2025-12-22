@@ -198,54 +198,54 @@ export default function UserSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navigation />
-      <div className="max-w-2xl mx-auto py-12 px-4">
+      <div className="max-w-2xl mx-auto py-6 sm:py-12 px-4">
         {/* Alerts */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
+          <div className="mb-4 p-4 bg-red-900 border border-red-700 rounded-lg">
+            <p className="text-red-200">{error}</p>
           </div>
         )}
         {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-800">{success}</p>
+          <div className="mb-4 p-4 bg-green-900 border border-green-700 rounded-lg">
+            <p className="text-green-200">{success}</p>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-            <p className="text-gray-600 mt-1">Manage your account preferences and security</p>
+        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-700">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Account Settings</h1>
+            <p className="text-sm sm:text-base text-slate-400 mt-1">Manage your account preferences and security</p>
           </div>
 
-          <div className="px-6 py-8">
+          <div className="px-4 sm:px-6 py-6 sm:py-8">
             {/* Account Information */}
-            <div className="mb-10 pb-8 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
+            <div className="mb-10 pb-8 border-b border-slate-700">
+              <h2 className="text-lg font-semibold text-white mb-4">Account Information</h2>
               <form onSubmit={handleSaveAccountInfo} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     Display Name
                   </label>
                   <input
                     type="text"
                     value={accountInfo.displayName}
                     onChange={(e) => setAccountInfo({...accountInfo, displayName: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Your display name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     Email Address
                   </label>
                   <input
                     type="email"
                     value={accountInfo.email}
                     onChange={(e) => setAccountInfo({...accountInfo, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -253,7 +253,7 @@ export default function UserSettingsPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
                 >
                   {loading ? 'Saving...' : 'Save Account Information'}
                 </button>
@@ -261,48 +261,48 @@ export default function UserSettingsPage() {
             </div>
 
             {/* Notification Preferences */}
-            <div className="mb-10 pb-8 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h2>
+            <div className="mb-10 pb-8 border-b border-slate-700">
+              <h2 className="text-lg font-semibold text-white mb-4">Notification Preferences</h2>
               
               {/* Notification Methods */}
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <h3 className="text-md font-medium text-gray-900 mb-4">Notification Contacts</h3>
+              <div className="mb-8 pb-8 border-b border-slate-600">
+                <h3 className="text-md font-medium text-slate-200 mb-4">Notification Contacts</h3>
                 <form onSubmit={handleSaveNotificationContacts} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-300 mb-1">
                       Email Address
                     </label>
                     <input
                       type="email"
                       value={notificationContacts.emailAddress}
                       onChange={(e) => setNotificationContacts({...notificationContacts, emailAddress: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="notifications@example.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-300 mb-1">
                       Discord Username
                     </label>
                     <input
                       type="text"
                       value={notificationContacts.discordUsername}
                       onChange={(e) => setNotificationContacts({...notificationContacts, discordUsername: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="your_discord_username"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-300 mb-1">
                       Telegram Username
                     </label>
                     <input
                       type="text"
                       value={notificationContacts.telegramUsername}
                       onChange={(e) => setNotificationContacts({...notificationContacts, telegramUsername: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="your_telegram_username"
                     />
                   </div>
@@ -310,7 +310,7 @@ export default function UserSettingsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
                   >
                     {loading ? 'Saving...' : 'Save Notification Contacts'}
                   </button>
@@ -319,49 +319,49 @@ export default function UserSettingsPage() {
 
               {/* Notification Toggle Switches */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
                   <div>
-                    <label className="font-medium text-gray-900">Email Notifications</label>
-                    <p className="text-sm text-gray-600">Receive notifications via email</p>
+                    <label className="font-medium text-white">Email Notifications</label>
+                    <p className="text-sm text-slate-400">Receive notifications via email</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notificationPrefs.emailNotifications}
                     onChange={() => handleNotificationChange('emailNotifications')}
-                    className="w-5 h-5 rounded"
+                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
                   <div>
-                    <label className="font-medium text-gray-900">Discord Notifications</label>
-                    <p className="text-sm text-gray-600">Receive notifications on Discord</p>
+                    <label className="font-medium text-white">Discord Notifications</label>
+                    <p className="text-sm text-slate-400">Receive notifications on Discord</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notificationPrefs.discordNotifications}
                     onChange={() => handleNotificationChange('discordNotifications')}
-                    className="w-5 h-5 rounded"
+                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
                   <div>
-                    <label className="font-medium text-gray-900">Web Notifications</label>
-                    <p className="text-sm text-gray-600">Receive notifications in the app</p>
+                    <label className="font-medium text-white">Web Notifications</label>
+                    <p className="text-sm text-slate-400">Receive notifications in the app</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={notificationPrefs.webNotifications}
                     onChange={() => handleNotificationChange('webNotifications')}
-                    className="w-5 h-5 rounded"
+                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                   />
                 </div>
 
                 <button
                   onClick={handleSaveNotifications}
                   disabled={loading}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                  className="w-full sm:w-auto mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
                 >
                   Save Preferences
                 </button>
@@ -370,43 +370,43 @@ export default function UserSettingsPage() {
 
             {/* Change Password */}
             <div className="mb-10">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
+              <h2 className="text-lg font-semibold text-white mb-4">Change Password</h2>
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     Current Password
                   </label>
                   <input
                     type="password"
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Enter your current password"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Enter your new password (min 8 characters)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     Confirm New Password
                   </label>
                   <input
                     type="password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Confirm your new password"
                   />
                 </div>
@@ -414,7 +414,7 @@ export default function UserSettingsPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                  className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
                 >
                   {loading ? 'Updating...' : 'Update Password'}
                 </button>
@@ -424,7 +424,7 @@ export default function UserSettingsPage() {
             {/* Back Button */}
             <button
               onClick={() => router.back()}
-              className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50"
+              className="w-full sm:w-auto border border-slate-600 text-slate-200 px-4 py-2 rounded-lg font-medium hover:bg-slate-700 transition-colors"
             >
               Back
             </button>

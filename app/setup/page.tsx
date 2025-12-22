@@ -42,20 +42,20 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8">
+      <div className="max-w-md w-full space-y-8 p-6 sm:p-8 bg-slate-800 border border-slate-700 rounded-lg shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-2 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
             Setup JellyConnect
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-slate-400">
             Configure your Jellyfin server. SSO can be configured later.
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="jellyfinUrl" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="jellyfinUrl" className="block text-sm font-medium text-slate-300">
                 Jellyfin Server URL
               </label>
               <input
@@ -64,14 +64,14 @@ export default function SetupPage() {
                 type="url"
                 required
                 autoComplete="url"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="http://localhost:8096"
                 value={config.jellyfinUrl}
                 onChange={handleChange}
               />
             </div>
             <div>
-              <label htmlFor="adminUsername" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="adminUsername" className="block text-sm font-medium text-slate-300">
                 Jellyfin Admin Username
               </label>
               <input
@@ -80,14 +80,14 @@ export default function SetupPage() {
                 type="text"
                 required
                 autoComplete="username"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="admin"
                 value={config.adminUsername}
                 onChange={handleChange}
               />
             </div>
             <div>
-              <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="adminPassword" className="block text-sm font-medium text-slate-300">
                 Jellyfin Admin Password
               </label>
               <input
@@ -96,7 +96,7 @@ export default function SetupPage() {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Your Jellyfin Admin Password"
                 value={config.adminPassword}
                 onChange={handleChange}
@@ -104,15 +104,15 @@ export default function SetupPage() {
             </div>
           </div>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm font-medium text-red-800">{error}</p>
+            <div className="rounded-md bg-red-900 border border-red-700 p-4">
+              <p className="text-sm font-medium text-red-200">{error}</p>
             </div>
           )}
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               {loading ? 'Saving...' : 'Save Configuration'}
             </button>

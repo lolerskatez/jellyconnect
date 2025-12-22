@@ -165,12 +165,12 @@ export default function UsersPageClient() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navigation />
       <div className="p-4 max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Manage Users</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Manage Users</h1>
           <button
             onClick={fetchUsers}
             disabled={loading}
-            className="bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center gap-2"
+            className="bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white px-4 sm:px-6 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none inline-flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -180,28 +180,28 @@ export default function UsersPageClient() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent">{users.length}</div>
-            <div className="text-sm text-slate-400">Total Users</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <div className="bg-slate-800 border border-slate-700 p-3 sm:p-4 rounded-lg shadow-lg">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent">{users.length}</div>
+            <div className="text-xs sm:text-sm text-slate-400">Total Users</div>
           </div>
-          <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg">
-            <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-green-500 bg-clip-text text-transparent">
+          <div className="bg-slate-800 border border-slate-700 p-3 sm:p-4 rounded-lg shadow-lg">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-400 to-green-500 bg-clip-text text-transparent">
               {users.filter(u => !u.Policy?.IsDisabled).length}
             </div>
-            <div className="text-sm text-slate-400">Active Users</div>
+            <div className="text-xs sm:text-sm text-slate-400">Active Users</div>
           </div>
-          <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg">
-            <div className="text-2xl font-bold bg-gradient-to-r from-red-400 to-red-500 bg-clip-text text-transparent">
+          <div className="bg-slate-800 border border-slate-700 p-3 sm:p-4 rounded-lg shadow-lg">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-400 to-red-500 bg-clip-text text-transparent">
               {users.filter(u => u.Policy?.IsAdministrator).length}
             </div>
-            <div className="text-sm text-slate-400">Administrators</div>
+            <div className="text-xs sm:text-sm text-slate-400">Administrators</div>
           </div>
-          <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg">
-            <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+          <div className="bg-slate-800 border border-slate-700 p-3 sm:p-4 rounded-lg shadow-lg">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               {users.filter(u => u.expiresAt && new Date(u.expiresAt) > new Date() && new Date(u.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).length}
             </div>
-            <div className="text-sm text-slate-400">Expiring Soon</div>
+            <div className="text-xs sm:text-sm text-slate-400">Expiring Soon</div>
           </div>
         </div>
 
@@ -211,7 +211,7 @@ export default function UsersPageClient() {
 
         <button
           onClick={() => router.push("/users/create")}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg mb-4 font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg mb-4 font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
         >
           + Create New User
         </button>
@@ -282,7 +282,8 @@ export default function UsersPageClient() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="w-full border-collapse border border-slate-700">
           <thead className="bg-slate-800">
             <tr>
@@ -437,6 +438,101 @@ export default function UsersPageClient() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {filteredUsers.map((user) => (
+          <div key={user.Id} className="bg-slate-800 border border-slate-700 rounded-lg p-4 shadow-lg">
+            {/* Header row with name, role, status */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white text-lg">{user.Name}</span>
+                {user.HasPassword && (
+                  <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user)}`}>
+                  {getUserRole(user)}
+                </span>
+                {user.Policy?.IsDisabled ? (
+                  <span className="px-2 py-1 bg-red-900 text-red-200 rounded-full text-xs font-medium">
+                    Disabled
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-green-900 text-green-200 rounded-full text-xs font-medium">
+                    Active
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Contacts Section */}
+            <div className="mb-3 text-sm">
+              <div className="flex flex-wrap gap-2">
+                {user.email && (
+                  <span className="inline-flex items-center text-blue-400 bg-blue-900/30 px-2 py-1 rounded text-xs">
+                    📧 {user.email}
+                  </span>
+                )}
+                {user.discordId && (
+                  <span className="inline-flex items-center text-indigo-400 bg-indigo-900/30 px-2 py-1 rounded text-xs">
+                    💬 Discord
+                  </span>
+                )}
+                {user.telegramId && (
+                  <span className="inline-flex items-center text-blue-300 bg-blue-900/30 px-2 py-1 rounded text-xs">
+                    ✈️ Telegram
+                  </span>
+                )}
+                {user.webhookUrl && (
+                  <span className="inline-flex items-center text-slate-400 bg-slate-700 px-2 py-1 rounded text-xs">
+                    🔗 Webhook
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Activity row */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mb-3">
+              <span>
+                Login: <span className="text-slate-200">{user.LastLoginDate ? new Date(user.LastLoginDate).toLocaleDateString() : 'Never'}</span>
+              </span>
+              <span>
+                Activity: <span className="text-slate-200">{user.LastActivityDate ? new Date(user.LastActivityDate).toLocaleDateString() : 'Never'}</span>
+              </span>
+              {user.expiresAt && (
+                <span>
+                  Expires: <span className="text-orange-400 font-medium">{new Date(user.expiresAt).toLocaleDateString()}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2 border-t border-slate-700">
+              <button
+                onClick={() => router.push(`/users/${user.Id}`)}
+                className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+              >
+                Edit User
+              </button>
+              <button
+                onClick={() => deleteUser(user.Id, user.Name)}
+                disabled={admin?.id === user.Id}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                  admin?.id === user.Id
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-red-500/20 hover:bg-red-500/30 text-red-400'
+                }`}
+              >
+                {admin?.id === user.Id ? 'Cannot Delete' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
       {filteredUsers.length === 0 && users.length > 0 && (
         <div className="text-slate-400 text-center mt-4 py-8">

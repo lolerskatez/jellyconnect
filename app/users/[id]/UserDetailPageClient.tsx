@@ -413,16 +413,16 @@ export default function UserDetailPageClient() {
         ← Back
       </button>
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Profile</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Profile</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium text-slate-400">Username:</span>
             <p className="mt-1 text-white">{user.Name}</p>
           </div>
           <div>
             <span className="font-medium text-slate-400">User ID:</span>
-            <p className="mt-1 font-mono text-xs text-slate-200">{user.Id}</p>
+            <p className="mt-1 font-mono text-xs text-slate-200 break-all">{user.Id}</p>
           </div>
           <div>
             <span className="font-medium text-slate-400">Last Login:</span>
@@ -447,8 +447,8 @@ export default function UserDetailPageClient() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Contact Information</h2>
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Contact Information</h2>
         <form onSubmit={updateContacts} className="space-y-4">
           <div>
             <label htmlFor="displayName" className="block text-sm font-medium text-slate-200">
@@ -553,8 +553,8 @@ export default function UserDetailPageClient() {
         </form>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Notification Settings</h2>
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Notification Settings</h2>
         <form onSubmit={updateNotifications} className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center">
@@ -641,11 +641,11 @@ export default function UserDetailPageClient() {
             </div>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
               disabled={saving}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+              className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
             >
               {saving ? 'Saving...' : 'Update Notification Settings'}
             </button>
@@ -654,7 +654,7 @@ export default function UserDetailPageClient() {
               type="button"
               onClick={testNotification}
               disabled={saving || (!notificationSettings.emailEnabled && !notificationSettings.discordEnabled && !notificationSettings.slackEnabled && !notificationSettings.telegramEnabled && !notificationSettings.webhookEnabled)}
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
+              className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
             >
               Test Notification
             </button>
@@ -662,8 +662,8 @@ export default function UserDetailPageClient() {
         </form>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Account Expiry</h2>
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Account Expiry</h2>
         <form onSubmit={updateExpiry} className="space-y-4">
           <div>
             <label htmlFor="expiryDate" className="block text-sm font-medium text-slate-200">
@@ -699,8 +699,8 @@ export default function UserDetailPageClient() {
         </div>
       )}
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Status</h2>
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Status</h2>
         <div className="mb-4">
           <p className="text-slate-400 mb-2">Current Status:</p>
           {user.Policy?.IsDisabled ? (
@@ -727,8 +727,8 @@ export default function UserDetailPageClient() {
         )}
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Role</h2>
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Role</h2>
         <p className="text-slate-400 mb-4">
           Current role: <strong className="text-white">{ROLE_PRESETS[currentRole].label}</strong>
         </p>

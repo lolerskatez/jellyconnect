@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { database } from '@/app/lib/db'
+import { database, saveDatabaseImmediate } from '@/app/lib/db'
 import { getOIDCProviderConfig } from '@/app/lib/auth-settings'
 import { generateSecurePassword, generateSecureUsername } from '@/app/lib/secure-password'
 import { mapGroupsToRole, getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
@@ -306,6 +306,7 @@ export async function GET(req: NextRequest) {
       } as any
 
       database.users.push(newUser)
+      saveDatabaseImmediate()  // Persist immediately to ensure QuickConnect works
       user = newUser
       console.log('[OIDC CALLBACK] User created successfully:', {
         email: newUser.email,
@@ -366,6 +367,7 @@ export async function GET(req: NextRequest) {
                 user.id = newUserId
                 // Store the new encrypted password
                 user.jellyfinPasswordEncrypted = encrypt(securePassword)
+                saveDatabaseImmediate()  // Persist immediately
                 console.log('[OIDC CALLBACK] Recreated user in Jellyfin with new ID:', newUserId)
               }
             } else {
@@ -381,8 +383,9 @@ export async function GET(req: NextRequest) {
               try {
                 const securePassword = generateSecurePassword()
                 
-                // Update password in Jellyfin
-                const updatePwResponse = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Password`, {
+                // Update password in Jellyfin using the correct API format
+                // The /Users/{userId}/Password endpoint with admin token requires userId query param
+                const updatePwResponse = await fetch(`${config.jellyfinUrl}/Users/Password?userId=${user.jellyfinId}`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -394,11 +397,13 @@ export async function GET(req: NextRequest) {
                   }),
                 })
                 
-                if (updatePwResponse.ok) {
+                if (updatePwResponse.ok || updatePwResponse.status === 204) {
                   user.jellyfinPasswordEncrypted = encrypt(securePassword)
+                  saveDatabaseImmediate()  // Persist immediately
                   console.log('[OIDC CALLBACK] Password updated and encrypted for QuickConnect support')
                 } else {
-                  console.error('[OIDC CALLBACK] Failed to update password:', updatePwResponse.status)
+                  const errorText = await updatePwResponse.text()
+                  console.error('[OIDC CALLBACK] Failed to update password:', updatePwResponse.status, errorText)
                 }
               } catch (pwError) {
                 console.error('[OIDC CALLBACK] Error updating password:', pwError)
