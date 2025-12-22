@@ -191,10 +191,10 @@ export function getNotificationSettings(userId: string) {
 export function upsertNotificationSettings(id: string, userId: string, settings: {
   emailEnabled: boolean;
   discordEnabled: boolean;
-  slackEnabled: boolean;
-  telegramEnabled: boolean;
-  webhookEnabled: boolean;
+  welcomeNotifications: boolean;
   expiryWarnings: boolean;
+  accountAlerts: boolean;
+  systemAlerts: boolean;
 }) {
   let existing = database.notificationSettings.find(s => s.id === id);
   if (existing) {
