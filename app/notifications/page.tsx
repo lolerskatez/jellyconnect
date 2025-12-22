@@ -16,19 +16,16 @@ interface User {
 interface NotificationSettings {
   emailEnabled: boolean
   discordEnabled: boolean
-  slackEnabled: boolean
-  telegramEnabled: boolean
-  webhookEnabled: boolean
+  welcomeNotifications: boolean
   expiryWarnings: boolean
+  accountAlerts: boolean
+  systemAlerts: boolean
 }
 
 interface UserWithNotifications extends User {
   contacts: {
     email?: string
-    discordId?: string
-    slackId?: string
-    telegramId?: string
-    webhookUrl?: string
+    discordUsername?: string
   }
   notificationSettings: NotificationSettings
 }

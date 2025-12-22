@@ -38,7 +38,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const config = getConfig();
-    const { name, password, email, discordId, slackId, telegramId, webhookUrl, displayName, inviteId } = await request.json();
+    const { name, password, email, discordUsername, displayName, inviteId } = await request.json();
 
     console.log('[User Create] Received inviteId:', inviteId);
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Store user in our database
     if (newUser.Id) {
       try {
-        createUser(newUser.Id, newUser.Id, email || undefined, discordId || undefined, slackId || undefined, telegramId || undefined, webhookUrl || undefined, displayName || undefined);
+        createUser(newUser.Id, newUser.Id, email || undefined, discordUsername || undefined, displayName || undefined);
 
         // Record invite usage if inviteId was provided
         if (inviteId) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send welcome notification if contact info provided
-        if (email || discordId || slackId || telegramId || webhookUrl) {
+        if (email || discordUsername) {
           const { sendWelcomeNotification } = await import('@/app/lib/notifications');
           await sendWelcomeNotification(newUser.Id, name);
         }

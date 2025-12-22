@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { emailService } from '../../../lib/email';
 import { discordService } from '../../../lib/discord';
-import { slackService } from '../../../lib/slack';
-import { telegramService } from '../../../lib/telegram';
-import { webhookService } from '../../../lib/webhook';
 
 export async function GET() {
   const results = {
@@ -13,18 +10,6 @@ export async function GET() {
     },
     discord: {
       configured: discordService.isConfigured(),
-      testResult: null as boolean | null,
-    },
-    slack: {
-      configured: slackService.isConfigured(),
-      testResult: null as boolean | null,
-    },
-    telegram: {
-      configured: telegramService.isConfigured(),
-      testResult: null as boolean | null,
-    },
-    webhook: {
-      configured: webhookService.isConfigured(),
       testResult: null as boolean | null,
     },
   };
@@ -47,52 +32,13 @@ export async function GET() {
   // Test Discord Service
   if (results.discord.configured) {
     try {
-      results.discord.testResult = await discordService.sendMessage(
+      results.discord.testResult = await discordService.sendDirectMessageByUsername(
+        'test-user',
         '**JellyConnect Service Test**\n\nThis is a test message to verify Discord configuration.'
       );
     } catch (error) {
       console.error('Discord test failed:', error);
       results.discord.testResult = false;
-    }
-  }
-
-  // Test Slack Service
-  if (results.slack.configured) {
-    try {
-      results.slack.testResult = await slackService.sendMessage(
-        '*JellyConnect Service Test*\n\nThis is a test message to verify Slack configuration.'
-      );
-    } catch (error) {
-      console.error('Slack test failed:', error);
-      results.slack.testResult = false;
-    }
-  }
-
-  // Test Telegram Service
-  if (results.telegram.configured) {
-    try {
-      results.telegram.testResult = await telegramService.sendMessage(
-        '*JellyConnect Service Test*\n\nThis is a test message to verify Telegram configuration.'
-      );
-    } catch (error) {
-      console.error('Telegram test failed:', error);
-      results.telegram.testResult = false;
-    }
-  }
-
-  // Test Webhook Service
-  if (results.webhook.configured) {
-    try {
-      results.webhook.testResult = await webhookService.sendNotification({
-        userId: 'test-user',
-        subject: 'Service Test',
-        message: 'This is a test webhook to verify webhook configuration.',
-        type: 'custom',
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Webhook test failed:', error);
-      results.webhook.testResult = false;
     }
   }
 

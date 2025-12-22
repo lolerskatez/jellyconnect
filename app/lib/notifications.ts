@@ -1,16 +1,34 @@
 import { getUserContacts, getNotificationSettings } from './db/queries';
 import { emailService } from './email';
 import { discordService } from './discord';
-import { slackService } from './slack';
-import { telegramService } from './telegram';
-import { webhookService } from './webhook';
+import { NotificationType } from './notifications-types';
 
 // Notification types
 export interface NotificationData {
   userId: string;
   subject: string;
   message: string;
-  type: 'welcome' | 'expiry_warning' | 'account_disabled' | 'invite_used' | 'custom';
+  type: 'welcome' | 'expiry_warning' | 'account_disabled' | 'invite_used' | 'system_alert' | 'custom';
+}
+
+// Check if user wants to receive this type of notification
+function shouldReceiveNotificationType(settings: any, notificationType: string): boolean {
+  if (!settings) return true; // Default to sending if no settings
+
+  switch (notificationType) {
+    case 'welcome':
+      return settings.welcomeNotifications ?? true;
+    case 'expiry_warning':
+      return settings.expiryWarnings ?? true;
+    case 'account_disabled':
+    case 'invite_used':
+      return settings.accountAlerts ?? true;
+    case 'system_alert':
+      return settings.systemAlerts ?? true;
+    case 'custom':
+    default:
+      return true; // Always send custom notifications
+  }
 }
 
 // Send notification to a user
@@ -23,6 +41,12 @@ export async function sendNotification(data: NotificationData): Promise<void> {
     return;
   }
 
+  // Check if user wants to receive this notification type
+  if (!shouldReceiveNotificationType(settings, data.type)) {
+    console.log(`User ${data.userId} has disabled ${data.type} notifications`);
+    return;
+  }
+
   const promises: Promise<void>[] = [];
 
   // Send email if enabled and email exists
@@ -30,30 +54,9 @@ export async function sendNotification(data: NotificationData): Promise<void> {
     promises.push(sendEmail(contacts.email, data.subject, data.message));
   }
 
-  // Send Discord message if enabled and Discord ID exists
-  if (settings?.discordEnabled && contacts.discordId) {
-    promises.push(sendDiscordMessage(contacts.discordId, data.subject, data.message));
-  }
-
-  // Send Slack message if enabled and Slack ID exists
-  if (settings?.slackEnabled && contacts.slackId) {
-    promises.push(sendSlackMessage(contacts.slackId, data.subject, data.message));
-  }
-
-  // Send Telegram message if enabled and Telegram ID exists
-  if (settings?.telegramEnabled && contacts.telegramId) {
-    promises.push(sendTelegramMessage(contacts.telegramId, data.subject, data.message));
-  }
-
-  // Send webhook notification if enabled and webhook URL exists
-  if (settings?.webhookEnabled && contacts.webhookUrl) {
-    promises.push(sendWebhookNotification({
-      userId: data.userId,
-      subject: data.subject,
-      message: data.message,
-      type: data.type,
-      timestamp: new Date().toISOString()
-    }));
+  // Send Discord DM if enabled and Discord username exists
+  if (settings?.discordEnabled && contacts.discordUsername) {
+    promises.push(sendDiscordMessage(contacts.discordUsername, data.subject, data.message));
   }
 
   // Wait for all notifications to complete
@@ -81,82 +84,22 @@ async function sendEmail(to: string, subject: string, message: string): Promise<
 }
 
 // Send Discord notification
-async function sendDiscordMessage(discordId: string, subject: string, message: string): Promise<void> {
+async function sendDiscordMessage(discordUsername: string, subject: string, message: string): Promise<void> {
   try {
     // Format message for Discord
     const discordMessage = `**${subject}**\n\n${message}`;
 
-    // Try to send as DM first, fallback to webhook/channel
-    let success = await discordService.sendDirectMessage(discordId, discordMessage);
+    // Send DM by username
+    const success = await discordService.sendDirectMessageByUsername(discordUsername, discordMessage);
 
     if (!success) {
-      // If DM fails, try webhook (this would send to a channel)
-      success = await discordService.sendMessage(`<@${discordId}>\n${discordMessage}`);
-    }
-
-    if (!success) {
-      console.log(`💬 DISCORD TO: ${discordId}`);
+      console.log(`💬 DISCORD TO: ${discordUsername}`);
       console.log(`💬 SUBJECT: ${subject}`);
       console.log(`💬 MESSAGE: ${message}`);
-      console.log('--- (Discord service not configured)');
+      console.log('--- (Discord service not configured or user not found)');
     }
   } catch (error) {
-    console.error(`Failed to send Discord message to ${discordId}:`, error);
-    throw error;
-  }
-}
-
-// Send Slack notification
-async function sendSlackMessage(slackId: string, subject: string, message: string): Promise<void> {
-  try {
-    // Format message for Slack
-    const slackMessage = `*${subject}*\n\n${message}`;
-
-    const success = await slackService.sendMessage(slackMessage);
-
-    if (!success) {
-      console.log(`📱 SLACK TO: ${slackId}`);
-      console.log(`📱 SUBJECT: ${subject}`);
-      console.log(`📱 MESSAGE: ${message}`);
-      console.log('--- (Slack service not configured)');
-    }
-  } catch (error) {
-    console.error(`Failed to send Slack message to ${slackId}:`, error);
-    throw error;
-  }
-}
-
-// Send Telegram notification
-async function sendTelegramMessage(telegramId: string, subject: string, message: string): Promise<void> {
-  try {
-    // Format message for Telegram
-    const telegramMessage = `*${subject}*\n\n${message}`;
-
-    const success = await telegramService.sendMessage(telegramMessage, telegramId);
-
-    if (!success) {
-      console.log(`✈️ TELEGRAM TO: ${telegramId}`);
-      console.log(`✈️ SUBJECT: ${subject}`);
-      console.log(`✈️ MESSAGE: ${message}`);
-      console.log('--- (Telegram service not configured)');
-    }
-  } catch (error) {
-    console.error(`Failed to send Telegram message to ${telegramId}:`, error);
-    throw error;
-  }
-}
-
-// Send webhook notification
-async function sendWebhookNotification(payload: any): Promise<void> {
-  try {
-    const success = await webhookService.sendNotification(payload);
-
-    if (!success) {
-      console.log(`🔗 WEBHOOK PAYLOAD:`, payload);
-      console.log('--- (Webhook service not configured)');
-    }
-  } catch (error) {
-    console.error('Failed to send webhook notification:', error);
+    console.error(`Failed to send Discord message to ${discordUsername}:`, error);
     throw error;
   }
 }

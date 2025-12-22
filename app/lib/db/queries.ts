@@ -2,17 +2,14 @@ import { database } from './index';
 import { randomBytes } from 'crypto';
 
 // User operations
-export function createUser(id: string, jellyfinId: string, email?: string, discordId?: string, slackId?: string, telegramId?: string, webhookUrl?: string, displayName?: string) {
+export function createUser(id: string, jellyfinId: string, email?: string, discordUsername?: string, displayName?: string) {
   const user = {
     id,
     jellyfinId,
     displayName,
     email,
     emailVerified: false,
-    discordId,
-    slackId,
-    telegramId,
-    webhookUrl,
+    discordUsername,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -27,10 +24,7 @@ export function getUserByJellyfinId(jellyfinId: string) {
 export function updateUser(id: string, updates: Partial<{
   displayName?: string;
   email: string;
-  discordId: string;
-  slackId: string;
-  telegramId: string;
-  webhookUrl: string;
+  discordUsername: string;
   expiresAt?: string;
   expiryWarningSent?: boolean;
 }>) {
@@ -51,10 +45,7 @@ export function getUserContacts(id: string) {
     return {
       displayName: user.displayName,
       email: user.email,
-      discordId: user.discordId,
-      slackId: user.slackId,
-      telegramId: user.telegramId,
-      webhookUrl: user.webhookUrl
+      discordUsername: user.discordUsername
     };
   }
   // If user doesn't exist in local database, return empty contacts
@@ -62,10 +53,7 @@ export function getUserContacts(id: string) {
   return {
     displayName: null,
     email: null,
-    discordId: null,
-    slackId: null,
-    telegramId: null,
-    webhookUrl: null
+    discordUsername: null
   };
 }
 

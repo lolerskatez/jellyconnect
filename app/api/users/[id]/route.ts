@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const config = getConfig();
     const { id } = await params;
-    const { name, password, email } = await request.json();
+    const { name, password, email, discordUsername } = await request.json();
 
     const updateData: any = {};
     if (name) updateData.Name = name;
@@ -113,9 +113,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
     const updatedUser = await updateRes.json();
 
-    // TODO: Update email in our own database/configuration for SSO purposes
-    if (email) {
-      console.log(`User ${id} email updated to: ${email}`);
+    // Update email and Discord username in our database
+    if (email || discordUsername !== undefined) {
+      const { updateUser } = await import('@/app/lib/db/queries');
+      const dbUpdates: any = {};
+      if (email) dbUpdates.email = email;
+      if (discordUsername !== undefined) dbUpdates.discordUsername = discordUsername;
+      
+      updateUser(id, dbUpdates);
+      console.log(`User ${id} contact info updated:`, dbUpdates);
     }
 
     return NextResponse.json(updatedUser);

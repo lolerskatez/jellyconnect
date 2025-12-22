@@ -21,10 +21,7 @@ interface User {
   displayName?: string; // Display name (optional, defaults to Jellyfin username)
   email?: string;
   emailVerified?: boolean;
-  discordId?: string;
-  slackId?: string;
-  telegramId?: string;
-  webhookUrl?: string;
+  discordUsername?: string; // Discord username for DM notifications
   createdAt: string;
   updatedAt: string;
   expiresAt?: string; // Account expiry date
@@ -70,12 +67,14 @@ interface AuditEntry {
 interface NotificationSetting {
   id: string;
   userId: string;
+  // Channel toggles
   emailEnabled: boolean;
   discordEnabled: boolean;
-  slackEnabled: boolean;
-  telegramEnabled: boolean;
-  webhookEnabled: boolean;
+  // Notification type preferences
+  welcomeNotifications: boolean;
   expiryWarnings: boolean;
+  accountAlerts: boolean;
+  systemAlerts: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -147,13 +146,7 @@ function loadDatabase(): Database {
 function saveDatabase(db: Database): void {
   try {
     const jsonData = JSON.stringify(db, null, 2)
-    console.log('[DATABASE] Saving database to:', DB_PATH)
-    console.log('[DATABASE] AuthSettings count:', db.authSettings.length)
-    if (db.authSettings.length > 0) {
-      console.log('[DATABASE] First authSettings entry:', JSON.stringify(db.authSettings[0], null, 2))
-    }
     fs.writeFileSync(DB_PATH, jsonData)
-    console.log('[DATABASE] Database saved successfully')
   } catch (error) {
     console.error('Failed to save database:', error)
   }

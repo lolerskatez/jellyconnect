@@ -14,20 +14,20 @@ export async function GET(
       return NextResponse.json({
         emailEnabled: false,
         discordEnabled: false,
-        slackEnabled: false,
-        telegramEnabled: false,
-        webhookEnabled: false,
-        expiryWarnings: true
+        welcomeNotifications: true,
+        expiryWarnings: true,
+        accountAlerts: true,
+        systemAlerts: false
       });
     }
 
     return NextResponse.json({
       emailEnabled: settings.emailEnabled,
       discordEnabled: settings.discordEnabled,
-      slackEnabled: settings.slackEnabled,
-      telegramEnabled: settings.telegramEnabled,
-      webhookEnabled: settings.webhookEnabled,
-      expiryWarnings: settings.expiryWarnings
+      welcomeNotifications: settings.welcomeNotifications,
+      expiryWarnings: settings.expiryWarnings,
+      accountAlerts: settings.accountAlerts,
+      systemAlerts: settings.systemAlerts
     });
   } catch (error) {
     console.error(error);
@@ -41,15 +41,22 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { emailEnabled, discordEnabled, slackEnabled, telegramEnabled, webhookEnabled, expiryWarnings } = await request.json();
+    const { 
+      emailEnabled, 
+      discordEnabled, 
+      welcomeNotifications, 
+      expiryWarnings, 
+      accountAlerts, 
+      systemAlerts 
+    } = await request.json();
 
     // Validate input
     if (typeof emailEnabled !== 'boolean' ||
         typeof discordEnabled !== 'boolean' ||
-        typeof slackEnabled !== 'boolean' ||
-        typeof telegramEnabled !== 'boolean' ||
-        typeof webhookEnabled !== 'boolean' ||
-        typeof expiryWarnings !== 'boolean') {
+        typeof welcomeNotifications !== 'boolean' ||
+        typeof expiryWarnings !== 'boolean' ||
+        typeof accountAlerts !== 'boolean' ||
+        typeof systemAlerts !== 'boolean') {
       return NextResponse.json({ error: 'Invalid settings format' }, { status: 400 });
     }
 
@@ -57,10 +64,10 @@ export async function PUT(
     const settings = upsertNotificationSettings(settingsId, id, {
       emailEnabled,
       discordEnabled,
-      slackEnabled,
-      telegramEnabled,
-      webhookEnabled,
-      expiryWarnings
+      welcomeNotifications,
+      expiryWarnings,
+      accountAlerts,
+      systemAlerts
     });
 
     return NextResponse.json({
@@ -68,10 +75,10 @@ export async function PUT(
       settings: {
         emailEnabled: settings.emailEnabled,
         discordEnabled: settings.discordEnabled,
-        slackEnabled: settings.slackEnabled,
-        telegramEnabled: settings.telegramEnabled,
-        webhookEnabled: settings.webhookEnabled,
-        expiryWarnings: settings.expiryWarnings
+        welcomeNotifications: settings.welcomeNotifications,
+        expiryWarnings: settings.expiryWarnings,
+        accountAlerts: settings.accountAlerts,
+        systemAlerts: settings.systemAlerts
       }
     });
   } catch (error) {

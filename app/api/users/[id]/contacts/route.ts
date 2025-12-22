@@ -23,22 +23,22 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { displayName, email, discordId, slackId, telegramId, webhookUrl } = await request.json();
+    const { displayName, email, discordUsername } = await request.json();
 
     // Validate email format if provided
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
-    // Validate Discord ID format if provided
-    if (discordId && !/^.{2,32}#\d{4}$|^.{2,32}$/.test(discordId)) {
+    // Validate Discord username format if provided (can be username or username#discriminator)
+    if (discordUsername && !/^.{2,32}(#\d{4})?$/.test(discordUsername)) {
       return NextResponse.json({ error: 'Invalid Discord username format' }, { status: 400 });
     }
 
-    const updatedUser = updateUser(id, { displayName, email, discordId, slackId, telegramId, webhookUrl });
+    const updatedUser = updateUser(id, { displayName, email, discordUsername });
     if (!updatedUser) {
       // User doesn't exist in local database, create them
-      createUser(id, id, email, discordId, slackId, telegramId, webhookUrl, displayName);
+      createUser(id, id, email, discordUsername, displayName);
     }
 
     return NextResponse.json({ success: true });

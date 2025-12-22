@@ -17,23 +17,7 @@ export async function GET() {
         from: ''
       },
       discord: config.discord || {
-        webhookUrl: '',
-        botToken: '',
-        channelId: ''
-      },
-      slack: config.slack || {
-        webhookUrl: '',
-        botToken: '',
-        channelId: ''
-      },
-      telegram: config.telegram || {
-        botToken: '',
-        chatId: ''
-      },
-      webhook: config.webhook || {
-        url: '',
-        secret: '',
-        headers: {}
+        botToken: ''
       }
     };
 
@@ -52,7 +36,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
 
     // Validate the input
-    if (!body.jellyfinUrl || !body.smtp || !body.discord || !body.slack || !body.telegram || !body.webhook) {
+    if (!body.jellyfinUrl || !body.smtp || !body.discord) {
       return NextResponse.json(
         { error: 'Invalid settings format' },
         { status: 400 }
@@ -73,23 +57,7 @@ export async function PUT(request: NextRequest) {
         from: body.smtp.from || body.smtp.user || '',
       },
       discord: {
-        webhookUrl: body.discord.webhookUrl || '',
         botToken: body.discord.botToken || '',
-        channelId: body.discord.channelId || '',
-      },
-      slack: {
-        webhookUrl: body.slack.webhookUrl || '',
-        botToken: body.slack.botToken || '',
-        channelId: body.slack.channelId || '',
-      },
-      telegram: {
-        botToken: body.telegram.botToken || '',
-        chatId: body.telegram.chatId || '',
-      },
-      webhook: {
-        url: body.webhook.url || '',
-        secret: body.webhook.secret || '',
-        headers: body.webhook.headers || {},
       }
     };
 

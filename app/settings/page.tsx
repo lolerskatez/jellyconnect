@@ -16,23 +16,7 @@ interface Settings {
     from: string
   }
   discord: {
-    webhookUrl: string
     botToken: string
-    channelId: string
-  }
-  slack: {
-    webhookUrl: string
-    botToken: string
-    channelId: string
-  }
-  telegram: {
-    botToken: string
-    chatId: string
-  }
-  webhook: {
-    url: string
-    secret: string
-    headers: Record<string, string>
   }
 }
 
@@ -50,23 +34,7 @@ export default function SettingsPage() {
       from: ''
     },
     discord: {
-      webhookUrl: '',
-      botToken: '',
-      channelId: ''
-    },
-    slack: {
-      webhookUrl: '',
-      botToken: '',
-      channelId: ''
-    },
-    telegram: {
-      botToken: '',
-      chatId: ''
-    },
-    webhook: {
-      url: '',
-      secret: '',
-      headers: {}
+      botToken: ''
     }
   })
   const [enableRegistration, setEnableRegistration] = useState(true)
@@ -77,9 +45,6 @@ export default function SettingsPage() {
   const [testResults, setTestResults] = useState<{
     email?: boolean
     discord?: boolean
-    slack?: boolean
-    telegram?: boolean
-    webhook?: boolean
   }>({})
 
   useEffect(() => {
@@ -198,45 +163,6 @@ export default function SettingsPage() {
     }
   }
 
-  const testSlack = async () => {
-    try {
-      const response = await fetch('/api/services/test')
-      if (response.ok) {
-        const results = await response.json()
-        setTestResults(prev => ({ ...prev, slack: results.slack?.testResult ?? false }))
-      }
-    } catch (err) {
-      console.error('Failed to test Slack:', err)
-      setTestResults(prev => ({ ...prev, slack: false }))
-    }
-  }
-
-  const testTelegram = async () => {
-    try {
-      const response = await fetch('/api/services/test')
-      if (response.ok) {
-        const results = await response.json()
-        setTestResults(prev => ({ ...prev, telegram: results.telegram?.testResult ?? false }))
-      }
-    } catch (err) {
-      console.error('Failed to test Telegram:', err)
-      setTestResults(prev => ({ ...prev, telegram: false }))
-    }
-  }
-
-  const testWebhook = async () => {
-    try {
-      const response = await fetch('/api/services/test')
-      if (response.ok) {
-        const results = await response.json()
-        setTestResults(prev => ({ ...prev, webhook: results.webhook?.testResult ?? false }))
-      }
-    } catch (err) {
-      console.error('Failed to test Webhook:', err)
-      setTestResults(prev => ({ ...prev, webhook: false }))
-    }
-  }
-
   const updateSmtpSetting = (field: keyof Settings['smtp'], value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
@@ -252,36 +178,6 @@ export default function SettingsPage() {
       ...prev,
       discord: {
         ...prev.discord,
-        [field]: value
-      }
-    }))
-  }
-
-  const updateSlackSetting = (field: keyof Settings['slack'], value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      slack: {
-        ...prev.slack,
-        [field]: value
-      }
-    }))
-  }
-
-  const updateTelegramSetting = (field: keyof Settings['telegram'], value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      telegram: {
-        ...prev.telegram,
-        [field]: value
-      }
-    }))
-  }
-
-  const updateWebhookSetting = (field: keyof Settings['webhook'], value: string | Record<string, string>) => {
-    setSettings(prev => ({
-      ...prev,
-      webhook: {
-        ...prev.webhook,
         [field]: value
       }
     }))
@@ -578,294 +474,30 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Webhook URL (Recommended)
-                    </label>
-                    <input
-                      type="url"
-                      value={settings.discord.webhookUrl}
-                      onChange={(e) => updateDiscordSetting('webhookUrl', e.target.value)}
-                      placeholder="https://discord.com/api/webhooks/..."
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      Create a webhook in your Discord server settings for easy message sending
-                    </p>
-                  </div>
-
-                  <div className="border-t border-slate-700 pt-4">
-                    <h3 className="text-sm font-medium text-slate-200 mb-2">Alternative: Bot Token (Advanced)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-200 mb-1">
-                          Bot Token
-                        </label>
-                        <input
-                          type="password"
-                          value={settings.discord.botToken}
-                          onChange={(e) => updateDiscordSetting('botToken', e.target.value)}
-                          placeholder="Your bot token"
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-200 mb-1">
-                          Channel ID
-                        </label>
-                        <input
-                          type="text"
-                          value={settings.discord.channelId}
-                          onChange={(e) => updateDiscordSetting('channelId', e.target.value)}
-                          placeholder="Channel ID for messages"
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-purple-400 mb-1">Discord Setup Instructions:</h3>
-                  <ul className="text-sm text-slate-300 space-y-1">
-                    <li>• <strong>Webhook (Easiest):</strong> Server Settings → Integrations → Webhooks → Create Webhook</li>
-                    <li>• <strong>Bot (Advanced):</strong> Create bot at https://discord.com/developers/applications</li>
-                    <li>• Copy the webhook URL or bot token and paste above</li>
-                    <li>• For bot setup, also provide the channel ID where messages should be sent</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Slack Settings */}
-              <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Slack Configuration</h2>
-                  <button
-                    type="button"
-                    onClick={testSlack}
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-md transition-all duration-200 transform hover:scale-105 text-sm shadow-lg"
-                  >
-                    Test Slack
-                  </button>
-                </div>
-
-                {testResults.slack !== undefined && (
-                  <div className={`p-3 rounded-lg mb-4 border ${testResults.slack ? 'bg-green-900 text-green-200 border-green-700' : 'bg-red-900 text-red-200 border-red-700'}`}>
-                    Slack test: {testResults.slack ? 'Success' : 'Failed'}
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Webhook URL (Recommended)
-                    </label>
-                    <input
-                      type="url"
-                      value={settings.slack.webhookUrl}
-                      onChange={(e) => updateSlackSetting('webhookUrl', e.target.value)}
-                      placeholder="https://hooks.slack.com/services/..."
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      Create an incoming webhook in your Slack workspace settings for easy message sending
-                    </p>
-                  </div>
-
-                  <div className="border-t border-slate-700 pt-4">
-                    <h3 className="text-sm font-medium text-slate-200 mb-2">Alternative: Bot Token (Advanced)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-200 mb-1">
-                          Bot Token
-                        </label>
-                        <input
-                          type="password"
-                          value={settings.slack.botToken}
-                          onChange={(e) => updateSlackSetting('botToken', e.target.value)}
-                          placeholder="xoxb-your-bot-token"
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-200 mb-1">
-                          Channel ID
-                        </label>
-                        <input
-                          type="text"
-                          value={settings.slack.channelId}
-                          onChange={(e) => updateSlackSetting('channelId', e.target.value)}
-                          placeholder="C1234567890"
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-purple-400 mb-1">Slack Setup Instructions:</h3>
-                  <ul className="text-sm text-slate-300 space-y-1">
-                    <li>• <strong>Webhook (Easiest):</strong> Apps → Incoming Webhooks → Add to Slack</li>
-                    <li>• <strong>Bot (Advanced):</strong> Create bot at https://api.slack.com/apps</li>
-                    <li>• Copy the webhook URL or bot token and paste above</li>
-                    <li>• For bot setup, also provide the channel ID where messages should be sent</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Telegram Settings */}
-              <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Telegram Configuration</h2>
-                  <button
-                    type="button"
-                    onClick={testTelegram}
-                    className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-4 py-2 rounded-md transition-all duration-200 transform hover:scale-105 text-sm shadow-lg"
-                  >
-                    Test Telegram
-                  </button>
-                </div>
-
-                {testResults.telegram !== undefined && (
-                  <div className={`p-3 rounded-lg mb-4 border ${testResults.telegram ? 'bg-green-900 text-green-200 border-green-700' : 'bg-red-900 text-red-200 border-red-700'}`}>
-                    Telegram test: {testResults.telegram ? 'Success' : 'Failed'}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
                       Bot Token
                     </label>
                     <input
                       type="password"
-                      value={settings.telegram.botToken}
-                      onChange={(e) => updateTelegramSetting('botToken', e.target.value)}
-                      placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                      value={settings.discord.botToken}
+                      onChange={(e) => updateDiscordSetting('botToken', e.target.value)}
+                      placeholder="Your Discord bot token"
                       className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-slate-400">
-                      Get this from @BotFather on Telegram
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Chat ID
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.telegram.chatId}
-                      onChange={(e) => updateTelegramSetting('chatId', e.target.value)}
-                      placeholder="-1001234567890"
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      Channel or group ID where messages should be sent
+                      Bot token is used to send direct messages to users based on their Discord username
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-cyan-400 mb-1">Telegram Setup Instructions:</h3>
+                  <h3 className="text-sm font-medium text-purple-400 mb-1">Discord Bot Setup Instructions:</h3>
                   <ul className="text-sm text-slate-300 space-y-1">
-                    <li>• Message @BotFather on Telegram and create a new bot</li>
-                    <li>• Copy the bot token provided by BotFather</li>
-                    <li>• Add the bot to your channel/group and give it admin permissions</li>
-                    <li>• Get the chat ID by messaging the bot or checking bot logs</li>
-                    <li>• For channels, the chat ID is usually negative (e.g., -1001234567890)</li>
+                    <li>• Create a bot at https://discord.com/developers/applications</li>
+                    <li>• Enable &quot;Message Content Intent&quot; in Bot settings</li>
+                    <li>• Copy the bot token and paste above</li>
+                    <li>• Users will be able to enter their Discord username in their profile</li>
+                    <li>• Bot will send direct messages to users based on their username</li>
                   </ul>
-                </div>
-              </div>
-
-              {/* Webhook Settings */}
-              <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Custom Webhook Configuration</h2>
-                  <button
-                    type="button"
-                    onClick={testWebhook}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-md transition-all duration-200 transform hover:scale-105 text-sm shadow-lg"
-                  >
-                    Test Webhook
-                  </button>
-                </div>
-
-                {testResults.webhook !== undefined && (
-                  <div className={`p-3 rounded-lg mb-4 border ${testResults.webhook ? 'bg-green-900 text-green-200 border-green-700' : 'bg-red-900 text-red-200 border-red-700'}`}>
-                    Webhook test: {testResults.webhook ? 'Success' : 'Failed'}
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Webhook URL
-                    </label>
-                    <input
-                      type="url"
-                      value={settings.webhook.url}
-                      onChange={(e) => updateWebhookSetting('url', e.target.value)}
-                      placeholder="https://your-app.com/webhook"
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      URL that will receive POST requests with notification data
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Secret Key (Optional)
-                    </label>
-                    <input
-                      type="password"
-                      value={settings.webhook.secret}
-                      onChange={(e) => updateWebhookSetting('secret', e.target.value)}
-                      placeholder="your-webhook-secret"
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      Secret key for webhook signature verification
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-1">
-                      Custom Headers (JSON)
-                    </label>
-                    <textarea
-                      value={JSON.stringify(settings.webhook.headers, null, 2)}
-                      onChange={(e) => {
-                        try {
-                          const headers = JSON.parse(e.target.value)
-                          updateWebhookSetting('headers', headers)
-                        } catch (err) {
-                          // Invalid JSON, keep current value
-                        }
-                      }}
-                      placeholder='{"Authorization": "Bearer token", "Content-Type": "application/json"}'
-                      rows={3}
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
-                    />
-                    <p className="mt-1 text-xs text-slate-400">
-                      Additional headers to include with webhook requests (JSON format)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-orange-400 mb-1">Webhook Payload Format:</h3>
-                  <div className="text-sm text-slate-300 font-mono bg-slate-950 border border-slate-700 p-2 rounded mt-1">
-                    {`{
-  "userId": "user123",
-  "subject": "Notification Subject",
-  "message": "Notification message",
-  "type": "expiry_warning",
-  "timestamp": "2025-12-19T10:00:00Z"
-}`}
-                  </div>
                 </div>
               </div>
 

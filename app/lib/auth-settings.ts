@@ -75,20 +75,14 @@ export async function getOIDCProviderConfigWithEndpoints() {
   
   // Otherwise, fetch from discovery document
   try {
-    console.log('[AUTH-SETTINGS] Fetching discovery document from:', settings.oidcDiscoveryUrl)
     const discoveryResponse = await fetch(settings.oidcDiscoveryUrl)
     
     if (!discoveryResponse.ok) {
-      console.error('[AUTH-SETTINGS] Failed to fetch discovery document:', discoveryResponse.status)
+      console.error('Failed to fetch OIDC discovery document:', discoveryResponse.status)
       throw new Error('Failed to fetch OIDC discovery document')
     }
     
     const discovery = await discoveryResponse.json()
-    console.log('[AUTH-SETTINGS] Discovery endpoints:', {
-      authorization: discovery.authorization_endpoint,
-      token: discovery.token_endpoint,
-      userinfo: discovery.userinfo_endpoint,
-    })
     
     return {
       name: settings.oidcProviderName || 'Custom OIDC Provider',
@@ -100,7 +94,7 @@ export async function getOIDCProviderConfigWithEndpoints() {
       userinfoEndpoint: discovery.userinfo_endpoint,
     }
   } catch (error) {
-    console.error('[AUTH-SETTINGS] Error fetching discovery document:', error)
+    console.error('Error fetching OIDC discovery document:', error)
     return null
   }
 }

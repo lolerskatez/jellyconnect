@@ -6,20 +6,24 @@ import Navigation from "../components/Navigation"
 import { useRouter } from "next/navigation"
 
 interface NotificationPreferences {
+  // Channel toggles
   emailNotifications: boolean
   discordNotifications: boolean
-  webNotifications: boolean
+  // Notification type preferences
+  welcomeNotifications: boolean
+  expiryWarnings: boolean
+  accountAlerts: boolean
+  systemAlerts: boolean
 }
 
 interface AccountInfo {
   email: string
   displayName: string
+  discordUsername: string
 }
 
 interface NotificationContacts {
   emailAddress: string
-  discordUsername: string
-  telegramUsername: string
 }
 
 export default function UserSettingsPage() {
@@ -28,16 +32,18 @@ export default function UserSettingsPage() {
   const [accountInfo, setAccountInfo] = useState<AccountInfo>({
     email: '',
     displayName: admin?.name || '',
+    discordUsername: '',
   })
   const [notificationContacts, setNotificationContacts] = useState<NotificationContacts>({
     emailAddress: '',
-    discordUsername: '',
-    telegramUsername: '',
   })
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     emailNotifications: true,
     discordNotifications: false,
-    webNotifications: true,
+    welcomeNotifications: true,
+    expiryWarnings: true,
+    accountAlerts: true,
+    systemAlerts: true,
   })
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -150,32 +156,6 @@ export default function UserSettingsPage() {
     }
   }
 
-  const handleSaveNotificationContacts = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/users/' + admin.id + '/notification-contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notificationContacts)
-      })
-
-      if (res.ok) {
-        setSuccess('Notification contacts saved successfully')
-      } else {
-        const data = await res.json()
-        setError(data.error || 'Failed to save notification contacts')
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSaveNotifications = async () => {
     setLoading(true)
     try {
@@ -250,6 +230,22 @@ export default function UserSettingsPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                    Discord Username
+                  </label>
+                  <input
+                    type="text"
+                    value={accountInfo.discordUsername}
+                    onChange={(e) => setAccountInfo({...accountInfo, discordUsername: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="your_discord_username"
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Used for Discord direct message notifications (if Discord is enabled on the server)
+                  </p>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -264,108 +260,103 @@ export default function UserSettingsPage() {
             <div className="mb-10 pb-8 border-b border-slate-700">
               <h2 className="text-lg font-semibold text-white mb-4">Notification Preferences</h2>
               
-              {/* Notification Methods */}
-              <div className="mb-8 pb-8 border-b border-slate-600">
-                <h3 className="text-md font-medium text-slate-200 mb-4">Notification Contacts</h3>
-                <form onSubmit={handleSaveNotificationContacts} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                      Email Address
-                    </label>
+              {/* Channel Toggles */}
+              <div className="mb-6">
+                <h3 className="text-md font-medium text-slate-200 mb-4">Notification Channels</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">Email Notifications</label>
+                      <p className="text-sm text-slate-400">Receive notifications via email</p>
+                    </div>
                     <input
-                      type="email"
-                      value={notificationContacts.emailAddress}
-                      onChange={(e) => setNotificationContacts({...notificationContacts, emailAddress: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="notifications@example.com"
+                      type="checkbox"
+                      checked={notificationPrefs.emailNotifications}
+                      onChange={() => handleNotificationChange('emailNotifications')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                      Discord Username
-                    </label>
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">Discord Notifications</label>
+                      <p className="text-sm text-slate-400">Receive direct messages on Discord</p>
+                    </div>
                     <input
-                      type="text"
-                      value={notificationContacts.discordUsername}
-                      onChange={(e) => setNotificationContacts({...notificationContacts, discordUsername: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="your_discord_username"
+                      type="checkbox"
+                      checked={notificationPrefs.discordNotifications}
+                      onChange={() => handleNotificationChange('discordNotifications')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                      Telegram Username
-                    </label>
-                    <input
-                      type="text"
-                      value={notificationContacts.telegramUsername}
-                      onChange={(e) => setNotificationContacts({...notificationContacts, telegramUsername: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="your_telegram_username"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
-                  >
-                    {loading ? 'Saving...' : 'Save Notification Contacts'}
-                  </button>
-                </form>
+                </div>
               </div>
 
-              {/* Notification Toggle Switches */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-                  <div>
-                    <label className="font-medium text-white">Email Notifications</label>
-                    <p className="text-sm text-slate-400">Receive notifications via email</p>
+              {/* Notification Types */}
+              <div className="mb-6">
+                <h3 className="text-md font-medium text-slate-200 mb-4">Notification Types</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">Welcome Messages</label>
+                      <p className="text-sm text-slate-400">Receive welcome notifications when your account is created</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notificationPrefs.welcomeNotifications}
+                      onChange={() => handleNotificationChange('welcomeNotifications')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                    />
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPrefs.emailNotifications}
-                    onChange={() => handleNotificationChange('emailNotifications')}
-                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-                  <div>
-                    <label className="font-medium text-white">Discord Notifications</label>
-                    <p className="text-sm text-slate-400">Receive notifications on Discord</p>
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">Account Expiry Warnings</label>
+                      <p className="text-sm text-slate-400">Get notified before your account expires</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notificationPrefs.expiryWarnings}
+                      onChange={() => handleNotificationChange('expiryWarnings')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                    />
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPrefs.discordNotifications}
-                    onChange={() => handleNotificationChange('discordNotifications')}
-                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-                  <div>
-                    <label className="font-medium text-white">Web Notifications</label>
-                    <p className="text-sm text-slate-400">Receive notifications in the app</p>
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">Account Alerts</label>
+                      <p className="text-sm text-slate-400">Notifications about account status changes</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notificationPrefs.accountAlerts}
+                      onChange={() => handleNotificationChange('accountAlerts')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                    />
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPrefs.webNotifications}
-                    onChange={() => handleNotificationChange('webNotifications')}
-                    className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
-                  />
-                </div>
 
-                <button
-                  onClick={handleSaveNotifications}
-                  disabled={loading}
-                  className="w-full sm:w-auto mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
-                >
-                  Save Preferences
-                </button>
+                  <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <label className="font-medium text-white">System Alerts</label>
+                      <p className="text-sm text-slate-400">Important system-wide announcements</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notificationPrefs.systemAlerts}
+                      onChange={() => handleNotificationChange('systemAlerts')}
+                      className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500"
+                    />
+                  </div>
+                </div>
               </div>
+
+              <button
+                onClick={handleSaveNotifications}
+                disabled={loading}
+                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all"
+              >
+                Save Notification Preferences
+              </button>
             </div>
 
             {/* Change Password */}

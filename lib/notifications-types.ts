@@ -21,10 +21,7 @@ export enum NotificationType {
 export enum NotificationChannel {
   IN_APP = 'in_app',
   EMAIL = 'email',
-  DISCORD = 'discord',
-  SLACK = 'slack',
-  TELEGRAM = 'telegram',
-  WEBHOOK = 'webhook'
+  DISCORD = 'discord'
 }
 
 export enum NotificationPriority {
@@ -35,12 +32,15 @@ export enum NotificationPriority {
 }
 
 export interface NotificationPreferences {
+  // Channel toggles
   emailEnabled: boolean;
   discordEnabled: boolean;
-  slackEnabled: boolean;
-  telegramEnabled: boolean;
-  webhookEnabled: boolean;
+  
+  // Notification type preferences
+  welcomeNotifications: boolean;
   expiryWarnings: boolean;
+  accountAlerts: boolean;
+  systemAlerts: boolean;
 }
 
 export interface Notification {

@@ -173,14 +173,14 @@ export default function UserDetailPageClient() {
   const userId = params.id as string
 
   const [user, setUser] = useState<any>(null)
-  const [contacts, setContacts] = useState<{displayName?: string; email?: string; discordId?: string; slackId?: string; telegramId?: string; webhookUrl?: string}>({})
+  const [contacts, setContacts] = useState<{displayName?: string; email?: string; discordUsername?: string}>({})
   const [notificationSettings, setNotificationSettings] = useState({
     emailEnabled: false,
     discordEnabled: false,
-    slackEnabled: false,
-    telegramEnabled: false,
-    webhookEnabled: false,
-    expiryWarnings: true
+    welcomeNotifications: true,
+    expiryWarnings: true,
+    accountAlerts: true,
+    systemAlerts: false
   })
   const [expiryDate, setExpiryDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -581,63 +581,66 @@ export default function UserDetailPageClient() {
               />
               <label htmlFor="discordEnabled" className="ml-2 block text-sm text-slate-200">
                 💬 Enable Discord notifications
-                {!contacts.discordId && <span className="text-slate-500 ml-1">(requires Discord username)</span>}
+                {!contacts.discordUsername && <span className="text-slate-500 ml-1">(requires Discord username)</span>}
               </label>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="slackEnabled"
-                type="checkbox"
-                checked={notificationSettings.slackEnabled}
-                onChange={(e) => setNotificationSettings({...notificationSettings, slackEnabled: e.target.checked})}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
-              />
-              <label htmlFor="slackEnabled" className="ml-2 block text-sm text-slate-200">
-                💬 Enable Slack notifications
-                {!contacts.slackId && <span className="text-slate-500 ml-1">(requires Slack user ID)</span>}
-              </label>
-            </div>
+            <div className="mt-4 pt-4 border-t border-slate-700">
+              <p className="text-sm font-medium text-slate-300 mb-3">Notification Types:</p>
+              
+              <div className="space-y-2 ml-4">
+                <div className="flex items-center">
+                  <input
+                    id="welcomeNotifications"
+                    type="checkbox"
+                    checked={notificationSettings.welcomeNotifications}
+                    onChange={(e) => setNotificationSettings({...notificationSettings, welcomeNotifications: e.target.checked})}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
+                  />
+                  <label htmlFor="welcomeNotifications" className="ml-2 block text-sm text-slate-200">
+                    👋 Welcome messages
+                  </label>
+                </div>
 
-            <div className="flex items-center">
-              <input
-                id="telegramEnabled"
-                type="checkbox"
-                checked={notificationSettings.telegramEnabled}
-                onChange={(e) => setNotificationSettings({...notificationSettings, telegramEnabled: e.target.checked})}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
-              />
-              <label htmlFor="telegramEnabled" className="ml-2 block text-sm text-slate-200">
-                ✈️ Enable Telegram notifications
-                {!contacts.telegramId && <span className="text-slate-500 ml-1">(requires Telegram username)</span>}
-              </label>
-            </div>
+                <div className="flex items-center">
+                  <input
+                    id="expiryWarnings"
+                    type="checkbox"
+                    checked={notificationSettings.expiryWarnings}
+                    onChange={(e) => setNotificationSettings({...notificationSettings, expiryWarnings: e.target.checked})}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
+                  />
+                  <label htmlFor="expiryWarnings" className="ml-2 block text-sm text-slate-200">
+                    ⚠️ Account expiry warnings
+                  </label>
+                </div>
 
-            <div className="flex items-center">
-              <input
-                id="webhookEnabled"
-                type="checkbox"
-                checked={notificationSettings.webhookEnabled}
-                onChange={(e) => setNotificationSettings({...notificationSettings, webhookEnabled: e.target.checked})}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
-              />
-              <label htmlFor="webhookEnabled" className="ml-2 block text-sm text-slate-200">
-                🔗 Enable webhook notifications
-                {!contacts.webhookUrl && <span className="text-slate-500 ml-1">(requires webhook URL)</span>}
-              </label>
-            </div>
+                <div className="flex items-center">
+                  <input
+                    id="accountAlerts"
+                    type="checkbox"
+                    checked={notificationSettings.accountAlerts}
+                    onChange={(e) => setNotificationSettings({...notificationSettings, accountAlerts: e.target.checked})}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
+                  />
+                  <label htmlFor="accountAlerts" className="ml-2 block text-sm text-slate-200">
+                    🔔 Account alerts (disabled/suspended)
+                  </label>
+                </div>
 
-            <div className="flex items-center">
-              <input
-                id="expiryWarnings"
-                type="checkbox"
-                checked={notificationSettings.expiryWarnings}
-                onChange={(e) => setNotificationSettings({...notificationSettings, expiryWarnings: e.target.checked})}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
-              />
-              <label htmlFor="expiryWarnings" className="ml-2 block text-sm text-slate-200">
-                ⚠️ Send expiry warnings
-              </label>
+                <div className="flex items-center">
+                  <input
+                    id="systemAlerts"
+                    type="checkbox"
+                    checked={notificationSettings.systemAlerts}
+                    onChange={(e) => setNotificationSettings({...notificationSettings, systemAlerts: e.target.checked})}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-slate-600 rounded bg-slate-700 accent-orange-500"
+                  />
+                  <label htmlFor="systemAlerts" className="ml-2 block text-sm text-slate-200">
+                    📢 System alerts
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -653,7 +656,7 @@ export default function UserDetailPageClient() {
             <button
               type="button"
               onClick={testNotification}
-              disabled={saving || (!notificationSettings.emailEnabled && !notificationSettings.discordEnabled && !notificationSettings.slackEnabled && !notificationSettings.telegramEnabled && !notificationSettings.webhookEnabled)}
+              disabled={saving || (!notificationSettings.emailEnabled && !notificationSettings.discordEnabled)}
               className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
             >
               Test Notification
