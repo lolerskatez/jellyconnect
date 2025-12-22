@@ -62,7 +62,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         // If no localStorage session, check the session endpoint (handles cookie-based sessions from OIDC)
         if (!token || !userData) {
           try {
-            console.log('[Providers] Checking session endpoint for cookie-based session')
+            // Note: 401 is expected when no session exists - don't log fetch to avoid console noise
             const sessionRes = await fetch('/api/auth/session', {
               credentials: 'include', // Include httpOnly cookies
             })

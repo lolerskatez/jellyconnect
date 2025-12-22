@@ -91,9 +91,14 @@ export default function Home() {
   const [quickConnectCode, setQuickConnectCode] = useState('')
   const [approving, setApproving] = useState(false)
   const [approveMessage, setApproveMessage] = useState('')
+  const [appMode, setAppMode] = useState('admin')
   
-  // Determine app mode based on port: 3001 = public, 3000 = admin
-  const appMode = typeof window !== 'undefined' && window.location.port === '3001' ? 'public' : 'admin'
+  // Determine app mode based on port after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAppMode(window.location.port === '3001' ? 'public' : 'admin')
+    }
+  }, [])
 
   useEffect(() => {
     console.log('Home page state:', { admin: !!admin, isLoading, isConfigured, appMode })

@@ -7,8 +7,7 @@ import { useAuth } from "../providers"
 
 function LoginPageContent() {
   const { admin, login, isLoading, isConfigured } = useAuth()
-  // Determine app mode based on port: 3001 = public, 3000 = admin
-  const appMode = typeof window !== 'undefined' && window.location.port === '3001' ? 'public' : 'admin'
+  const [appMode, setAppMode] = useState('admin')
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -21,6 +20,13 @@ function LoginPageContent() {
   const [showOIDC, setShowOIDC] = useState(false)
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
   const [enableRegistration, setEnableRegistration] = useState(true)
+
+  // Determine app mode based on port after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAppMode(window.location.port === '3001' ? 'public' : 'admin')
+    }
+  }, [])
 
   useEffect(() => {
     // Redirect to home if already logged in

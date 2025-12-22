@@ -25,9 +25,7 @@ const isValidDiscordId = (discordId: string): boolean => {
 
 export default function RegisterPage() {
   const router = useRouter()
-  // Determine app mode based on port: 3001 = public, 3000 = admin
-  const appMode = typeof window !== 'undefined' && window.location.port === '3001' ? 'public' : 'admin'
-  console.log('[RegisterPage] Rendering with appMode:', appMode)
+  const [appMode, setAppMode] = useState('admin')
   const [step, setStep] = useState<'invite' | 'register'>('invite')
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidation, setInviteValidation] = useState<InviteValidation | null>(null)
@@ -41,6 +39,13 @@ export default function RegisterPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Determine app mode based on port after mount to avoid hydration mismatch
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAppMode(window.location.port === '3001' ? 'public' : 'admin')
+    }
+  }, [])
 
   // Check if registration is enabled on component mount
   React.useEffect(() => {

@@ -26,9 +26,17 @@ export function usePublicAuth() {
 
 export default function PublicAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+  
+  // Set mounted state to prevent hydration mismatches
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   
   // Load session on mount
   useEffect(() => {
+    if (!isMounted || typeof window === 'undefined') return
+    
     const token = localStorage.getItem('public_token')
     const userData = localStorage.getItem('public_user')
     if (token && userData) {
@@ -39,7 +47,7 @@ export default function PublicAuthProvider({ children }: { children: React.React
         localStorage.removeItem('public_user')
       }
     }
-  }, [])
+  }, [isMounted])
   
   const login = async (username: string, password: string) => {
     try {
@@ -56,8 +64,10 @@ export default function PublicAuthProvider({ children }: { children: React.React
           name: data.user.Name,
           token: data.token
         }
-        localStorage.setItem('public_token', data.token)
-        localStorage.setItem('public_user', JSON.stringify(publicUser))
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('public_token', data.token)
+          localStorage.setItem('public_user', JSON.stringify(publicUser))
+        }
         setUser(publicUser)
         return true
       }
@@ -69,8 +79,10 @@ export default function PublicAuthProvider({ children }: { children: React.React
   }
   
   const logout = () => {
-    localStorage.removeItem('public_token')
-    localStorage.removeItem('public_user')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('public_token')
+      localStorage.removeItem('public_user')
+    }
     setUser(null)
   }
 

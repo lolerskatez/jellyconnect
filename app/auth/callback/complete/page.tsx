@@ -1,12 +1,19 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 export default function CallbackCompletePage() {
   const router = useRouter()
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+
     const checkSessionAndRedirect = async () => {
       try {
         // Check if session is available
@@ -17,16 +24,18 @@ export default function CallbackCompletePage() {
           const sessionData = await sessionRes.json()
           if (sessionData.user) {
             // Session found, store in localStorage and redirect to home
-            localStorage.setItem('jellyfin_token', sessionData.user.token)
-            localStorage.setItem('user_data', JSON.stringify({
-              id: sessionData.user.id,
-              name: sessionData.user.email?.split('@')[0] || 'User',
-              email: sessionData.user.email,
-              isAdmin: true,
-              role: 'admin',
-              permissions: {},
-              token: sessionData.user.token,
-            }))
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('jellyfin_token', sessionData.user.token)
+              localStorage.setItem('user_data', JSON.stringify({
+                id: sessionData.user.id,
+                name: sessionData.user.email?.split('@')[0] || 'User',
+                email: sessionData.user.email,
+                isAdmin: true,
+                role: 'admin',
+                permissions: {},
+                token: sessionData.user.token,
+              }))
+            }
             
             // Redirect to home
             router.push('/')
@@ -45,7 +54,7 @@ export default function CallbackCompletePage() {
 
     // Start checking
     checkSessionAndRedirect()
-  }, [router])
+  }, [router, isMounted])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">

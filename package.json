@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3000",
-    "dev:admin": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3000",
-    "dev:public": "cross-env NEXT_PUBLIC_APP_MODE=public next dev -p 3001",
+    "dev": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3000 -H 0.0.0.0",
+    "dev:admin": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3000 -H 0.0.0.0",
+    "dev:public": "cross-env NEXT_PUBLIC_APP_MODE=public next dev -p 3001 -H 0.0.0.0",
     "dev:both": "echo 'Run dev:admin or dev:public separately in different terminals'",
     "build": "next build",
     "start": "next start",

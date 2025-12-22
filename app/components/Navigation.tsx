@@ -4,16 +4,22 @@ import { useAuth } from "../providers"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { NotificationBell } from "../../components/NotificationBell"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function Navigation() {
   const { admin, logout } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-  // Determine app mode based on port: 3001 = public, 3000 = admin
-  const appMode = typeof window !== 'undefined' && window.location.port === '3001' ? 'public' : 'admin'
+  const [appMode, setAppMode] = useState('admin')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Determine app mode based on port after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAppMode(window.location.port === '3001' ? 'public' : 'admin')
+    }
+  }, [])
 
   const handleLogout = () => {
     logout()
