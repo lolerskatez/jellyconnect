@@ -76,6 +76,8 @@ export default function ProfilePage() {
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
+      // Reload profile data to ensure the saved data is persisted
+      await fetchProfile()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save profile')
     } finally {

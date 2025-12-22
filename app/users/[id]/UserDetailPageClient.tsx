@@ -432,6 +432,8 @@ export default function UserDetailPageClient() {
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
+      // Reload user data to ensure the saved data is persisted
+      await fetchUser();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update contact information');
     } finally {
