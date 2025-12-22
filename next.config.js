@@ -17,7 +17,15 @@ const nextConfig = {
   // Environment variables to expose to the client
   env: {
     NEXT_PUBLIC_APP_MODE: process.env.APP_MODE || 'admin'
-  }
+  },
+
+  // Allow cross-origin dev requests from local network
+  allowedDevOrigins: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://192.168.1.125:3000',
+    'http://192.168.1.125:3001',
+  ],
 }
 
 module.exports = nextConfig

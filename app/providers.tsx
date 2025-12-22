@@ -12,6 +12,7 @@ interface AdminUser {
   role: UserRole
   permissions: any
   token: string
+  oidcProvider?: string
 }
 
 interface AuthContextType {
@@ -38,17 +39,25 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const [admin, setAdmin] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isConfigured, setIsConfigured] = useState<boolean | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Set mounted state to prevent hydration mismatches
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
-    let isMounted = true
+    if (!isMounted) return
+    
+    let isActive = true
     console.log('[Providers] useEffect running')
 
     const initializeAuth = async () => {
       console.log('[Providers] initializeAuth starting')
       try {
         // Check for existing session first - try localStorage first for backward compatibility
-        let token = localStorage.getItem('jellyfin_token')
-        let userData = localStorage.getItem('user_data')
+        let token = typeof window !== 'undefined' ? localStorage.getItem('jellyfin_token') : null
+        let userData = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null
         
         // If no localStorage session, check the session endpoint (handles cookie-based sessions from OIDC)
         if (!token || !userData) {
@@ -74,9 +83,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   role: role,
                   permissions: permissions,
                   token: sessionToken,
+                  oidcProvider: sessionData.user.oidcProvider,
                 })
                 // Store in localStorage for next visit
-                if (sessionToken) {
+                if (sessionToken && typeof window !== 'undefined') {
                   localStorage.setItem('jellyfin_token', sessionToken)
                   localStorage.setItem('user_data', sessionUserData)
                   token = sessionToken
@@ -95,13 +105,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         if (token && userData) {
           try {
             const parsedAdmin = JSON.parse(userData)
-            if (isMounted) {
+            if (isActive) {
               console.log('[Providers] Setting admin from session')
               setAdmin(parsedAdmin)
             }
           } catch (error) {
-            localStorage.removeItem('jellyfin_token')
-            localStorage.removeItem('user_data')
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('jellyfin_token')
+              localStorage.removeItem('user_data')
+            }
           }
         }
 
@@ -109,21 +121,21 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         try {
           console.log('[Providers] Fetching config status')
           const res = await fetch('/api/config/status')
-          if (isMounted) {
+          if (isActive) {
             const data = await res.json()
             console.log('[Providers] Config data:', data)
             setIsConfigured(data.isConfigured)
           }
         } catch (error) {
           console.log('[Providers] Config fetch error:', error)
-          if (isMounted) {
+          if (isActive) {
             setIsConfigured(false)
           }
         }
       } finally {
         // Always set loading to false, even if there were errors
-        console.log('[Providers] Setting isLoading to false, isMounted:', isMounted)
-        if (isMounted) {
+        console.log('[Providers] Setting isLoading to false, isActive:', isActive)
+        if (isActive) {
           setIsLoading(false)
         }
       }
@@ -135,9 +147,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     // Cleanup function
     return () => {
       console.log('[Providers] Cleanup - unmounting')
-      isMounted = false
+      isActive = false
     }
-  }, [])
+  }, [isMounted])
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -171,8 +183,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           token: data.token
         }
 
-        localStorage.setItem('jellyfin_token', data.token)
-        localStorage.setItem('user_data', JSON.stringify(adminUser))
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('jellyfin_token', data.token)
+          localStorage.setItem('user_data', JSON.stringify(adminUser))
+        }
         setAdmin(adminUser)
         return true
       } else {
@@ -197,8 +211,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     }
     
     // Clear localStorage
-    localStorage.removeItem('jellyfin_token')
-    localStorage.removeItem('user_data')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jellyfin_token')
+      localStorage.removeItem('user_data')
+    }
     setAdmin(null)
     
     // Redirect to login

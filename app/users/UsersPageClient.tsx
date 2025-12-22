@@ -77,6 +77,10 @@ export default function UsersPageClient() {
             if (contactsRes.ok) {
               const contacts = await contactsRes.json()
               Object.assign(userDetails, contacts)
+              // Map discordUsername to discordId for table display consistency
+              if (contacts.discordUsername) {
+                userDetails.discordId = contacts.discordUsername
+              }
             }
           } catch (err) {
             console.error(`Failed to fetch contacts for user ${user.Id}:`, err)
