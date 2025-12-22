@@ -91,6 +91,7 @@ async function autoCreateJellyfinUser(
       id: jellyfin_id,
       jellyfinId: jellyfin_id,
       jellyfinUsername,
+      displayName: name || jellyfinUsername,
       email,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -100,10 +101,16 @@ async function autoCreateJellyfinUser(
     }
 
     database.users.push(newUser)
+    
+    // Save database immediately so new user persists
+    const { saveDatabaseImmediate } = await import('./app/lib/db')
+    saveDatabaseImmediate()
+    
     console.log('[OIDC] User created successfully:', {
       email,
       jellyfinId: jellyfin_id,
       jellyfinUsername,
+      displayName: name || jellyfinUsername,
       role,
       groups
     })
@@ -168,6 +175,7 @@ const authOptions: NextAuthOptions = {
       if (!account || !profile) return false
 
       console.log('[OIDC] Sign in attempt:', profile.email, 'provider:', account.provider)
+      console.log('[OIDC] Full profile object:', JSON.stringify(profile, null, 2))
 
       let dbUser: typeof database.users[0] | null | undefined = database.users.find(u => u.email === profile.email)
 
@@ -193,17 +201,29 @@ const authOptions: NextAuthOptions = {
           return false
         }
       } else {
-        // Update existing user's groups if they've changed
+        // Update existing user's groups and display name if they've changed
         const newGroups = profile.groups || profile.roles || profile.oidc_groups || []
         if (newGroups && Array.isArray(newGroups)) {
           dbUser.oidcGroups = newGroups
           console.log('[OIDC] Updated groups for existing user:', profile.email, newGroups)
         }
+        
+        // Update display name if provided
+        if (profile.name && profile.name !== dbUser.displayName) {
+          dbUser.displayName = profile.name
+          console.log('[OIDC] Updated display name for existing user:', profile.email, 'to:', profile.name)
+        }
+        
+        dbUser.updatedAt = new Date().toISOString()
       }
 
       if (dbUser) {
         dbUser.oidcProvider = account.provider
         dbUser.oidcProviderId = profile.email || ''
+        
+        // Save database immediately so changes persist
+        const { saveDatabaseImmediate } = await import('./app/lib/db')
+        saveDatabaseImmediate()
       }
 
       return true

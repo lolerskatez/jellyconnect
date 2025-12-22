@@ -85,6 +85,13 @@ export class EmailService {
   isConfigured(): boolean {
     return this.transporter !== null && this.config !== null;
   }
+
+  // Reinitialize the service (useful when config changes)
+  reinitialize(): void {
+    this.transporter = null;
+    this.config = null;
+    this.initializeTransporter();
+  }
 }
 
 // Singleton instance

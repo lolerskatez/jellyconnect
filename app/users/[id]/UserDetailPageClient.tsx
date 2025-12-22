@@ -325,19 +325,61 @@ export default function UserDetailPageClient() {
 
   const testNotification = async () => {
     try {
+      if (!user || !user.Id) {
+        alert('User data not loaded. Please wait and try again.');
+        return;
+      }
+
+      // Check if user has at least one contact method configured
+      if (!contacts.email && !contacts.discordUsername) {
+        alert('User must have at least an email address or Discord username configured to test notifications.');
+        return;
+      }
+
       const response = await fetch(`/api/notifications/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
-          type: 'test',
+          userId: user.Id,
+          subject: 'Test Notification',
+          message: 'This is a test notification from JellyConnect.',
         }),
       });
 
       if (response.ok) {
-        alert('Test notification sent successfully!');
+        const data = await response.json();
+        let message = 'Test notification results:\n';
+        
+        if (contacts.email) {
+          if (data.results?.email === 'sent') {
+            message += `✓ Email: Sent successfully\n`;
+          } else if (data.results?.email === 'failed') {
+            message += `✗ Email: Failed to send\n`;
+          } else if (data.results?.email === 'not_configured') {
+            message += `✗ Email: Service not configured\n`;
+          }
+        } else {
+          message += `⊘ Email: Not configured for this user\n`;
+        }
+        
+        if (contacts.discordUsername) {
+          if (data.results?.discord === 'sent') {
+            message += `✓ Discord: Message sent\n`;
+          } else if (data.results?.discord === 'failed') {
+            message += `✗ Discord: Could not send (user not found in bot's servers or Discord bot not configured)\n`;
+          } else if (data.results?.discord === 'not_configured') {
+            message += `⊘ Discord: Not configured for this user\n`;
+          }
+        } else {
+          message += `⊘ Discord: Not configured for this user\n`;
+        }
+        
+        if (data.results?.error) {
+          message += `\nNote: ${data.results.error}`;
+        }
+        alert(message);
       } else {
         const error = await response.json();
         alert(`Failed to send test notification: ${error.error}`);
@@ -413,6 +455,18 @@ export default function UserDetailPageClient() {
         ← Back
       </button>
 
+      {error && (
+        <div className="bg-red-900 border border-red-700 text-red-200 p-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-900 border border-green-700 text-green-200 p-3 rounded-lg mb-4">
+          ✓ Changes saved successfully
+        </div>
+      )}
+
       <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
         <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">User Profile</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -480,67 +534,19 @@ export default function UserDetailPageClient() {
             />
           </div>
           <div>
-            <label htmlFor="discordId" className="block text-sm font-medium text-slate-200">
+            <label htmlFor="discordUsername" className="block text-sm font-medium text-slate-200">
               Discord Username
             </label>
             <input
-              id="discordId"
+              id="discordUsername"
               type="text"
-              value={contacts.discordId || ''}
-              onChange={(e) => setContacts({...contacts, discordId: e.target.value})}
+              value={contacts.discordUsername || ''}
+              onChange={(e) => setContacts({...contacts, discordUsername: e.target.value})}
               className="mt-1 appearance-none relative block w-full px-3 py-2 bg-slate-700 border border-slate-600 placeholder-slate-400 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
               placeholder="username#1234 or username"
             />
             <p className="mt-1 text-xs text-slate-400">
               Discord username with or without discriminator
-            </p>
-          </div>
-          <div>
-            <label htmlFor="slackId" className="block text-sm font-medium text-slate-200">
-              Slack User ID
-            </label>
-            <input
-              id="slackId"
-              type="text"
-              value={contacts.slackId || ''}
-              onChange={(e) => setContacts({...contacts, slackId: e.target.value})}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 bg-slate-700 border border-slate-600 placeholder-slate-400 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-              placeholder="U1234567890"
-            />
-            <p className="mt-1 text-xs text-slate-400">
-              Slack user ID (starts with U followed by numbers)
-            </p>
-          </div>
-          <div>
-            <label htmlFor="telegramId" className="block text-sm font-medium text-slate-200">
-              Telegram Username
-            </label>
-            <input
-              id="telegramId"
-              type="text"
-              value={contacts.telegramId || ''}
-              onChange={(e) => setContacts({...contacts, telegramId: e.target.value})}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 bg-slate-700 border border-slate-600 placeholder-slate-400 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-              placeholder="@username or username"
-            />
-            <p className="mt-1 text-xs text-slate-400">
-              Telegram username with or without @
-            </p>
-          </div>
-          <div>
-            <label htmlFor="webhookUrl" className="block text-sm font-medium text-slate-200">
-              Webhook URL
-            </label>
-            <input
-              id="webhookUrl"
-              type="url"
-              value={contacts.webhookUrl || ''}
-              onChange={(e) => setContacts({...contacts, webhookUrl: e.target.value})}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 bg-slate-700 border border-slate-600 placeholder-slate-400 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-              placeholder="https://example.com/webhook"
-            />
-            <p className="mt-1 text-xs text-slate-400">
-              HTTP/HTTPS webhook URL for custom notifications
             </p>
           </div>
           <button

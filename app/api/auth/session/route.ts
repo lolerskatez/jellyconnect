@@ -50,15 +50,48 @@ export async function GET(req: NextRequest) {
       console.error('[SESSION] Error checking Jellyfin admin status:', error)
     }
 
+    // Fetch displayName from our database
+    let displayName: string | undefined
+    let jellyfinName: string | undefined
+    try {
+      const { getUserByJellyfinId } = await import('@/app/lib/db/queries')
+      const dbUser = await getUserByJellyfinId(payload.jellyfinId)
+      displayName = dbUser?.displayName
+      console.log('[SESSION] Fetched displayName from database:', displayName, 'for jellyfinId:', payload.jellyfinId)
+    } catch (error) {
+      console.log('[SESSION] Could not fetch displayName from database:', error)
+    }
+
+    // Fetch Jellyfin username
+    try {
+      const config = getConfig()
+      if (config.jellyfinUrl && config.apiKey && payload.jellyfinId) {
+        const userResponse = await fetch(`${config.jellyfinUrl}/Users/${payload.jellyfinId}`, {
+          headers: {
+            'X-Emby-Token': config.apiKey,
+          },
+        })
+        if (userResponse.ok) {
+          const jellyfinUser = await userResponse.json()
+          jellyfinName = jellyfinUser.Name
+          console.log('[SESSION] Fetched Jellyfin username:', jellyfinName)
+        }
+      }
+    } catch (error) {
+      console.error('[SESSION] Error fetching Jellyfin username:', error)
+    }
+
     console.log('[SESSION] Returning user data:', payload.email, 'isAdmin:', isAdmin)
     return NextResponse.json({
       user: {
         id: payload.sub,
         email: payload.email,
         jellyfinId: payload.jellyfinId,
+        jellyfinName: jellyfinName,
         oidcProvider: payload.oidcProvider,
         token: token,
         isAdmin: isAdmin,
+        displayName: displayName,
       }
     })
   } catch (error) {

@@ -48,10 +48,11 @@ export async function POST(request: NextRequest) {
     let displayName: string | undefined
     try {
       const { getUserByJellyfinId } = await import('@/app/lib/db/queries')
-      const dbUser = getUserByJellyfinId(user.Id)
+      const dbUser = await getUserByJellyfinId(user.Id)
       displayName = dbUser?.displayName
+      console.log('[Login] Fetched displayName from database:', displayName, 'for user:', user.Id)
     } catch (error) {
-      console.log('Could not fetch displayName from database:', error)
+      console.log('[Login] Could not fetch displayName from database:', error)
     }
 
     return NextResponse.json({

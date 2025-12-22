@@ -25,7 +25,8 @@ export default async function testServices() {
   console.log('💬 Testing Discord Service:');
   if (discordService.isConfigured()) {
     console.log('✅ Discord service is configured');
-    const discordResult = await discordService.sendMessage(
+    const discordResult = await discordService.sendDirectMessageByUsername(
+      'test-user',
       '**JellyConnect Test**\n\nThis is a test message from JellyConnect.'
     );
     console.log(discordResult ? '✅ Discord message sent successfully' : '❌ Discord message failed to send');

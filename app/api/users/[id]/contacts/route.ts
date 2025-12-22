@@ -41,6 +41,10 @@ export async function PUT(
       createUser(id, id, email, discordUsername, displayName);
     }
 
+    // Save the database immediately to persist changes
+    const { saveDatabaseImmediate } = await import('../../../../lib/db/index');
+    saveDatabaseImmediate();
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

@@ -295,6 +295,7 @@ export async function GET(req: NextRequest) {
         id: userId,
         jellyfinId: userId,
         jellyfinUsername,
+        displayName: userinfo.name || userinfo.preferred_username || jellyfinUsername,
         email: userinfo.email,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -312,6 +313,7 @@ export async function GET(req: NextRequest) {
         email: newUser.email,
         jellyfinId: userId,
         jellyfinUsername,
+        displayName: newUser.displayName,
         role,
         groups: groupsArray
       })
@@ -428,8 +430,24 @@ export async function GET(req: NextRequest) {
       if (groupsChanged && groupsArray.length > 0) {
         user.oidcGroups = groupsArray
         console.log('[OIDC CALLBACK] Updated groups for existing user:', user.email, groupsArray)
-        
-        // Apply role update to Jellyfin if groups changed
+      } else {
+        console.log('[OIDC CALLBACK] Groups unchanged for existing user:', user.email, 'current groups:', user.oidcGroups)
+      }
+      
+      // Update display name if provided
+      const displayName = userinfo.name || userinfo.preferred_username
+      if (displayName && displayName !== user.displayName) {
+        user.displayName = displayName
+        console.log('[OIDC CALLBACK] Updated display name for existing user:', user.email, 'to:', displayName)
+      }
+      
+      // Save if anything changed
+      if (groupsChanged || (displayName && displayName !== user.displayName)) {
+        saveDatabaseImmediate()
+      }
+      
+      // Apply role update to Jellyfin if groups changed
+      if (groupsChanged) {
         try {
           const { getConfig } = await import('@/app/lib/config')
           const config = getConfig()
@@ -493,8 +511,6 @@ export async function GET(req: NextRequest) {
           console.error('[OIDC CALLBACK] Error updating user role:', error)
           // Don't fail the login if role update fails
         }
-      } else if (groupsArray.length > 0) {
-        console.log('[OIDC CALLBACK] Groups unchanged for existing user:', user.email, 'current groups:', user.oidcGroups)
       }
     }
 

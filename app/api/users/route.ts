@@ -26,7 +26,22 @@ export async function GET() {
     }
 
     const users = await usersRes.json();
-    return NextResponse.json(users);
+    
+    // Add oidcProvider from database for each user
+    try {
+      const { getUserById } = await import('@/app/lib/db/queries');
+      const usersWithOidc = users.map((user: any) => {
+        const dbUser = getUserById(user.Id);
+        if (dbUser?.oidcProvider) {
+          user.oidcProvider = dbUser.oidcProvider;
+        }
+        return user;
+      });
+      return NextResponse.json(usersWithOidc);
+    } catch (error) {
+      console.log('Could not fetch oidcProvider from database:', error);
+      return NextResponse.json(users);
+    }
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json({

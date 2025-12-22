@@ -64,6 +64,12 @@ export async function PUT(request: NextRequest) {
     // Save the updated config
     saveConfig(updatedConfig);
 
+    // Reinitialize notification services to pick up new config
+    const { emailService } = await import('../../lib/email');
+    const { discordService } = await import('../../lib/discord');
+    emailService.reinitialize();
+    discordService.reinitialize();
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to save settings:', error);

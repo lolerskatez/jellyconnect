@@ -495,11 +495,8 @@ export default function NotificationsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                       <div>
                         {user.contacts.email && <div>📧 {user.contacts.email}</div>}
-                        {user.contacts.discordId && <div>💬 {user.contacts.discordId}</div>}
-                        {user.contacts.slackId && <div>📱 {user.contacts.slackId}</div>}
-                        {user.contacts.telegramId && <div>✈️ {user.contacts.telegramId}</div>}
-                        {user.contacts.webhookUrl && <div>🔗 {user.contacts.webhookUrl}</div>}
-                        {!user.contacts.email && !user.contacts.discordId && !user.contacts.slackId && !user.contacts.telegramId && !user.contacts.webhookUrl && (
+                        {user.contacts.discordUsername && <div>💬 {user.contacts.discordUsername}</div>}
+                        {!user.contacts.email && !user.contacts.discordUsername && (
                           <span className="text-slate-500">No contacts</span>
                         )}
                       </div>
@@ -524,43 +521,7 @@ export default function NotificationsPage() {
                           ...user.notificationSettings,
                           discordEnabled: e.target.checked
                         })}
-                        disabled={!user.contacts.discordId || user.Policy?.IsDisabled}
-                        className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={user.notificationSettings.slackEnabled}
-                        onChange={(e) => updateUserNotificationSettings(user.Id, {
-                          ...user.notificationSettings,
-                          slackEnabled: e.target.checked
-                        })}
-                        disabled={!user.contacts.slackId || user.Policy?.IsDisabled}
-                        className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={user.notificationSettings.telegramEnabled}
-                        onChange={(e) => updateUserNotificationSettings(user.Id, {
-                          ...user.notificationSettings,
-                          telegramEnabled: e.target.checked
-                        })}
-                        disabled={!user.contacts.telegramId || user.Policy?.IsDisabled}
-                        className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={user.notificationSettings.webhookEnabled}
-                        onChange={(e) => updateUserNotificationSettings(user.Id, {
-                          ...user.notificationSettings,
-                          webhookEnabled: e.target.checked
-                        })}
-                        disabled={!user.contacts.webhookUrl || user.Policy?.IsDisabled}
+                        disabled={!user.contacts.discordUsername || user.Policy?.IsDisabled}
                         className="h-4 w-4 accent-orange-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                       />
                     </td>
@@ -633,17 +594,14 @@ export default function NotificationsPage() {
                 {/* Contacts */}
                 <div className="mb-3 text-xs text-slate-300 flex flex-wrap gap-1">
                   {user.contacts.email && <span className="bg-slate-700 px-2 py-1 rounded">📧 {user.contacts.email}</span>}
-                  {user.contacts.discordId && <span className="bg-slate-700 px-2 py-1 rounded">💬 Discord</span>}
-                  {user.contacts.slackId && <span className="bg-slate-700 px-2 py-1 rounded">📱 Slack</span>}
-                  {user.contacts.telegramId && <span className="bg-slate-700 px-2 py-1 rounded">✈️ Telegram</span>}
-                  {user.contacts.webhookUrl && <span className="bg-slate-700 px-2 py-1 rounded">🔗 Webhook</span>}
-                  {!user.contacts.email && !user.contacts.discordId && !user.contacts.slackId && !user.contacts.telegramId && !user.contacts.webhookUrl && (
+                  {user.contacts.discordUsername && <span className="bg-slate-700 px-2 py-1 rounded">💬 Discord: {user.contacts.discordUsername}</span>}
+                  {!user.contacts.email && !user.contacts.discordUsername && (
                     <span className="text-slate-500">No contacts configured</span>
                   )}
                 </div>
 
                 {/* Notification toggles in a grid */}
-                <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.email ? 'bg-slate-700' : 'bg-slate-800'}`}>
                     <input
                       type="checkbox"
@@ -657,7 +615,7 @@ export default function NotificationsPage() {
                     />
                     <span className="text-xs text-slate-300">Email</span>
                   </label>
-                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.discordId ? 'bg-slate-700' : 'bg-slate-800'}`}>
+                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.discordUsername ? 'bg-slate-700' : 'bg-slate-800'}`}>
                     <input
                       type="checkbox"
                       checked={user.notificationSettings.discordEnabled}
@@ -665,49 +623,10 @@ export default function NotificationsPage() {
                         ...user.notificationSettings,
                         discordEnabled: e.target.checked
                       })}
-                      disabled={!user.contacts.discordId || user.Policy?.IsDisabled}
+                      disabled={!user.contacts.discordUsername || user.Policy?.IsDisabled}
                       className="h-4 w-4 accent-orange-500 disabled:opacity-50"
                     />
                     <span className="text-xs text-slate-300">Discord</span>
-                  </label>
-                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.slackId ? 'bg-slate-700' : 'bg-slate-800'}`}>
-                    <input
-                      type="checkbox"
-                      checked={user.notificationSettings.slackEnabled}
-                      onChange={(e) => updateUserNotificationSettings(user.Id, {
-                        ...user.notificationSettings,
-                        slackEnabled: e.target.checked
-                      })}
-                      disabled={!user.contacts.slackId || user.Policy?.IsDisabled}
-                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
-                    />
-                    <span className="text-xs text-slate-300">Slack</span>
-                  </label>
-                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.telegramId ? 'bg-slate-700' : 'bg-slate-800'}`}>
-                    <input
-                      type="checkbox"
-                      checked={user.notificationSettings.telegramEnabled}
-                      onChange={(e) => updateUserNotificationSettings(user.Id, {
-                        ...user.notificationSettings,
-                        telegramEnabled: e.target.checked
-                      })}
-                      disabled={!user.contacts.telegramId || user.Policy?.IsDisabled}
-                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
-                    />
-                    <span className="text-xs text-slate-300">Telegram</span>
-                  </label>
-                  <label className={`flex items-center gap-2 p-2 rounded-lg ${user.contacts.webhookUrl ? 'bg-slate-700' : 'bg-slate-800'}`}>
-                    <input
-                      type="checkbox"
-                      checked={user.notificationSettings.webhookEnabled}
-                      onChange={(e) => updateUserNotificationSettings(user.Id, {
-                        ...user.notificationSettings,
-                        webhookEnabled: e.target.checked
-                      })}
-                      disabled={!user.contacts.webhookUrl || user.Policy?.IsDisabled}
-                      className="h-4 w-4 accent-orange-500 disabled:opacity-50"
-                    />
-                    <span className="text-xs text-slate-300">Webhook</span>
                   </label>
                   <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-700">
                     <input

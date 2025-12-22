@@ -1,7 +1,7 @@
 import { getUserContacts, getNotificationSettings } from './db/queries';
 import { emailService } from './email';
 import { discordService } from './discord';
-import { NotificationType } from './notifications-types';
+import { NotificationType } from '../../lib/notifications-types';
 
 // Notification types
 export interface NotificationData {

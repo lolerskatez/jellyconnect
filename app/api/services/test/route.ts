@@ -3,6 +3,10 @@ import { emailService } from '../../../lib/email';
 import { discordService } from '../../../lib/discord';
 
 export async function GET() {
+  // Reinitialize services to pick up latest config
+  emailService.reinitialize();
+  discordService.reinitialize();
+
   const results = {
     email: {
       configured: emailService.isConfigured(),

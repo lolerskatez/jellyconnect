@@ -64,10 +64,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 const isAdmin = sessionData.user.isAdmin === true
                 const role = isAdmin ? UserRole.ADMIN : UserRole.USER
                 const permissions = getRolePermissions(role)
-                console.log('[Providers] Session found from cookie, isAdmin:', isAdmin, 'permissions:', permissions)
+                console.log('[Providers] Session found from cookie, isAdmin:', isAdmin, 'permissions:', permissions, 'displayName:', sessionData.user.displayName, 'jellyfinName:', sessionData.user.jellyfinName)
                 const sessionUserData = JSON.stringify({
                   id: sessionData.user.id,
-                  name: sessionData.user.email?.split('@')[0] || 'User',
+                  name: sessionData.user.jellyfinName || sessionData.user.email?.split('@')[0] || 'User',
+                  displayName: sessionData.user.displayName,
                   email: sessionData.user.email,
                   isAdmin: isAdmin,
                   role: role,

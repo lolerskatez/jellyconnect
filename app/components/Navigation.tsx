@@ -264,10 +264,10 @@ export default function Navigation() {
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium">
-                    {admin.name.charAt(0).toUpperCase()}
+                    {(admin.displayName || admin.name).charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="text-sm">{admin.name}</span>
+                <span className="text-sm">{admin.displayName || admin.name}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -311,10 +311,10 @@ export default function Navigation() {
             <div className="flex items-center space-x-3 px-3 py-2 mb-2">
               <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
                 <span className="text-base font-medium">
-                  {admin.name.charAt(0).toUpperCase()}
+                  {(admin.displayName || admin.name).charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="text-base font-medium">{admin.name}</span>
+              <span className="text-base font-medium">{admin.displayName || admin.name}</span>
             </div>
 
             {/* Nav links */}

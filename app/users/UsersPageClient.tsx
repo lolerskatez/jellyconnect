@@ -16,6 +16,7 @@ interface UserPolicy {
 interface User {
   Id: string
   Name: string
+  displayName?: string
   Policy?: UserPolicy
   HasPassword: boolean
   LastLoginDate?: string
@@ -27,6 +28,7 @@ interface User {
   telegramId?: string
   webhookUrl?: string
   expiresAt?: string
+  oidcProvider?: string
 }
 
 export default function UsersPageClient() {
@@ -57,6 +59,17 @@ export default function UsersPageClient() {
       const usersWithDetails = await Promise.all(
         data.map(async (user: User) => {
           const userDetails = { ...user }
+
+          // Fetch displayName from database
+          try {
+            const displayNameRes = await fetch(`/api/users/${user.Id}`)
+            if (displayNameRes.ok) {
+              const userRecord = await displayNameRes.json()
+              userDetails.displayName = userRecord.displayName
+            }
+          } catch (err) {
+            console.error(`Failed to fetch displayName for user ${user.Id}:`, err)
+          }
 
           // Fetch contacts
           try {
@@ -287,10 +300,13 @@ export default function UsersPageClient() {
         <table className="w-full border-collapse border border-slate-700">
           <thead className="bg-slate-800">
             <tr>
+              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Display Name</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">User</th>
               <th className="border border-slate-700 p-3 text-center font-semibold text-slate-200 w-24">Password</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Role</th>
-              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Contacts</th>
+              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Email</th>
+              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Discord</th>
+              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Auth</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200 w-64">Activity</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Status</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Actions</th>
@@ -299,6 +315,9 @@ export default function UsersPageClient() {
           <tbody className="bg-slate-800">
             {filteredUsers.map((user) => (
               <tr key={user.Id} className="hover:bg-slate-700 transition-colors duration-150">
+                <td className="border border-slate-700 p-3">
+                  <div className="text-slate-300">{user.displayName || '-'}</div>
+                </td>
                 <td className="border border-slate-700 p-3">
                   <div className="font-medium text-white">{user.Name}</div>
                 </td>
@@ -319,43 +338,26 @@ export default function UsersPageClient() {
                   </span>
                 </td>
                 <td className="border border-slate-700 p-3">
-                  <div className="text-sm space-y-1">
-                    {user.email && (
-                      <div className="flex items-center text-blue-400">
-                        <span className="mr-1">📧</span>
-                        <span className="truncate max-w-32" title={user.email}>{user.email}</span>
-                      </div>
-                    )}
-                    {user.discordId && (
-                      <div className="flex items-center text-indigo-400">
-                        <span className="mr-1">💬</span>
-                        <span className="truncate max-w-32" title={user.discordId}>{user.discordId}</span>
-                      </div>
-                    )}
-                    {user.slackId && (
-                      <div className="flex items-center text-purple-400">
-                        <span className="mr-1">💬</span>
-                        <span className="truncate max-w-32" title={user.slackId}>{user.slackId}</span>
-                      </div>
-                    )}
-                    {user.telegramId && (
-                      <div className="flex items-center text-blue-300">
-                        <span className="mr-1">✈️</span>
-                        <span className="truncate max-w-32" title={user.telegramId}>{user.telegramId}</span>
-                      </div>
-                    )}
-                    {user.webhookUrl && (
-                      <div className="flex items-center text-slate-400">
-                        <span className="mr-1">🔗</span>
-                        <span className="truncate max-w-32" title={user.webhookUrl}>Webhook</span>
-                      </div>
-                    )}
-                    {!user.email && !user.discordId && !user.slackId && !user.telegramId && !user.webhookUrl && (
-                      <span className="text-slate-500 text-xs">No contacts</span>
-                    )}
+                  <div className="text-sm text-slate-300 truncate max-w-40" title={user.email}>
+                    {user.email || '-'}
                   </div>
                 </td>
                 <td className="border border-slate-700 p-3">
+                  <div className="text-sm text-slate-300 truncate max-w-40" title={user.discordId}>
+                    {user.discordId || '-'}
+                  </div>
+                </td>
+                <td className="border border-slate-700 p-3">
+                  {user.oidcProvider ? (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900 text-purple-200" title={`SSO via ${user.oidcProvider}`}>
+                      SSO
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">Local</span>
+                  )}
+                </td>
+                <td className="border border-slate-700 p-3">
+
                   <div className="text-xs space-y-1">
                     <div className="flex items-center gap-2">
                       <div>

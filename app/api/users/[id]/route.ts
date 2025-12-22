@@ -13,6 +13,18 @@ export async function GET(
     })
     if (!res.ok) throw new Error('User not found')
     const user = await res.json()
+    
+    // Add oidcProvider from database if available
+    try {
+      const { getUserById } = await import('@/app/lib/db/queries')
+      const dbUser = await getUserById(id)
+      if (dbUser?.oidcProvider) {
+        user.oidcProvider = dbUser.oidcProvider
+      }
+    } catch (error) {
+      console.log('Could not fetch oidcProvider from database:', error)
+    }
+    
     return NextResponse.json(user)
   } catch (error) {
     console.error('Failed to fetch user:', error)
