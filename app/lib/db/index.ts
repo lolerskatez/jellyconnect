@@ -146,9 +146,16 @@ function loadDatabase(): Database {
 
 function saveDatabase(db: Database): void {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+    const jsonData = JSON.stringify(db, null, 2)
+    console.log('[DATABASE] Saving database to:', DB_PATH)
+    console.log('[DATABASE] AuthSettings count:', db.authSettings.length)
+    if (db.authSettings.length > 0) {
+      console.log('[DATABASE] First authSettings entry:', JSON.stringify(db.authSettings[0], null, 2))
+    }
+    fs.writeFileSync(DB_PATH, jsonData)
+    console.log('[DATABASE] Database saved successfully')
   } catch (error) {
-    console.error('Failed to save database:', error);
+    console.error('Failed to save database:', error)
   }
 }
 

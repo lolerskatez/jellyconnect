@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
+    console.log('[AUTH SETTINGS] Saving auth settings:', JSON.stringify(body, null, 2))
+    
     // Validate that forceOIDC and oidcEnabled are compatible
     if (body.forceOIDC && !body.oidcEnabled) {
       return NextResponse.json(
@@ -25,7 +27,10 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedSettings = updateAuthSettings(body)
-    await saveDatabaseImmediate()
+    console.log('[AUTH SETTINGS] Updated settings:', JSON.stringify(updatedSettings, null, 2))
+    
+    saveDatabaseImmediate()
+    console.log('[AUTH SETTINGS] Database saved to disk')
     
     return NextResponse.json(updatedSettings)
   } catch (error) {

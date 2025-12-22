@@ -8,6 +8,7 @@ interface Config {
   oidcClientSecret?: string
   oidcIssuer?: string
   nextAuthSecret?: string
+  enableRegistration?: boolean
   smtp?: {
     host: string
     port: number
@@ -46,6 +47,7 @@ const defaultConfig: Config = {
   oidcClientSecret: process.env.OIDC_CLIENT_SECRET || '',
   oidcIssuer: process.env.OIDC_ISSUER || '',
   nextAuthSecret: process.env.NEXTAUTH_SECRET || '',
+  enableRegistration: true,
   smtp: {
     host: process.env.SMTP_HOST || '',
     port: parseInt(process.env.SMTP_PORT || '587'),
@@ -87,6 +89,7 @@ export function getConfig(): Config {
       oidcClientSecret: parsed.oidcClientSecret || '',
       oidcIssuer: parsed.oidcIssuer || '',
       nextAuthSecret: parsed.nextAuthSecret || '',
+      enableRegistration: parsed.enableRegistration ?? true,
       smtp: {
         host: parsed.smtp?.host || defaultConfig.smtp!.host,
         port: parsed.smtp?.port || defaultConfig.smtp!.port,

@@ -41,6 +41,25 @@ export function getOIDCProviderConfig() {
     return null
   }
   
+  // Always return what we have in settings - endpoints will be fetched dynamically when needed
+  return {
+    name: settings.oidcProviderName || 'Custom OIDC Provider',
+    discoveryUrl: settings.oidcDiscoveryUrl,
+    clientId: settings.oidcClientId,
+    clientSecret: settings.oidcClientSecret || '',
+    authorizationEndpoint: settings.oidcAuthorizationEndpoint,
+    tokenEndpoint: settings.oidcTokenEndpoint,
+    userinfoEndpoint: settings.oidcUserinfoEndpoint,
+  }
+}
+
+export async function getOIDCProviderConfigWithEndpoints() {
+  const settings = getAuthSettings()
+  
+  if (!settings.oidcEnabled || !settings.oidcDiscoveryUrl || !settings.oidcClientId) {
+    return null
+  }
+  
   // If endpoints are explicitly configured, use those
   if (settings.oidcAuthorizationEndpoint && settings.oidcTokenEndpoint && settings.oidcUserinfoEndpoint) {
     return {
@@ -54,19 +73,34 @@ export function getOIDCProviderConfig() {
     }
   }
   
-  // Otherwise, try to fetch from discovery document
-  // This will be handled by the provider-details endpoint
-  const baseUrl = settings.oidcDiscoveryUrl
-    .replace(/\/$/, '')
-    .replace('/.well-known/openid-configuration', '')
-  
-  return {
-    name: settings.oidcProviderName || 'Custom OIDC Provider',
-    discoveryUrl: settings.oidcDiscoveryUrl,
-    clientId: settings.oidcClientId,
-    clientSecret: settings.oidcClientSecret || '',
-    authorizationEndpoint: settings.oidcAuthorizationEndpoint || `${baseUrl}/authorize/`,
-    tokenEndpoint: settings.oidcTokenEndpoint || `${baseUrl}/token/`,
-    userinfoEndpoint: settings.oidcUserinfoEndpoint || `${baseUrl}/userinfo/`,
+  // Otherwise, fetch from discovery document
+  try {
+    console.log('[AUTH-SETTINGS] Fetching discovery document from:', settings.oidcDiscoveryUrl)
+    const discoveryResponse = await fetch(settings.oidcDiscoveryUrl)
+    
+    if (!discoveryResponse.ok) {
+      console.error('[AUTH-SETTINGS] Failed to fetch discovery document:', discoveryResponse.status)
+      throw new Error('Failed to fetch OIDC discovery document')
+    }
+    
+    const discovery = await discoveryResponse.json()
+    console.log('[AUTH-SETTINGS] Discovery endpoints:', {
+      authorization: discovery.authorization_endpoint,
+      token: discovery.token_endpoint,
+      userinfo: discovery.userinfo_endpoint,
+    })
+    
+    return {
+      name: settings.oidcProviderName || 'Custom OIDC Provider',
+      discoveryUrl: settings.oidcDiscoveryUrl,
+      clientId: settings.oidcClientId,
+      clientSecret: settings.oidcClientSecret || '',
+      authorizationEndpoint: discovery.authorization_endpoint,
+      tokenEndpoint: discovery.token_endpoint,
+      userinfoEndpoint: discovery.userinfo_endpoint,
+    }
+  } catch (error) {
+    console.error('[AUTH-SETTINGS] Error fetching discovery document:', error)
+    return null
   }
 }

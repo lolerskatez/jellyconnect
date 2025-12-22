@@ -20,6 +20,7 @@ function LoginPageContent() {
   const [enabledProviders, setEnabledProviders] = useState<string[]>([])
   const [showOIDC, setShowOIDC] = useState(false)
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
+  const [enableRegistration, setEnableRegistration] = useState(true)
 
   useEffect(() => {
     // Redirect to home if already logged in
@@ -51,6 +52,24 @@ function LoginPageContent() {
     }
     
     fetchProviders()
+  }, [])
+
+  useEffect(() => {
+    // Fetch registration setting
+    const fetchRegistrationSetting = async () => {
+      try {
+        const res = await fetch('/api/config/registration')
+        if (res.ok) {
+          const data = await res.json()
+          setEnableRegistration(data.enableRegistration ?? true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch registration setting:', error)
+        setEnableRegistration(true) // Default to enabled on error
+      }
+    }
+    
+    fetchRegistrationSetting()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -288,7 +307,7 @@ function LoginPageContent() {
           )}
         </form>
 
-        {appMode === 'public' && (
+        {appMode === 'public' && enableRegistration && (
           <div className="text-center">
             <button
               type="button"

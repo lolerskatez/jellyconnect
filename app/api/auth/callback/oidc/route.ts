@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { database, saveDatabaseImmediate } from '@/app/lib/db'
-import { getOIDCProviderConfig } from '@/app/lib/auth-settings'
+import { getOIDCProviderConfigWithEndpoints } from '@/app/lib/auth-settings'
 import { generateSecurePassword, generateSecureUsername } from '@/app/lib/secure-password'
 import { mapGroupsToRole, getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
 import { encrypt } from '@/app/lib/encryption'
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get provider configuration from database
-    const providerConfig = getOIDCProviderConfig()
+    const providerConfig = await getOIDCProviderConfigWithEndpoints()
     if (!providerConfig) {
       console.error('[OIDC CALLBACK] No OIDC provider configured')
       return NextResponse.redirect(new URL('/login?error=provider_not_configured', baseUrl))

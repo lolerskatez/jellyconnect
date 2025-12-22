@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import React from "react"
 import { useRouter } from "next/navigation"
 
 interface InviteValidation {
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<'invite' | 'register'>('invite')
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidation, setInviteValidation] = useState<InviteValidation | null>(null)
+  const [enableRegistration, setEnableRegistration] = useState(true)
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -40,10 +42,43 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Check if registration is enabled on component mount
+  React.useEffect(() => {
+    const checkRegistrationSetting = async () => {
+      try {
+        const res = await fetch('/api/config/registration')
+        if (res.ok) {
+          const data = await res.json()
+          setEnableRegistration(data.enableRegistration ?? true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch registration setting:', error)
+        // Default to enabled on error
+        setEnableRegistration(true)
+      }
+    }
+    
+    checkRegistrationSetting()
+  }, [])
+
   const validateInvite = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // If registration is disabled and there's no invite code, show error
+    if (!enableRegistration && !inviteCode.trim()) {
+      setError('Registration is currently disabled. Please use an invitation link.')
+      setLoading(false)
+      return
+    }
+
+    // If no invite code provided when registration is disabled
+    if (!enableRegistration && !inviteCode.trim()) {
+      setError('You must provide an invite code to register')
+      setLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/invites/validate', {
@@ -309,6 +344,12 @@ export default function RegisterPage() {
 
         {step === 'invite' ? (
           <form onSubmit={validateInvite} className="mt-8 space-y-6">
+            {!enableRegistration && (
+              <div className="bg-blue-900 border border-blue-700 text-blue-200 p-4 rounded-lg text-sm">
+                <p className="font-medium mb-1">Registration is Currently Disabled</p>
+                <p>You can only register using an invitation link. If you have an invite code, enter it below.</p>
+              </div>
+            )}
             <div>
               <label htmlFor="inviteCode" className="sr-only">
                 Invite Code
