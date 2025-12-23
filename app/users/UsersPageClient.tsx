@@ -311,6 +311,7 @@ export default function UsersPageClient() {
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Email</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Discord</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Auth</th>
+              <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200 w-32">Expiry</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200 w-64">Activity</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Status</th>
               <th className="border border-slate-700 p-3 text-left font-semibold text-slate-200">Actions</th>
@@ -361,6 +362,26 @@ export default function UsersPageClient() {
                   )}
                 </td>
                 <td className="border border-slate-700 p-3">
+                  {user.expiresAt ? (
+                    <div className="text-sm">
+                      <div className="text-orange-400 font-medium">
+                        {new Date(user.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {(() => {
+                          const days = Math.ceil((new Date(user.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          if (days < 0) return 'Expired'
+                          if (days === 0) return 'Today'
+                          if (days === 1) return '1 day'
+                          return `${days} days`
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-slate-500 text-sm">Never</span>
+                  )}
+                </td>
+                <td className="border border-slate-700 p-3">
 
                   <div className="text-xs space-y-1">
                     <div className="flex items-center gap-2">
@@ -384,14 +405,6 @@ export default function UsersPageClient() {
                         </span>
                       </div>
                     </div>
-                    {user.expiresAt && (
-                      <div>
-                        <span className="text-slate-400">Expires:</span>
-                        <span className="text-orange-400 font-medium ml-1">
-                          {new Date(user.expiresAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </td>
                 <td className="border border-slate-700 p-3">
