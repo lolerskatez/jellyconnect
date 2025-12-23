@@ -45,11 +45,6 @@ export default function UserSettingsPage() {
     accountAlerts: true,
     systemAlerts: true,
   })
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -100,61 +95,7 @@ export default function UserSettingsPage() {
     }
   }
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-    setLoading(true)
 
-    // Validation
-    if (!passwordForm.currentPassword) {
-      setError('Current password is required')
-      setLoading(false)
-      return
-    }
-    if (!passwordForm.newPassword) {
-      setError('New password is required')
-      setLoading(false)
-      return
-    }
-    if (passwordForm.newPassword.length < 8) {
-      setError('New password must be at least 8 characters')
-      setLoading(false)
-      return
-    }
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const res = await fetch('/api/users/' + admin.id + '/password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
-      })
-
-      if (res.ok) {
-        setSuccess('Password changed successfully')
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        })
-      } else {
-        const data = await res.json()
-        setError(data.error || 'Failed to change password')
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSaveNotifications = async () => {
     setLoading(true)
@@ -195,8 +136,8 @@ export default function UserSettingsPage() {
 
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
           <div className="px-4 sm:px-6 py-4 border-b border-slate-700">
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Account Settings</h1>
-            <p className="text-sm sm:text-base text-slate-400 mt-1">Manage your account preferences and security</p>
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Settings</h1>
+            <p className="text-sm sm:text-base text-slate-400 mt-1">Manage your account and notification preferences</p>
           </div>
 
           <div className="px-4 sm:px-6 py-6 sm:py-8">

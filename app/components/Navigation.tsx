@@ -91,7 +91,7 @@ export default function Navigation() {
                         <>
                           <hr className="my-1 border-slate-700" />
                           <Link
-                            href="/user-settings?tab=password"
+                            href="/change-password"
                             className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
                             onClick={() => setShowProfileMenu(false)}
                           >
@@ -315,6 +315,18 @@ export default function Navigation() {
                   >
                     Settings
                   </Link>
+                  {!admin.oidcProvider && (
+                    <>
+                      <hr className="my-1 border-slate-700" />
+                      <Link
+                        href="/change-password"
+                        className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        Change Password
+                      </Link>
+                    </>
+                  )}
                   <hr className="my-1 border-slate-700" />
                   <button
                     onClick={() => {
@@ -404,6 +416,15 @@ export default function Navigation() {
               >
                 Settings
               </Link>
+              {!admin.oidcProvider && (
+                <Link
+                  href="/change-password"
+                  className="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Change Password
+                </Link>
+              )}
               <button
                 onClick={() => {
                   setMobileMenuOpen(false)
