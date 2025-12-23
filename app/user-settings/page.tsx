@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "../providers"
 import Navigation from "../components/Navigation"
 import { useRouter } from "next/navigation"
@@ -49,6 +49,29 @@ export default function UserSettingsPage() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (admin) {
+      fetchProfile()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [admin])
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`/api/users/${admin?.id}/profile`)
+      if (res.ok) {
+        const data = await res.json()
+        setAccountInfo({
+          displayName: data.displayName || admin?.name || '',
+          email: data.email || '',
+          discordUsername: data.discordUsername || ''
+        })
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+    }
+  }
+
   if (!admin) {
     return null
   }
@@ -78,7 +101,8 @@ export default function UserSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           displayName: accountInfo.displayName,
-          email: accountInfo.email
+          email: accountInfo.email,
+          discordUsername: accountInfo.discordUsername
         })
       })
 
@@ -161,14 +185,23 @@ export default function UserSettingsPage() {
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
                     Email Address
+                    {admin.oidcProvider && (
+                      <span className="ml-2 text-xs text-slate-500">(Managed by SSO Provider)</span>
+                    )}
                   </label>
                   <input
                     type="email"
                     value={accountInfo.email}
                     onChange={(e) => setAccountInfo({...accountInfo, email: e.target.value})}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    disabled={!!admin.oidcProvider}
+                    className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${admin.oidcProvider ? 'opacity-60 cursor-not-allowed' : ''}`}
                     placeholder="your@email.com"
                   />
+                  {!admin.oidcProvider && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Used for notifications and account recovery
+                    </p>
+                  )}
                 </div>
 
                 <div>

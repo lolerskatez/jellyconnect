@@ -120,10 +120,10 @@ export default function NotificationsPage() {
             const notificationSettings = notificationsRes.ok ? await notificationsRes.json() : {
               emailEnabled: false,
               discordEnabled: false,
-              slackEnabled: false,
-              telegramEnabled: false,
-              webhookEnabled: false,
-              expiryWarnings: true
+              welcomeNotifications: true,
+              expiryWarnings: true,
+              accountAlerts: true,
+              systemAlerts: true
             }
 
             return {
@@ -139,10 +139,10 @@ export default function NotificationsPage() {
               notificationSettings: {
                 emailEnabled: false,
                 discordEnabled: false,
-                slackEnabled: false,
-                telegramEnabled: false,
-                webhookEnabled: false,
-                expiryWarnings: true
+                welcomeNotifications: true,
+                expiryWarnings: true,
+                accountAlerts: true,
+                systemAlerts: true
               }
             }
           }
@@ -445,15 +445,6 @@ export default function NotificationsPage() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider">
                     Discord
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider">
-                    Slack
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider">
-                    Telegram
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider">
-                    Webhook
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider">
                     Expiry Warnings
