@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         email: payload.email,
         jellyfinId: payload.jellyfinId,
         jellyfinName: jellyfinName,
-        oidcProvider: payload.oidcProvider,
+        oidcProvider: payload.oidcProvider || undefined,
         token: token,
         isAdmin: isAdmin,
         displayName: displayName,

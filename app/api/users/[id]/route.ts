@@ -20,9 +20,14 @@ export async function GET(
       const dbUser = await getUserById(id)
       if (dbUser?.oidcProvider) {
         user.oidcProvider = dbUser.oidcProvider
+      } else {
+        // Explicitly set to undefined for local users (not SSO)
+        user.oidcProvider = undefined
       }
     } catch (error) {
       console.log('Could not fetch oidcProvider from database:', error)
+      // If we can't check the database, assume local user
+      user.oidcProvider = undefined
     }
     
     return NextResponse.json(user)
