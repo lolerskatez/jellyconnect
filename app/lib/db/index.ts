@@ -12,6 +12,7 @@ interface Database {
   notificationSettings: NotificationSetting[];
   authSettings: AuthSettings[];
   scheduledTasks: ScheduledTask[];
+  passwordResetTokens: PasswordResetToken[];
 }
 
 interface User {
@@ -108,6 +109,16 @@ interface ScheduledTask {
   createdAt: string;
 }
 
+interface PasswordResetToken {
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: string;
+  used: boolean;
+  createdAt: string;
+  createdBy?: string; // Admin who created the token
+}
+
 // Initialize database
 function loadDatabase(): Database {
   try {
@@ -123,7 +134,8 @@ function loadDatabase(): Database {
         auditLog: parsed.auditLog || [],
         notificationSettings: parsed.notificationSettings || [],
         authSettings: parsed.authSettings || [],
-        scheduledTasks: parsed.scheduledTasks || []
+        scheduledTasks: parsed.scheduledTasks || [],
+        passwordResetTokens: parsed.passwordResetTokens || []
       };
       
       return db;
@@ -139,7 +151,8 @@ function loadDatabase(): Database {
     auditLog: [],
     notificationSettings: [],
     authSettings: [],
-    scheduledTasks: []
+    scheduledTasks: [],
+    passwordResetTokens: []
   };
 }
 
@@ -173,4 +186,4 @@ process.on('SIGINT', () => {
 });
 
 export { database };
-export type { Database, User, Invite, InviteUsage, AuditEntry, NotificationSetting, AuthSettings, ScheduledTask };
+export type { Database, User, Invite, InviteUsage, AuditEntry, NotificationSetting, AuthSettings, ScheduledTask, PasswordResetToken };

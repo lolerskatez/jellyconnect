@@ -390,6 +390,43 @@ export default function UserDetailPageClient() {
     }
   };
 
+  const generatePasswordResetLink = async () => {
+    if (!user) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const res = await fetch(`/api/users/${userId}/password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          createdBy: admin?.id,
+          expiresInHours: 24
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to generate reset link');
+      }
+
+      const data = await res.json();
+
+      // Copy reset URL to clipboard
+      navigator.clipboard.writeText(data.resetUrl).then(() => {
+        alert(`Password reset link generated and copied to clipboard!\n\nURL: ${data.resetUrl}\n\nThis link will expire in ${data.expiresInHours} hours.`);
+      }).catch(() => {
+        alert(`Password reset link generated!\n\nURL: ${data.resetUrl}\n\nThis link will expire in ${data.expiresInHours} hours.\n\n(Couldn't copy to clipboard automatically)`);
+      });
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate password reset link');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateExpiry = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -699,6 +736,47 @@ export default function UserDetailPageClient() {
             {saving ? 'Saving...' : 'Update Expiry Date'}
           </button>
         </form>
+      </div>
+
+      <div className="bg-slate-800 border border-slate-700 p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Password Reset</h2>
+        <p className="text-slate-400 mb-4">
+          Generate a secure password reset link for this user. The link will be valid for 24 hours and can only be used once.
+        </p>
+
+        {user?.oidcProvider && (
+          <div className="bg-yellow-900 border border-yellow-700 rounded p-3 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-200">
+                  SSO User Detected
+                </h3>
+                <div className="mt-2 text-sm text-yellow-300">
+                  <p>This user authenticates via {user.oidcProvider}. Password reset links are only available for local Jellyfin users.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={generatePasswordResetLink}
+          disabled={saving || !user?.HasPassword || !!user?.oidcProvider}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:bg-slate-600"
+        >
+          {saving ? 'Generating...' : '🔗 Generate Password Reset Link'}
+        </button>
+
+        {!user?.HasPassword && !user?.oidcProvider && (
+          <p className="text-xs text-slate-400 mt-2">
+            This user doesn&apos;t have a password set in Jellyfin.
+          </p>
+        )}
       </div>
 
       {error && (

@@ -268,3 +268,55 @@ export function generateId(): string {
 export function generateInviteCode(): string {
   return randomBytes(6).toString('hex').toUpperCase();
 }
+
+// Password reset token operations
+export function createPasswordResetToken(userId: string, createdBy?: string, expiresInHours: number = 24): string {
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + (expiresInHours * 60 * 60 * 1000)).toISOString();
+
+  const resetToken = {
+    id: generateId(),
+    userId,
+    token,
+    expiresAt,
+    used: false,
+    createdAt: new Date().toISOString(),
+    createdBy
+  };
+
+  database.passwordResetTokens.push(resetToken);
+  saveDatabaseImmediate();
+  return token;
+}
+
+export function getPasswordResetToken(token: string) {
+  const resetToken = database.passwordResetTokens.find(t => t.token === token && !t.used);
+  if (!resetToken) return null;
+
+  // Check if token is expired
+  const now = new Date();
+  const expiresAt = new Date(resetToken.expiresAt);
+  if (now > expiresAt) return null;
+
+  return resetToken;
+}
+
+export function markPasswordResetTokenUsed(token: string): boolean {
+  const resetToken = database.passwordResetTokens.find(t => t.token === token);
+  if (resetToken && !resetToken.used) {
+    resetToken.used = true;
+    saveDatabaseImmediate();
+    return true;
+  }
+  return false;
+}
+
+export function cleanupExpiredPasswordResetTokens(): number {
+  const now = new Date();
+  const initialCount = database.passwordResetTokens.length;
+  database.passwordResetTokens = database.passwordResetTokens.filter(token => {
+    const expiresAt = new Date(token.expiresAt);
+    return expiresAt > now;
+  });
+  return initialCount - database.passwordResetTokens.length;
+}
