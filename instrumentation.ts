@@ -57,7 +57,8 @@ export async function register() {
   console.log('Initializing JellyConnect server...');
   validateEnvironmentVariables();
 
+  // Temporarily disabled account expiry monitoring for testing
   // The AccountExpiryManager constructor automatically starts the monitoring
   // We just need to import it to ensure it's initialized
-  console.log('Account expiry monitoring initialized');
+  // console.log('Account expiry monitoring initialized');
 }

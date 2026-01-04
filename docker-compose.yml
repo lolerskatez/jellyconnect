@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  jellyconnect-admin:
+    build: .
+    environment:
+      - NEXT_PUBLIC_APP_MODE=admin
+      - APP_MODE=admin
+      - PORT=3000
+      - ADMIN_PORT=3000
+      - NEXTAUTH_URL=https://admin.yourdomain.com
+      - NEXT_PUBLIC_NEXTAUTH_URL=https://admin.yourdomain.com
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  jellyconnect-public:
+    build: .
+    environment:
+      - NEXT_PUBLIC_APP_MODE=public
+      - APP_MODE=public
+      - PORT=3001
+      - PUBLIC_PORT=3001
+      - NEXTAUTH_URL=https://public.yourdomain.com
+      - NEXT_PUBLIC_NEXTAUTH_URL=https://public.yourdomain.com
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

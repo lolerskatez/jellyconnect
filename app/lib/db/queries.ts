@@ -1,4 +1,4 @@
-import { database } from './index';
+import { database, saveDatabaseImmediate } from './index';
 import { randomBytes } from 'crypto';
 
 // User operations

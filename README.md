@@ -63,6 +63,38 @@ npm test
 
 5. Save the configuration. The app will now be ready to use.
 
+## Deployment
+
+For production deployment, see the **[Deployment Guide](DEPLOYMENT.md)** for detailed instructions.
+
+### Quick Docker Deployment
+
+1. Ensure you have Docker and Docker Compose installed.
+
+2. Clone the repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/yourusername/jellyconnect.git
+cd jellyconnect
+```
+
+3. Configure your environment variables by copying and editing the example file:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your Jellyfin server details, OIDC provider settings, etc.
+```
+
+4. Update `docker-compose.yml` with your domain names (replace `yourdomain.com` with your actual domain).
+
+5. Build and run the containers:
+
+```bash
+docker-compose up -d
+```
+
+6. Access the admin interface at `http://localhost:3000` (or your configured domain) and complete the setup.
+
 ## Documentation
 
 - **[Deployment Guide](DEPLOYMENT.md)** - Production deployment with Docker, systemd, or PM2; reverse proxy setup; SSL/TLS configuration
