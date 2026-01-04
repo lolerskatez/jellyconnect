@@ -82,10 +82,10 @@ cd jellyconnect
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local with your Jellyfin server details, OIDC provider settings, etc.
+# Edit .env.local with your Jellyfin server URL, NextAuth secret, and other settings
 ```
 
-4. Update `docker-compose.yml` with your domain names (replace `yourdomain.com` with your actual domain).
+4. Update `docker-compose.yml` with your actual domain names, Jellyfin server URL, and generate a secure NextAuth secret.
 
 5. Build and run the containers:
 
@@ -93,7 +93,7 @@ cp .env.example .env.local
 docker-compose up -d
 ```
 
-6. Access the admin interface at `http://localhost:3000` (or your configured domain) and complete the setup.
+6. Access the admin interface at `http://localhost:3010` (or your configured domain) and complete the setup.
 
 ## Documentation
 

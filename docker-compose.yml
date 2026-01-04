@@ -6,12 +6,14 @@ services:
     environment:
       - NEXT_PUBLIC_APP_MODE=admin
       - APP_MODE=admin
-      - PORT=3000
-      - ADMIN_PORT=3000
+      - PORT=3010
+      - ADMIN_PORT=3010
       - NEXTAUTH_URL=https://admin.yourdomain.com
       - NEXT_PUBLIC_NEXTAUTH_URL=https://admin.yourdomain.com
+      - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
+      - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
-      - "3000:3000"
+      - "3010:3010"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -21,12 +23,14 @@ services:
     environment:
       - NEXT_PUBLIC_APP_MODE=public
       - APP_MODE=public
-      - PORT=3001
-      - PUBLIC_PORT=3001
+      - PORT=3020
+      - PUBLIC_PORT=3020
       - NEXTAUTH_URL=https://public.yourdomain.com
       - NEXT_PUBLIC_NEXTAUTH_URL=https://public.yourdomain.com
+      - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
+      - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
-      - "3001:3001"
+      - "3020:3020"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
