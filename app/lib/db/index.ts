@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const DB_PATH = path.join(process.cwd(), 'jellyconnect-data.json');
+const DB_PATH = path.join(process.cwd(), 'data', 'jellyconnect-data.json');
 
 // Database structure
 interface Database {
@@ -158,6 +158,10 @@ function loadDatabase(): Database {
 
 function saveDatabase(db: Database): void {
   try {
+    const dir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     const jsonData = JSON.stringify(db, null, 2)
     fs.writeFileSync(DB_PATH, jsonData)
   } catch (error) {

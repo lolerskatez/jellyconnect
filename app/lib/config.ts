@@ -22,7 +22,7 @@ interface Config {
   }
 }
 
-const configPath = path.join(process.cwd(), 'config.json')
+const configPath = path.join(process.cwd(), 'data', 'config.json')
 
 const defaultConfig: Config = {
   jellyfinUrl: process.env.JELLYFIN_SERVER_URL || '',
@@ -78,5 +78,9 @@ export function getConfig(): Config {
 export function saveConfig(config: Partial<Config>): void {
   const current = getConfig()
   const updated = { ...current, ...config }
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
   fs.writeFileSync(configPath, JSON.stringify(updated, null, 2))
 }
