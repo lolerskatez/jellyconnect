@@ -74,7 +74,7 @@ For production deployment, see the **[Deployment Guide](DEPLOYMENT.md)** for det
 2. Clone the repository and navigate to the project directory:
 
 ```bash
-git clone https://github.com/yourusername/jellyconnect.git
+git clone https://github.com/lolerskatez/jellyconnect.git
 cd jellyconnect
 ```
 
