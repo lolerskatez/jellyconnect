@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useAuth } from "../providers"
-import Navigation from "../components/Navigation"
+import { useAuth } from "../../providers"
+import Navigation from "../../components/Navigation"
 
 interface Notification {
   id: string

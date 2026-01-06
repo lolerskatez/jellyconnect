@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useAuth } from "../providers"
-import Navigation from "../components/Navigation"
-import AuthSettingsComponent from "../../components/AuthSettingsComponent"
+import { useAuth } from "../../providers"
+import Navigation from "../../components/Navigation"
+import AuthSettingsComponent from "../../../components/AuthSettingsComponent"
 
 interface Settings {
   jellyfinUrl: string

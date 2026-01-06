@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "../providers"
-import Navigation from "../components/Navigation"
+import { useAuth } from "../../providers"
+import Navigation from "../../components/Navigation"
 
 interface Invite {
   id: string

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-const UsersPage = dynamic(() => import('../UsersPageClient'), {
+const UsersPage = dynamic(() => import('../../users/UsersPageClient'), {
   ssr: false,
   loading: () => <div>Loading...</div>
 })
