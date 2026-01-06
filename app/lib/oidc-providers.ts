@@ -38,6 +38,10 @@ export function createCustomOIDCProvider(config: {
         scope: 'openid profile email',
       },
     },
+    token: {
+      clientSecret: config.clientSecret,
+      params: {},
+    },
     profile(profile: any) {
       console.log('[OIDC] Profile received:', profile)
       return {

@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 
-const CONFIG_PATH = join(process.cwd(), 'config.json');
+const CONFIG_PATH = join(process.cwd(), 'data', 'config.json');
 
 interface Config {
   jellyfinUrl: string;
