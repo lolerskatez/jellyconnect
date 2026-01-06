@@ -5,6 +5,7 @@ import { ChevronRight, InfoIcon } from "lucide-react"
 
 interface AuthSettings {
   id: string
+  appUrl?: string
   passwordAuthEnabled: boolean
   oidcEnabled: boolean
   forceOIDC: boolean
@@ -168,6 +169,33 @@ export default function AuthSettingsComponent() {
             </label>
           </div>
 
+          {/* Application URL Configuration */}
+          <div className="pt-6 border-t border-slate-700 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Application URL</label>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="https://jc.tanjiro.one"
+                  value={settings.appUrl || ''}
+                  onChange={(e) => handleChange('appUrl', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm"
+                />
+                <p className="text-xs text-slate-400">The public URL where JellyConnect is accessible (e.g., https://jc.tanjiro.one)</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const detected = window.location.origin
+                    handleChange('appUrl', detected)
+                  }}
+                  className="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-slate-300 transition-colors"
+                >
+                  Auto-detect from current URL ({window.location.origin})
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* OIDC Configuration - Only show if OIDC enabled */}
           {settings.oidcEnabled && (
             <div className="space-y-4 pt-2">
@@ -228,13 +256,13 @@ export default function AuthSettingsComponent() {
                   <input
                     type="text"
                     readOnly
-                    value={`${appUrl}/api/auth/callback/oidc`}
+                    value={`${settings.appUrl || appUrl}/api/auth/callback/oidc`}
                     className="flex-1 px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent cursor-text"
                     aria-label="OIDC redirect URI for your provider configuration"
                   />
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(`${appUrl}/api/auth/callback/oidc`)}
+                    onClick={() => copyToClipboard(`${settings.appUrl || appUrl}/api/auth/callback/oidc`)}
                     className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-sm transition-colors whitespace-nowrap"
                   >
                     Copy

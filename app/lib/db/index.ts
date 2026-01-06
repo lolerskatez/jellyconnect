@@ -82,6 +82,8 @@ interface NotificationSetting {
 
 interface AuthSettings {
   id: string;
+  // Application URL for OIDC redirect URI
+  appUrl?: string; // e.g., "https://jc.tanjiro.one" - auto-detected from requests if not set
   // Password auth
   passwordAuthEnabled: boolean;
   // Generic OIDC settings

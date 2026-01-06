@@ -7,14 +7,26 @@ import { encrypt } from '@/app/lib/encryption'
 
 // Get the base URL for redirects - derive from request to support both admin and public servers
 function getBaseUrl(req: NextRequest): string {
-  // Priority 1: Use environment variable (most reliable for production)
+  // Priority 1: Check if appUrl is configured in settings
+  try {
+    const { getAuthSettings } = require('@/app/lib/auth-settings')
+    const settings = getAuthSettings()
+    if (settings.appUrl) {
+      console.log('[OIDC CALLBACK] Using appUrl from settings:', settings.appUrl)
+      return settings.appUrl
+    }
+  } catch (e) {
+    console.log('[OIDC CALLBACK] Could not load appUrl from settings:', e instanceof Error ? e.message : 'Unknown error')
+  }
+  
+  // Priority 2: Use environment variable (most reliable for production)
   const envUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL
   if (envUrl) {
     console.log('[OIDC CALLBACK] Using NEXTAUTH_URL from environment:', envUrl)
     return envUrl
   }
   
-  // Priority 2: Get from request headers (handles proxied requests with proper headers)
+  // Priority 3: Get from request headers (handles proxied requests with proper headers)
   const forwardedHost = req.headers.get('x-forwarded-host')
   const forwardedProto = req.headers.get('x-forwarded-proto')
   
@@ -23,7 +35,7 @@ function getBaseUrl(req: NextRequest): string {
     return `${forwardedProto}://${forwardedHost}`
   }
   
-  // Priority 3: Get from host header with assumed https for non-localhost
+  // Priority 4: Get from host header with assumed https for non-localhost
   const host = req.headers.get('host')
   if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
     const url = `https://${host}`
