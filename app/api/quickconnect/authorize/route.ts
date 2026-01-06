@@ -109,7 +109,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
     }
 
-    const errorText = await authorizeRes.text()
+    let errorText = ''
+    try {
+      errorText = await authorizeRes.text()
+    } catch (e) {
+      errorText = 'Could not read error response'
+    }
     console.log('[Quick Connect Authorize] userId param approach failed:', authorizeRes.status, errorText)
 
     // FALLBACK 2: Try with X-Emby-Authorization header
@@ -128,7 +133,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
     }
 
-    const error2 = await authorizeRes.text()
+    let error2 = ''
+    try {
+      error2 = await authorizeRes.text()
+    } catch (e) {
+      error2 = 'Could not read error response'
+    }
     console.log('[Quick Connect Authorize] X-Emby-Authorization approach failed:', authorizeRes.status, error2)
 
     // FALLBACK 3: Basic admin authorization (will likely associate with admin user)
@@ -150,17 +160,26 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const fallbackError = await authorizeRes.text()
-    console.error('[Quick Connect Authorize] All authorization attempts failed:', fallbackError)
+    let fallbackError = ''
+    try {
+      fallbackError = await authorizeRes.text()
+    } catch (e) {
+      fallbackError = 'Could not read error response'
+    }
+    console.error('[Quick Connect Authorize] All authorization attempts failed:', authorizeRes.status, fallbackError)
     
     return NextResponse.json({ 
       error: 'Failed to authorize Quick Connect session',
       details: 'The QuickConnect code could not be authorized. Please try again or use another login method.',
-      code: authorizeRes.status
+      jellyfinStatus: authorizeRes.status,
+      jellyfinError: fallbackError.substring(0, 200)
     }, { status: 500 })
 
   } catch (error) {
-    console.error('Authorize Quick Connect error:', error)
-    return NextResponse.json({ error: 'Failed to authorize Quick Connect' }, { status: 500 })
+    console.error('[Quick Connect Authorize] Endpoint error:', error instanceof Error ? error.message : String(error))
+    return NextResponse.json({ 
+      error: 'Failed to authorize Quick Connect',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
