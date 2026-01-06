@@ -9,17 +9,26 @@ import { encrypt } from '@/app/lib/encryption'
 function getBaseUrl(req: NextRequest): string {
   // Try to get from request headers (handles proxied requests)
   const forwardedHost = req.headers.get('x-forwarded-host')
-  const forwardedProto = req.headers.get('x-forwarded-proto') || 'http'
+  const forwardedProto = req.headers.get('x-forwarded-proto')
   const host = req.headers.get('host')
   
-  if (forwardedHost) {
+  // Only use forwarded headers if BOTH proto and host are present
+  if (forwardedProto && forwardedHost) {
     return `${forwardedProto}://${forwardedHost}`
   }
-  if (host) {
-    return `${forwardedProto}://${host}`
+  
+  // Fallback to environment variable (most reliable for production)
+  const envUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL
+  if (envUrl) {
+    return envUrl
   }
-  // Fallback to environment variable
-  return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL || 'http://localhost:3000'
+  
+  // Last resort: construct from host header with assumed https for safety
+  if (host) {
+    return `https://${host}`
+  }
+  
+  return 'http://localhost:3000'
 }
 
 /**
@@ -81,17 +90,19 @@ export async function GET(req: NextRequest) {
     const tokenEndpoint = providerConfig.tokenEndpoint
     console.log('[OIDC CALLBACK] Token endpoint being used:', tokenEndpoint)
     
+    // Use Basic Authentication for client credentials (more reliable with Authentik)
+    const basicAuth = Buffer.from(`${providerConfig.clientId}:${providerConfig.clientSecret}`).toString('base64')
+    
     const tokenResponse = await fetch(tokenEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
+        'Authorization': `Basic ${basicAuth}`,
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        client_id: providerConfig.clientId,
-        client_secret: providerConfig.clientSecret,
         redirect_uri: redirectUri,
       }).toString(),
     })
