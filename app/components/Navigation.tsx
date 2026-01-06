@@ -21,8 +21,8 @@ export default function Navigation() {
     router.push('/login')
   }
 
-  // In public mode, show minimal navigation
-  if (appMode === 'public') {
+  // Show standard navigation for logged-out users
+  if (!admin) {
     return (
       <nav className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-white p-4 shadow-lg">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -48,165 +48,55 @@ export default function Navigation() {
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-4">
-            {admin ? (
-              <>
-                <NotificationBell />
-                <div className="relative">
-                  <button
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors duration-200"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {(admin.displayName || admin.name).charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm">{admin.displayName || admin.name}</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {showProfileMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1 z-10">
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        href="/user-settings"
-                        className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        Settings
-                      </Link>
-                      {!admin.oidcProvider && (
-                        <>
-                          <hr className="my-1 border-slate-700" />
-                          <Link
-                            href="/change-password"
-                            className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
-                            onClick={() => setShowProfileMenu(false)}
-                          >
-                            Change Password
-                          </Link>
-                        </>
-                      )}
-                      <hr className="my-1 border-slate-700" />
-                      <button
-                        onClick={() => {
-                          setShowProfileMenu(false)
-                          handleLogout()
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-orange-400 hover:bg-slate-700 transition-colors"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className={`px-3 py-2 rounded-lg transition-colors ${
-                    pathname === '/login' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className={`px-3 py-2 rounded-lg transition-colors ${
-                    pathname === '/register' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                  }`}
-                >
-                  Register
-                </Link>
-              </>
-            )}
+            <Link
+              href="/login"
+              className={`px-3 py-2 rounded-lg transition-colors ${
+                pathname === '/login' ? 'bg-orange-600' : 'hover:bg-slate-700'
+              }`}
+            >
+              Login
+            </Link>
+            <Link
+              href="/register"
+              className={`px-3 py-2 rounded-lg transition-colors ${
+                pathname === '/register' ? 'bg-orange-600' : 'hover:bg-slate-700'
+              }`}
+            >
+              Register
+            </Link>
           </div>
         </div>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 border-t border-slate-700 pt-4">
-            {admin ? (
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3 px-3 py-2">
-                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                    <span className="text-base font-medium">
-                      {(admin.displayName || admin.name).charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  <span className="text-base font-medium">{admin.displayName || admin.name}</span>
-                </div>
-                <Link
-                  href="/profile"
-                  className="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Profile
-                </Link>
-                <Link
-                  href="/user-settings"
-                  className="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Settings
-                </Link>
-                {!admin.oidcProvider && (
-                  <Link
-                    href="/user-settings?tab=password"
-                    className="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Change Password
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    handleLogout()
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-lg text-orange-400 hover:bg-slate-700 transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Link
-                  href="/login"
-                  className={`block px-3 py-2 rounded-lg transition-colors ${
-                    pathname === '/login' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className={`block px-3 py-2 rounded-lg transition-colors ${
-                    pathname === '/register' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Register
-                </Link>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Link
+                href="/login"
+                className={`block px-3 py-2 rounded-lg transition-colors ${
+                  pathname === '/login' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className={`block px-3 py-2 rounded-lg transition-colors ${
+                  pathname === '/register' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Register
+              </Link>
+            </div>
           </div>
         )}
       </nav>
     )
   }
 
-  // Admin mode navigation
-  if (!admin) return null
+  // Show admin navigation for logged-in users (both admins and standard users see different features based on role)
   const { permissions } = admin
   return (
     <nav className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-white p-4 shadow-lg">

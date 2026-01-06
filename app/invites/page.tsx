@@ -55,22 +55,12 @@ export default function InvitesPage() {
       router.push('/login')
       return
     }
-
-    // Check if in public mode, redirect to home
-    const appMode = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_APP_MODE : 'admin'
-    if (appMode === 'public') {
-      router.push('/')
-      return
-    }
   }, [admin, isLoading, router])
 
   useEffect(() => {
-    // Only fetch if we're authenticated and in admin mode
+    // Only fetch if we're authenticated
     if (!isLoading && admin) {
-      const appMode = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_APP_MODE : 'admin'
-      if (appMode === 'admin') {
-        fetchInvites()
-      }
+      fetchInvites()
     }
   }, [isLoading, admin])
 

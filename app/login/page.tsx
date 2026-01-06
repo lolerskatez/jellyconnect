@@ -80,7 +80,7 @@ function LoginPageContent() {
     if (success) {
       router.push('/')
     } else {
-      setError(appMode === 'public' ? "Invalid username or password" : "Invalid username or password, or insufficient permissions")
+      setError("Invalid username or password")
     }
     
     setIsLoggingIn(false)
@@ -150,7 +150,7 @@ function LoginPageContent() {
     )
   }
 
-  if (appMode === 'admin' && isConfigured === false) {
+  if (isConfigured === false) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">JellyConnect</h1>
@@ -170,10 +170,10 @@ function LoginPageContent() {
       <div className="max-w-md w-full space-y-8 p-8 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-            {appMode === 'public' ? 'Sign in to JellyConnect' : 'Admin Sign In'}
+            Sign in to JellyConnect
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
-            {appMode === 'public' ? 'Access your personal media library' : 'Administrator access required'}
+            Administrator access required
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -305,7 +305,7 @@ function LoginPageContent() {
           )}
         </form>
 
-        {appMode === 'public' && enableRegistration && (
+        {enableRegistration && (
           <div className="text-center">
             <button
               type="button"
