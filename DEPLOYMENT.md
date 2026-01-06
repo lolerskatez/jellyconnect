@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying JellyConnect in production with SSO authentication, separate admin and public systems, and proper security configuration.
+This guide covers deploying JellyConnect in production with SSO authentication and proper security configuration.
 
 ## Prerequisites
 
@@ -12,18 +12,13 @@ This guide covers deploying JellyConnect in production with SSO authentication, 
 
 ## Architecture
 
-JellyConnect supports two deployment models:
+JellyConnect uses a single-service architecture where both admin and user functions are available in one application:
 
-### Single Server (Recommended for small deployments)
-- One Next.js instance handles both admin and public routes
-- Lower resource usage
-- Simpler deployment
-
-### Separate Systems (Recommended for larger deployments)
-- Admin system (port 3000) - Admins only
-- Public system (port 3001) - User registration/login
-- Better security isolation
-- Easier horizontal scaling
+- **Single Next.js instance** handles all routes
+- **Admin functions** available at `/admin/*` routes (role-based access)
+- **User functions** available at root routes
+- **Lower resource usage** and simpler deployment
+- **Role-based security** instead of port-based separation
 
 ## Pre-Deployment Configuration
 
@@ -52,24 +47,13 @@ Configure your OIDC provider (e.g., Authentik):
 
 ### 3. Domain Configuration
 
-Decide on your domain structure:
+Configure your domain for the single service:
 
-**Option A: Subdomain Routing** (Recommended)
 ```
-admin.yourdomain.com → Admin system (port 3000)
-public.yourdomain.com → Public system (port 3001)
+yourdomain.com → JellyConnect application (port 3000)
 ```
 
-**Option B: Path Routing**
-```
-yourdomain.com/admin → Admin system (port 3000)
-yourdomain.com/public → Public system (port 3001)
-```
-
-**Option C: Single System**
-```
-yourdomain.com → Combined system (both admin and public)
-```
+Admin functions are available at `yourdomain.com/admin/*` routes with role-based access control.
 
 ## Installation
 
@@ -151,7 +135,7 @@ COPY . .
 RUN npm run build
 
 ENV NODE_ENV=production
-EXPOSE 3000 3001
+EXPOSE 3000
 
 CMD ["npm", "start"]
 ```
@@ -162,30 +146,15 @@ Create `docker-compose.yml`:
 version: '3.8'
 
 services:
-  jellyconnect-admin:
+  jellyconnect:
     build: .
     environment:
-      - NEXT_PUBLIC_APP_MODE=admin
-      - APP_MODE=admin
-      - ADMIN_PORT=3000
-      - NEXTAUTH_URL=https://admin.yourdomain.com
-      - NEXT_PUBLIC_NEXTAUTH_URL=https://admin.yourdomain.com
+      - PORT=3000
+      - NEXTAUTH_URL=https://yourdomain.com
+      - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
+      - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/app/data
-    restart: unless-stopped
-
-  jellyconnect-public:
-    build: .
-    environment:
-      - NEXT_PUBLIC_APP_MODE=public
-      - APP_MODE=public
-      - PUBLIC_PORT=3001
-      - NEXTAUTH_URL=https://public.yourdomain.com
-      - NEXT_PUBLIC_NEXTAUTH_URL=https://public.yourdomain.com
-    ports:
-      - "3001:3001"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -198,11 +167,11 @@ docker-compose up -d
 
 ### Option 2: Systemd Service (Linux)
 
-Create `/etc/systemd/system/jellyconnect-admin.service`:
+Create `/etc/systemd/system/jellyconnect.service`:
 
 ```ini
 [Unit]
-Description=JellyConnect Admin System
+Description=JellyConnect Application
 After=network.target
 
 [Service]
@@ -210,9 +179,7 @@ Type=simple
 User=jellyconnect
 WorkingDirectory=/opt/jellyconnect
 Environment="NODE_ENV=production"
-Environment="NEXT_PUBLIC_APP_MODE=admin"
-Environment="APP_MODE=admin"
-Environment="ADMIN_PORT=3000"
+Environment="PORT=3000"
 ExecStart=/usr/local/bin/npm start
 Restart=on-failure
 RestartSec=10
@@ -223,8 +190,8 @@ WantedBy=multi-user.target
 
 Enable and start:
 ```bash
-sudo systemctl enable jellyconnect-admin
-sudo systemctl start jellyconnect-admin
+sudo systemctl enable jellyconnect
+sudo systemctl start jellyconnect
 ```
 
 ### Option 3: PM2 (Node.js Process Manager)
@@ -240,27 +207,12 @@ Create `ecosystem.config.js`:
 module.exports = {
   apps: [
     {
-      name: 'jellyconnect-admin',
+      name: 'jellyconnect',
       script: 'npm',
       args: 'start',
       env: {
         NODE_ENV: 'production',
-        NEXT_PUBLIC_APP_MODE: 'admin',
-        APP_MODE: 'admin',
-        ADMIN_PORT: 3000,
-      },
-      instances: 2,
-      exec_mode: 'cluster',
-    },
-    {
-      name: 'jellyconnect-public',
-      script: 'npm',
-      args: 'start',
-      env: {
-        NODE_ENV: 'production',
-        NEXT_PUBLIC_APP_MODE: 'public',
-        APP_MODE: 'public',
-        PUBLIC_PORT: 3001,
+        PORT: 3000,
       },
       instances: 2,
       exec_mode: 'cluster',
@@ -281,9 +233,8 @@ pm2 startup
 ### Nginx (Recommended)
 
 ```nginx
-# Admin System
 server {
-    server_name admin.yourdomain.com;
+    server_name yourdomain.com;
     listen 80;
     listen [::]:80;
     
@@ -292,45 +243,15 @@ server {
 }
 
 server {
-    server_name admin.yourdomain.com;
+    server_name yourdomain.com;
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
 
-    ssl_certificate /etc/letsencrypt/live/admin.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/admin.yourdomain.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
 
     location / {
         proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-
-# Public System
-server {
-    server_name public.yourdomain.com;
-    listen 80;
-    listen [::]:80;
-    
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    server_name public.yourdomain.com;
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-
-    ssl_certificate /etc/letsencrypt/live/public.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/public.yourdomain.com/privkey.pem;
-
-    location / {
-        proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -347,22 +268,23 @@ server {
 
 ```apache
 <VirtualHost *:80>
-    ServerName admin.yourdomain.com
-    Redirect permanent / https://admin.yourdomain.com/
+    ServerName yourdomain.com
+    Redirect permanent / https://yourdomain.com/
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName admin.yourdomain.com
+    ServerName yourdomain.com
     
     SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/admin.yourdomain.com/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/admin.yourdomain.com/privkey.pem
+    SSLCertificateFile /etc/letsencrypt/live/yourdomain.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/yourdomain.com/privkey.pem
     
-    ProxyPreserveHost On
     ProxyPass / http://localhost:3000/
     ProxyPassReverse / http://localhost:3000/
     
+    ProxyPreserveHost On
     RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
 </VirtualHost>
 ```
 
@@ -375,7 +297,7 @@ Using Let's Encrypt with Certbot:
 sudo apt-get install certbot python3-certbot-nginx
 
 # Generate certificates
-sudo certbot certonly --nginx -d admin.yourdomain.com -d public.yourdomain.com
+sudo certbot certonly --nginx -d yourdomain.com
 
 # Auto-renewal
 sudo systemctl enable certbot.timer
@@ -386,7 +308,7 @@ sudo systemctl start certbot.timer
 
 ### 1. First-Time Setup
 
-1. Navigate to `https://admin.yourdomain.com`
+1. Navigate to `https://yourdomain.com`
 2. Go to `/setup` to complete initial configuration
 3. Enter your Jellyfin server details
 4. Configure OIDC provider (admin panel → Settings)
@@ -405,15 +327,14 @@ After deployment, go to **Admin Settings → Authentication**:
 
 ### 3. Test the Flow
 
-**Admin System Test:**
-1. Visit `https://admin.yourdomain.com/login`
+1. Visit `https://yourdomain.com/login`
 2. Click "Sign in with SSO"
 3. Should redirect to your OIDC provider
 4. After login, should redirect back and be logged in
 
-**Public System Test:**
-1. Visit `https://public.yourdomain.com`
-2. Create an invite (from admin)
+**Registration Test:**
+1. Create an invite (from admin panel)
+2. Visit `https://yourdomain.com/register`
 3. Register with invite code
 4. Try SSO login
 
@@ -422,10 +343,14 @@ After deployment, go to **Admin Settings → Authentication**:
 Check logs:
 ```bash
 # Docker
-docker-compose logs -f jellyconnect-admin
+docker-compose logs -f jellyconnect
 
 # Systemd
-journalctl -u jellyconnect-admin -f
+journalctl -u jellyconnect -f
+
+# PM2
+pm2 logs jellyconnect
+```
 
 # PM2
 pm2 logs jellyconnect-admin
@@ -477,7 +402,7 @@ docker cp jellyconnect-admin:/app/jellyconnect-data.json ./backup/
 ```bash
 cp jellyconnect-data.backup.json jellyconnect-data.json
 # Restart services
-systemctl restart jellyconnect-admin
+systemctl restart jellyconnect
 ```
 
 ## Scaling Considerations
@@ -539,7 +464,7 @@ npm install
 npm run build
 
 # Restart services
-systemctl restart jellyconnect-admin jellyconnect-public
+systemctl restart jellyconnect
 ```
 
 ## Support

@@ -9,9 +9,8 @@ COPY . .
 RUN npm run build
 
 ENV NODE_ENV=production
-EXPOSE 3010 3020
+EXPOSE 3000
 
-# Set app mode via environment variable (admin or public)
-# For admin portal: docker run -e NEXT_PUBLIC_APP_MODE=admin -p 3010:3010 ...
-# For public portal: docker run -e NEXT_PUBLIC_APP_MODE=public -p 3020:3020 ...
+# Single service running on port 3000
+# Admin functions available at /admin routes
 CMD ["npm", "start"]

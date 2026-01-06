@@ -1,30 +1,15 @@
 version: '3.8'
 
 services:
-  jellyconnect-admin:
+  jellyconnect:
     build: .
     environment:
-      - NEXT_PUBLIC_APP_MODE=admin
-      - ADMIN_PORT=3010
-      - NEXTAUTH_URL=https://jellyconnect.tanjiro.one
+      - PORT=3000
+      - NEXTAUTH_URL=https://your-domain.com
       - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
       - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
-      - "3010:3010"
-    volumes:
-      - ./data:/app/data
-    restart: unless-stopped
-
-  jellyconnect-public:
-    build: .
-    environment:
-      - NEXT_PUBLIC_APP_MODE=public
-      - PUBLIC_PORT=3020
-      - NEXTAUTH_URL=https://c.tanjiro.one
-      - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
-      - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
-    ports:
-      - "3020:3020"
+      - "3000:3000"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
