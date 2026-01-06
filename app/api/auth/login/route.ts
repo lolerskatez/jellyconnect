@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
     const authData = await authRes.json()
     const user = authData.User
 
-    // Determine app mode based on port: 3001 = public, 3000 = admin
+    // Determine app mode based on port: 3020 = public, 3010 = admin
     const hostname = request.headers.get('host') || ''
     const port = hostname.split(':')[1] || '80'
-    const appMode = port === '3001' ? 'public' : 'admin'
+    const appMode = port === '3020' ? 'public' : 'admin'
     
     // Check if user is administrator (only required in admin mode)
     if (appMode === 'admin' && !user.Policy?.IsAdministrator) {

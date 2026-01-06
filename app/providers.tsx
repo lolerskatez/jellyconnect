@@ -162,8 +162,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json()
         const isJellyfinAdmin = data.user.Policy?.IsAdministrator || false
-        // Determine app mode based on port: 3001 = public, 3000 = admin
-        const appMode = typeof window !== 'undefined' && window.location.port === '3001' ? 'public' : 'admin'
+        // Determine app mode based on port: 3020 = public, 3010 = admin
+        const appMode = typeof window !== 'undefined' && window.location.port === '3020' ? 'public' : 'admin'
         
         // In admin mode, require administrator access
         if (appMode === 'admin' && !isJellyfinAdmin) {

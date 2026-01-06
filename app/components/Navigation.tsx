@@ -17,7 +17,7 @@ export default function Navigation() {
   // Determine app mode based on port after mount to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAppMode(window.location.port === '3001' ? 'public' : 'admin')
+      setAppMode(window.location.port === '3020' ? 'public' : 'admin')
     }
   }, [])
 
