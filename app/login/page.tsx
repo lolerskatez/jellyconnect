@@ -21,10 +21,27 @@ function LoginPageContent() {
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
   const [enableRegistration, setEnableRegistration] = useState(true)
 
-  // Determine app mode based on port after mount to avoid hydration mismatch
+  // Determine app mode based on environment variable or port after mount to avoid hydration mismatch
   useEffect(() => {
+    let mode = process.env.NEXT_PUBLIC_APP_MODE || 'admin'
+    
     if (typeof window !== 'undefined') {
-      setAppMode(window.location.port === '3020' ? 'public' : 'admin')
+      // If env var not set, detect from port
+      if (!process.env.NEXT_PUBLIC_APP_MODE) {
+        const port = window.location.port
+        const hostname = window.location.hostname
+        
+        // Check port first (when running locally)
+        if (port === '3020') {
+          mode = 'public'
+        } else if (port === '3010') {
+          mode = 'admin'
+        } else if (!port || port === '443') {
+          // Behind reverse proxy on standard HTTPS port - check hostname
+          mode = hostname.startsWith('c.') ? 'public' : 'admin'
+        }
+      }
+      setAppMode(mode)
     }
   }, [])
 

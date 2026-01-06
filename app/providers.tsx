@@ -162,8 +162,23 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json()
         const isJellyfinAdmin = data.user.Policy?.IsAdministrator || false
-        // Determine app mode based on port: 3020 = public, 3010 = admin
-        const appMode = typeof window !== 'undefined' && window.location.port === '3020' ? 'public' : 'admin'
+        // Determine app mode: use env var first, then port, then hostname for reverse proxy
+        let appMode = process.env.NEXT_PUBLIC_APP_MODE || 'admin'
+        
+        if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_APP_MODE) {
+          const port = window.location.port
+          const hostname = window.location.hostname
+          
+          // Check port first (when running locally)
+          if (port === '3020') {
+            appMode = 'public'
+          } else if (port === '3010') {
+            appMode = 'admin'
+          } else if (!port || port === '443') {
+            // Behind reverse proxy - check hostname
+            appMode = hostname.startsWith('c.') ? 'public' : 'admin'
+          }
+        }
         
         // In admin mode, require administrator access
         if (appMode === 'admin' && !isJellyfinAdmin) {
