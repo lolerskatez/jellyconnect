@@ -81,8 +81,8 @@ export async function GET(req: NextRequest) {
 
     console.log('[OIDC CALLBACK] Using provider:', providerConfig.name)
 
-    // Build redirect URI - must match what was sent to the provider
-    const redirectUri = `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host') || req.headers.get('host')}/api/auth/callback/oidc`
+    // Build redirect URI using the same baseUrl - must match what was sent to the provider
+    const redirectUri = `${baseUrl}/api/auth/callback/oidc`
 
     console.log('[OIDC CALLBACK] Exchanging code for tokens:', {
       provider: providerConfig.name,
