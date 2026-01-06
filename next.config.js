@@ -2,31 +2,16 @@
 const nextConfig = {
   // output: 'export',
 
-  // Configure port based on APP_MODE
+  // Configure port for single service
   serverRuntimeConfig: {
-    port: process.env.APP_MODE === 'public'
-      ? parseInt(process.env.PUBLIC_PORT || '3001')
-      : parseInt(process.env.ADMIN_PORT || '3000')
-  },
-
-  // Make APP_MODE available to the client
-  publicRuntimeConfig: {
-    appMode: process.env.APP_MODE || 'admin'
-  },
-
-  // Environment variables to expose to the client
-  env: {
-    NEXT_PUBLIC_APP_MODE: process.env.APP_MODE || 'admin'
+    port: parseInt(process.env.PORT || '3100')
   },
 
   // Allow cross-origin dev requests from local network
   allowedDevOrigins: [
-    'http://localhost:3010',
-    'http://localhost:3020',
-    'http://100.74.214.67:3010',
-    'http://100.74.214.67:3020',
-    'http://192.168.1.125:3010',
-    'http://192.168.1.125:3020',
+    'http://localhost:3100',
+    'http://100.74.214.67:3100',
+    'http://192.168.1.125:3100',
   ],
 
   // Trust proxy headers for reverse proxy setup

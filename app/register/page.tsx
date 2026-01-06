@@ -25,7 +25,6 @@ const isValidDiscordId = (discordId: string): boolean => {
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [appMode, setAppMode] = useState('admin')
   const [step, setStep] = useState<'invite' | 'register'>('invite')
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidation, setInviteValidation] = useState<InviteValidation | null>(null)
@@ -39,30 +38,6 @@ export default function RegisterPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // Determine app mode based on environment variable or port after mount to avoid hydration mismatch
-  React.useEffect(() => {
-    let mode = process.env.NEXT_PUBLIC_APP_MODE || 'admin'
-    
-    if (typeof window !== 'undefined') {
-      // If env var not set, detect from port
-      if (!process.env.NEXT_PUBLIC_APP_MODE) {
-        const port = window.location.port
-        const hostname = window.location.hostname
-        
-        // Check port first (when running locally)
-        if (port === '3020') {
-          mode = 'public'
-        } else if (port === '3010') {
-          mode = 'admin'
-        } else if (!port || port === '443') {
-          // Behind reverse proxy on standard HTTPS port - check hostname
-          mode = hostname.startsWith('c.') ? 'public' : 'admin'
-        }
-      }
-      setAppMode(mode)
-    }
-  }, [])
 
   // Check if registration is enabled on component mount
   React.useEffect(() => {

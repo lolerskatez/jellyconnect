@@ -7,7 +7,6 @@ import { useAuth } from "../providers"
 
 function LoginPageContent() {
   const { admin, login, isLoading, isConfigured } = useAuth()
-  const [appMode, setAppMode] = useState('admin')
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -20,30 +19,6 @@ function LoginPageContent() {
   const [showOIDC, setShowOIDC] = useState(false)
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
   const [enableRegistration, setEnableRegistration] = useState(true)
-
-  // Determine app mode based on environment variable or port after mount to avoid hydration mismatch
-  useEffect(() => {
-    let mode = process.env.NEXT_PUBLIC_APP_MODE || 'admin'
-    
-    if (typeof window !== 'undefined') {
-      // If env var not set, detect from port
-      if (!process.env.NEXT_PUBLIC_APP_MODE) {
-        const port = window.location.port
-        const hostname = window.location.hostname
-        
-        // Check port first (when running locally)
-        if (port === '3020') {
-          mode = 'public'
-        } else if (port === '3010') {
-          mode = 'admin'
-        } else if (!port || port === '443') {
-          // Behind reverse proxy on standard HTTPS port - check hostname
-          mode = hostname.startsWith('c.') ? 'public' : 'admin'
-        }
-      }
-      setAppMode(mode)
-    }
-  }, [])
 
   useEffect(() => {
     // Redirect to home if already logged in
