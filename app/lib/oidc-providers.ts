@@ -42,6 +42,7 @@ export function createCustomOIDCProvider(config: {
       clientSecret: config.clientSecret,
       params: {},
     },
+    redirectUri: `${process.env.NEXTAUTH_URL}/api/auth/callback/oidc`,
     profile(profile: any) {
       console.log('[OIDC] Profile received:', profile)
       return {
