@@ -21,12 +21,12 @@ const nextConfig = {
 
   // Allow cross-origin dev requests from local network
   allowedDevOrigins: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://100.74.214.67:3000',
-    'http://100.74.214.67:3001',
-    'http://192.168.1.125:3000',
-    'http://192.168.1.125:3001',
+    'http://localhost:3010',
+    'http://localhost:3020',
+    'http://100.74.214.67:3010',
+    'http://100.74.214.67:3020',
+    'http://192.168.1.125:3010',
+    'http://192.168.1.125:3020',
   ],
 
   // Trust proxy headers for reverse proxy setup
