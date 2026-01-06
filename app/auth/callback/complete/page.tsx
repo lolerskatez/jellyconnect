@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 export default function CallbackCompletePage() {
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const MAX_RETRIES = 10 // Maximum 5 seconds of retries (10 * 500ms)
 
   useEffect(() => {
     setIsMounted(true)
@@ -43,18 +45,32 @@ export default function CallbackCompletePage() {
           }
         }
         
-        // If no session, try again after a short delay
-        setTimeout(checkSessionAndRedirect, 500)
+        // If no session, try again after a short delay (with max retries)
+        if (retryCount < MAX_RETRIES) {
+          setRetryCount(prev => prev + 1)
+          setTimeout(checkSessionAndRedirect, 500)
+        } else {
+          // Max retries reached, redirect to home without session
+          console.warn('Max session check retries reached, redirecting to home')
+          router.push('/')
+        }
       } catch (error) {
         console.error('Failed to check session:', error)
-        // Retry on error
-        setTimeout(checkSessionAndRedirect, 500)
+        // Retry on error (with max retries)
+        if (retryCount < MAX_RETRIES) {
+          setRetryCount(prev => prev + 1)
+          setTimeout(checkSessionAndRedirect, 500)
+        } else {
+          // Max retries reached, redirect to home
+          console.warn('Max session check retries reached after error, redirecting to home')
+          router.push('/')
+        }
       }
     }
 
     // Start checking
     checkSessionAndRedirect()
-  }, [router, isMounted])
+  }, [router, isMounted, retryCount])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
