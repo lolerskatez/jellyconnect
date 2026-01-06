@@ -27,7 +27,7 @@ export function createCustomOIDCProvider(config: {
 
   // Create OAuth provider 
   const provider: any = {
-    id: 'authentik',
+    id: 'oidc',
     name: config.name,
     type: 'oauth',
     clientId: config.clientId,
