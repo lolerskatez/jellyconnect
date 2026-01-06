@@ -7,28 +7,32 @@ import { encrypt } from '@/app/lib/encryption'
 
 // Get the base URL for redirects - derive from request to support both admin and public servers
 function getBaseUrl(req: NextRequest): string {
-  // Try to get from request headers (handles proxied requests)
-  const forwardedHost = req.headers.get('x-forwarded-host')
-  const forwardedProto = req.headers.get('x-forwarded-proto')
-  const host = req.headers.get('host')
-  
-  // Only use forwarded headers if BOTH proto and host are present
-  if (forwardedProto && forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`
-  }
-  
-  // Fallback to environment variable (most reliable for production)
+  // Priority 1: Use environment variable (most reliable for production)
   const envUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL
   if (envUrl) {
+    console.log('[OIDC CALLBACK] Using NEXTAUTH_URL from environment:', envUrl)
     return envUrl
   }
   
-  // Last resort: construct from host header with assumed https for safety
-  if (host) {
-    return `https://${host}`
+  // Priority 2: Get from request headers (handles proxied requests with proper headers)
+  const forwardedHost = req.headers.get('x-forwarded-host')
+  const forwardedProto = req.headers.get('x-forwarded-proto')
+  
+  if (forwardedProto && forwardedHost) {
+    console.log('[OIDC CALLBACK] Using forwarded headers:', `${forwardedProto}://${forwardedHost}`)
+    return `${forwardedProto}://${forwardedHost}`
   }
   
-  return 'http://localhost:3000'
+  // Priority 3: Get from host header with assumed https for non-localhost
+  const host = req.headers.get('host')
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    const url = `https://${host}`
+    console.log('[OIDC CALLBACK] Using host header with HTTPS for non-localhost:', url)
+    return url
+  }
+  
+  // Fallback for local development
+  return 'http://localhost:3100'
 }
 
 /**
