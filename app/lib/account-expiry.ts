@@ -87,5 +87,5 @@ export class AccountExpiryManager {
   }
 }
 
-// Singleton instance
-export const accountExpiryManager = new AccountExpiryManager();
+// Singleton instance - temporarily disabled
+// export const accountExpiryManager = new AccountExpiryManager();

@@ -1,4 +1,4 @@
-import { accountExpiryManager } from './app/lib/account-expiry';
+// import { accountExpiryManager } from './app/lib/account-expiry';
 
 // Validate required environment variables on startup
 function validateEnvironmentVariables() {
@@ -60,5 +60,5 @@ export async function register() {
   // Temporarily disabled account expiry monitoring for testing
   // The AccountExpiryManager constructor automatically starts the monitoring
   // We just need to import it to ensure it's initialized
-  // console.log('Account expiry monitoring initialized');
+  console.log('Account expiry monitoring disabled for testing');
 }
