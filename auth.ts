@@ -151,6 +151,7 @@ if (typeof window === 'undefined') {
 }
 const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
+  baseUrl: process.env.NEXTAUTH_URL,
   pages: {
     signIn: '/login',
   },
