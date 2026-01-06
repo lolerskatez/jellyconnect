@@ -42,7 +42,14 @@ npm install
 2. Run the development server:
 
 ```bash
-npm run dev
+# Admin portal only (port 3010)
+npm run dev:admin
+
+# Public portal only (port 3020)
+npm run dev:public
+
+# Both portals simultaneously
+node run-both.js
 ```
 
 3. Run tests to verify everything is working:
@@ -51,9 +58,9 @@ npm run dev
 npm test
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser. You'll be prompted to configure the service.
+4. Open [http://localhost:3010](http://localhost:3010) for the admin portal or [http://localhost:3020](http://localhost:3020) for the public portal in your browser.
 
-4. Go to the setup page at [http://localhost:3000/setup](http://localhost:3000/setup) and fill in your configuration:
+5. Go to the setup page at admin portal [http://localhost:3010/setup](http://localhost:3010/setup) and fill in your configuration:
 
    - **Jellyfin Server URL**: The URL of your Jellyfin server (e.g., `http://localhost:8096`)
    - **Jellyfin Admin Username**: Your Jellyfin admin username (used only for initial setup)
@@ -67,6 +74,33 @@ npm test
 
 For production deployment, see the **[Deployment Guide](DEPLOYMENT.md)** for detailed instructions.
 
+### Architecture
+
+JellyConnect supports running separate **Admin** and **Public** portals on different ports:
+
+- **Admin Portal (Port 3010)**: `jellyconnect.tanjiro.one` - For administrators only
+  - Full system access
+  - User management, invites, settings
+  - Requires Jellyfin administrator account
+
+- **Public Portal (Port 3020)**: `c.tanjiro.one` - For user login/registration
+  - Limited user interface
+  - Self-service registration with invite codes
+  - Account management and personal dashboard
+
+### App Mode Detection
+
+The application automatically detects which portal is running using a multi-layered approach:
+
+1. **Environment Variable** (preferred): `NEXT_PUBLIC_APP_MODE=admin` or `NEXT_PUBLIC_APP_MODE=public`
+2. **Port Detection**: Port 3020 = public, Port 3010 = admin
+3. **Hostname Detection** (reverse proxy): Hostnames starting with `c.` = public, others = admin
+
+This ensures the app works correctly in all deployment scenarios:
+- Local development with explicit ports
+- Docker with environment variables
+- Reverse proxy with hostname routing
+
 ### Quick Docker Deployment
 
 1. Ensure you have Docker and Docker Compose installed.
@@ -78,22 +112,22 @@ git clone https://github.com/lolerskatez/jellyconnect.git
 cd jellyconnect
 ```
 
-3. Configure your environment variables by copying and editing the example file:
+3. Configure your environment variables in `docker-compose.yml`:
+   - Update `NEXTAUTH_URL` to your admin domain (admin service)
+   - Update `NEXTAUTH_URL` to your public domain (public service)
+   - Replace `NEXTAUTH_SECRET` with a secure random string
+   - Update `JELLYFIN_SERVER_URL` to your Jellyfin server location
 
-```bash
-cp .env.example .env.local
-# Edit .env.local with your Jellyfin server URL, NextAuth secret, and other settings
-```
-
-4. Update `docker-compose.yml` with your actual domain names, Jellyfin server URL, and generate a secure NextAuth secret.
-
-5. Build and run the containers:
+4. Build and run the containers:
 
 ```bash
 docker-compose up -d
 ```
 
-6. Access the admin interface at `http://localhost:3010` (or your configured domain) and complete the setup.
+5. Access the admin interface at `https://jellyconnect.tanjiro.one` (or your configured admin domain)
+6. Access the public interface at `https://c.tanjiro.one` (or your configured public domain)
+
+Complete the setup at the admin portal.
 
 ## Documentation
 
@@ -140,16 +174,24 @@ DISCORD_CHANNEL_ID=YOUR_CHANNEL_ID
 JellyConnect supports Single Sign-On (SSO) with any OpenID Connect (OIDC) provider such as Authentik, Keycloak, Okta, or Azure AD.
 
 1. Set up your OIDC provider and create a client application with:
-   - **Redirect URI**: `http://your-jellyconnect-url/api/auth/callback/oidc`
+   - **Redirect URI (Admin)**: `https://jellyconnect.tanjiro.one/api/auth/callback/oidc`
+   - **Redirect URI (Public)**: `https://c.tanjiro.one/api/auth/callback/oidc`
    - **Grant Type**: Authorization Code
    - **Scopes**: `openid`, `email`, `profile`
 
-2. Configure environment variables in `.env.local`:
-```env
-NEXTAUTH_URL=http://your-jellyconnect-url:3000
-NEXT_PUBLIC_NEXTAUTH_URL=http://your-jellyconnect-url:3000
-NEXTAUTH_SECRET=your-random-secret-here
-```
+2. Configure environment variables in `.env.local` for each portal:
+   ```env
+   # Admin portal
+   NEXTAUTH_URL=https://jellyconnect.tanjiro.one
+   NEXT_PUBLIC_APP_MODE=admin
+   
+   # Public portal
+   NEXTAUTH_URL=https://c.tanjiro.one
+   NEXT_PUBLIC_APP_MODE=public
+   
+   # Both
+   NEXTAUTH_SECRET=your-random-secret-here
+   ```
 
 3. Configure the OIDC provider in JellyConnect:
    - Go to **Settings** → **Authentication** in the admin panel
@@ -334,56 +376,87 @@ JellyConnect supports running separate admin and public systems on different por
 Create or update your `.env.local` file with the following variables:
 
 ```env
-# Application Mode Configuration
-# Set to 'admin' for admin system or 'public' for user system
-APP_MODE=admin
+# Admin Portal
+ADMIN_PORT=3010
+NEXTAUTH_URL=https://jellyconnect.tanjiro.one
+NEXT_PUBLIC_APP_MODE=admin
 
-# Port configuration
-ADMIN_PORT=3000
-PUBLIC_PORT=3001
+# Public Portal
+PUBLIC_PORT=3020
+NEXTAUTH_URL=https://c.tanjiro.one  # Use different NEXTAUTH_URL for public portal
+NEXT_PUBLIC_APP_MODE=public
+
+# Shared Settings
+NEXTAUTH_SECRET=your-random-secret-here
+JELLYFIN_SERVER_URL=http://localhost:8096
 ```
 
 ### Running Separate Systems
 
-**Admin System (Port 3000)** - For administrators only:
+**Admin System (Port 3010)** - For administrators only:
 ```bash
 npm run dev:admin
-# or for production
-npm run build:admin && npm run start:admin
 ```
 
-**Public System (Port 3001)** - For user login/registration:
+**Public System (Port 3020)** - For user login/registration:
 ```bash
 npm run dev:public
-# or for production
-npm run build:public && npm run start:public
 ```
 
 **Both Systems Simultaneously** (for development):
 ```bash
-npm run dev:both
+node run-both.js
 ```
-
-### Security Benefits
-
-- **Port Separation**: Admin and public systems run on different ports
-- **Route Isolation**: Middleware prevents cross-access between systems
-- **Navigation Control**: Each system shows only relevant navigation options
-- **Access Control**: Public users cannot access admin routes, and vice versa
 
 ### Production Deployment
 
-For production deployment, you can run both systems simultaneously:
+For production, use the environment variables to control which portal is running:
 
 ```bash
-# Terminal 1 - Admin System
-APP_MODE=admin ADMIN_PORT=3000 npm run start
+# Terminal 1 - Admin System (Port 3010)
+NEXT_PUBLIC_APP_MODE=admin ADMIN_PORT=3010 NEXTAUTH_URL=https://jellyconnect.tanjiro.one npm run start
 
-# Terminal 2 - Public System  
-APP_MODE=public PUBLIC_PORT=3001 npm run start
+# Terminal 2 - Public System (Port 3020)
+NEXT_PUBLIC_APP_MODE=public PUBLIC_PORT=3020 NEXTAUTH_URL=https://c.tanjiro.one npm run start
 ```
 
-Make sure your reverse proxy (nginx, Apache, etc.) routes the appropriate domains/paths to the correct ports.
+Or use Docker Compose (see Quick Docker Deployment section above).
+
+### Reverse Proxy Configuration
+
+When running behind a reverse proxy, ensure your reverse proxy forwards the correct hostname headers. The app will automatically detect admin vs public mode based on the hostname:
+
+- Hostnames starting with `c.` route to public portal
+- All other hostnames route to admin portal
+
+Example nginx configuration:
+```nginx
+# Admin Portal
+server {
+    server_name jellyconnect.tanjiro.one;
+    listen 443 ssl http2;
+    
+    location / {
+        proxy_pass http://localhost:3010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+# Public Portal  
+server {
+    server_name c.tanjiro.one;
+    listen 443 ssl http2;
+    
+    location / {
+        proxy_pass http://localhost:3020;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
 
 ## Learn More
 

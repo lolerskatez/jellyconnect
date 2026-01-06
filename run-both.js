@@ -10,8 +10,8 @@ const path = require('path')
 
 console.log('🚀 Starting JellyConnect Admin and Public systems...\n')
 
-// Start Admin System (Port 3000)
-console.log('📊 Starting Admin System on port 3000...')
+// Start Admin System (Port 3010)
+console.log('📊 Starting Admin System on port 3010...')
 const adminProcess = spawn('npm', [
   'run', 'dev:admin'
 ], {
@@ -20,9 +20,9 @@ const adminProcess = spawn('npm', [
   cwd: __dirname
 })
 
-// Start Public System (Port 3001) after a short delay
+// Start Public System (Port 3020) after a short delay
 setTimeout(() => {
-  console.log('\n👥 Starting Public System on port 3001...')
+  console.log('\n👥 Starting Public System on port 3020...')
   const publicProcess = spawn('npm', [
     'run', 'dev:public'
   ], {

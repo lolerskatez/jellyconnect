@@ -5,11 +5,8 @@ services:
     build: .
     environment:
       - NEXT_PUBLIC_APP_MODE=admin
-      - APP_MODE=admin
-      - PORT=3010
       - ADMIN_PORT=3010
-      - NEXTAUTH_URL=https://admin.yourdomain.com
-      - NEXT_PUBLIC_NEXTAUTH_URL=https://admin.yourdomain.com
+      - NEXTAUTH_URL=https://jellyconnect.tanjiro.one
       - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
       - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
@@ -22,11 +19,8 @@ services:
     build: .
     environment:
       - NEXT_PUBLIC_APP_MODE=public
-      - APP_MODE=public
-      - PORT=3020
       - PUBLIC_PORT=3020
-      - NEXTAUTH_URL=https://public.yourdomain.com
-      - NEXT_PUBLIC_NEXTAUTH_URL=https://public.yourdomain.com
+      - NEXTAUTH_URL=https://c.tanjiro.one
       - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
       - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
