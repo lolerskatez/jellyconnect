@@ -4,12 +4,12 @@ services:
   jellyconnect:
     build: .
     environment:
-      - PORT=3000
+      - PORT=3100
       - NEXTAUTH_URL=https://your-domain.com
       - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
       - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
-      - "3000:3000"
+      - "3100:3100"
     volumes:
       - ./data:/app/data
     restart: unless-stopped

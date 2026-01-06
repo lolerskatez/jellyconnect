@@ -50,7 +50,7 @@ Configure your OIDC provider (e.g., Authentik):
 Configure your domain for the single service:
 
 ```
-yourdomain.com → JellyConnect application (port 3000)
+yourdomain.com → JellyConnect application (port 3100)
 ```
 
 Admin functions are available at `yourdomain.com/admin/*` routes with role-based access control.
@@ -95,12 +95,9 @@ SMTP_FROM=noreply@yourdomain.com
 
 # Discord Notifications (Optional)
 DISCORD_BOT_TOKEN=your-bot-token
-DISCORD_CHANNEL_ID=your-channel-id
 
-# Application Configuration
-APP_MODE=admin
-ADMIN_PORT=3000
-PUBLIC_PORT=3001
+# Single Service Configuration
+PORT=3100
 ```
 
 **Generate a secure NEXTAUTH_SECRET:**
@@ -135,7 +132,7 @@ COPY . .
 RUN npm run build
 
 ENV NODE_ENV=production
-EXPOSE 3000
+EXPOSE 3100
 
 CMD ["npm", "start"]
 ```
@@ -149,12 +146,12 @@ services:
   jellyconnect:
     build: .
     environment:
-      - PORT=3000
+      - PORT=3100
       - NEXTAUTH_URL=https://yourdomain.com
       - NEXTAUTH_SECRET=your-random-secret-here-change-this-in-production
       - JELLYFIN_SERVER_URL=http://your-jellyfin-server:8096
     ports:
-      - "3000:3000"
+      - "3100:3100"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -179,7 +176,7 @@ Type=simple
 User=jellyconnect
 WorkingDirectory=/opt/jellyconnect
 Environment="NODE_ENV=production"
-Environment="PORT=3000"
+Environment="PORT=3100"
 ExecStart=/usr/local/bin/npm start
 Restart=on-failure
 RestartSec=10
@@ -212,7 +209,7 @@ module.exports = {
       args: 'start',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 3100,
       },
       instances: 2,
       exec_mode: 'cluster',
@@ -251,7 +248,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3100;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -279,8 +276,8 @@ server {
     SSLCertificateFile /etc/letsencrypt/live/yourdomain.com/fullchain.pem
     SSLCertificateKeyFile /etc/letsencrypt/live/yourdomain.com/privkey.pem
     
-    ProxyPass / http://localhost:3000/
-    ProxyPassReverse / http://localhost:3000/
+    ProxyPass / http://localhost:3100/
+    ProxyPassReverse / http://localhost:3100/
     
     ProxyPreserveHost On
     RequestHeader set X-Forwarded-Proto "https"
