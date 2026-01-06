@@ -6,37 +6,56 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Navigation from "./components/Navigation"
 
-function HomeContent({ admin, appMode, onOpenJellyfin, onQuickConnect }: { admin?: any, appMode: string, onOpenJellyfin?: () => void, onQuickConnect?: () => void }) {
-  if (appMode === 'public' && admin) {
-    // Public mode user dashboard
+function HomeContent({ admin, onOpenJellyfin, onQuickConnect }: { admin?: any, onOpenJellyfin?: () => void, onQuickConnect?: () => void }) {
+  // Show admin dashboard for admin users
+  if (admin?.isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Navigation />
         <div className="flex items-center justify-center flex-col py-32">
-          <div className="text-center max-w-2xl px-4">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Welcome to JellyConnect</h1>
-            <p className="text-lg text-slate-300 mb-12">Access your personal media library with seamless authentication</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={onOpenJellyfin}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-              >
-                <span className="flex items-center justify-center gap-2">
+          <div className="text-center max-w-3xl px-4">
+            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">JellyConnect Admin</h1>
+            <p className="text-lg text-slate-300 mb-12">Manage your Jellyfin instance and users</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
+              <Link href="/admin/users" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 12H9m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Manage Users
+              </Link>
+              <Link href="/admin/invites" className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Manage Invites
+              </Link>
+              <Link href="/admin/settings" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                System Settings
+              </Link>
+              <Link href="/admin/notifications" className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white px-6 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.868 12.683A17.925 17.925 0 012 21h12.01c.276 0 .494-.222.494-.496v-1.019a49.853 49.853 0 01-1.381-5.24c-.254-2.813-.166-5.653.329-8.424.494-2.753 2.708-4.89 5.505-4.89 3.074 0 5.572 2.498 5.572 5.572 0 2.84-.082 5.68-.336 8.493a49.853 49.853 0 01-1.381 5.24v1.02c0 .274.218.496.494.496H21" />
+                </svg>
+                Notifications
+              </Link>
+              <Link href="/admin/expiry" className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-4 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Account Expiry
+              </Link>
+              <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer" onClick={onOpenJellyfin}>
+                <div className="flex items-center justify-center gap-2 text-slate-300">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M17.657 17.657a8 8 0 00-11.314-11.314M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Open Jellyfin
-                </span>
-              </button>
-              <button
-                onClick={onQuickConnect}
-                className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4.243 4.243m9.878-9.878l2.121 2.121m0 5.656l2.121 2.121M9 11H7m12 0h-2m1 8H8m4 0h4m-11-11l1.414-1.414M19.07 4.93L17.656 6.344" />
-                </svg>
-                Quick Connect
-              </button>
+                  <span>Open Jellyfin</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -44,39 +63,35 @@ function HomeContent({ admin, appMode, onOpenJellyfin, onQuickConnect }: { admin
     )
   }
 
-  // Admin mode dashboard
+  // Regular user dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navigation />
       <div className="flex items-center justify-center flex-col py-32">
-        <div className="text-center max-w-3xl px-4">
+        <div className="text-center max-w-2xl px-4">
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">Welcome to JellyConnect</h1>
-          <p className="text-lg text-slate-300 mb-12">Manage your Jellyfin instance and users</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+          <p className="text-lg text-slate-300 mb-12">Access your personal media library with seamless authentication</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={onOpenJellyfin}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M17.657 17.657a8 8 0 00-11.314-11.314M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Open Jellyfin
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M17.657 17.657a8 8 0 00-11.314-11.314M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Open Jellyfin
+              </span>
             </button>
             <button
               onClick={onQuickConnect}
-              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2"
+              className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4.243 4.243m9.878-9.878l2.121 2.121m0 5.656l2.121 2.121M9 11H7m12 0h-2m1 8H8m4 0h4m-11-11l1.414-1.414M19.07 4.93L17.656 6.344" />
               </svg>
               Quick Connect
             </button>
-            <Link href="/users" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 12H9m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Manage Users
-            </Link>
           </div>
         </div>
       </div>
@@ -91,41 +106,15 @@ export default function Home() {
   const [quickConnectCode, setQuickConnectCode] = useState('')
   const [approving, setApproving] = useState(false)
   const [approveMessage, setApproveMessage] = useState('')
-  const [appMode, setAppMode] = useState('admin')
-  
-  // Determine app mode based on environment variable or port after mount to avoid hydration mismatch
-  useEffect(() => {
-    let mode = process.env.NEXT_PUBLIC_APP_MODE || 'admin'
-    
-    if (typeof window !== 'undefined') {
-      // If env var not set, detect from port
-      if (!process.env.NEXT_PUBLIC_APP_MODE) {
-        const port = window.location.port
-        const hostname = window.location.hostname
-        
-        // Check port first (when running locally)
-        if (port === '3020') {
-          mode = 'public'
-        } else if (port === '3010') {
-          mode = 'admin'
-        } else if (!port || port === '443') {
-          // Behind reverse proxy on standard HTTPS port - check hostname
-          // c.tanjiro.one = public, jellyconnect.tanjiro.one = admin
-          mode = hostname.startsWith('c.') ? 'public' : 'admin'
-        }
-      }
-      setAppMode(mode)
-    }
-  }, [])
 
   useEffect(() => {
-    console.log('Home page state:', { admin: !!admin, isLoading, isConfigured, appMode })
+    console.log('Home page state:', { admin: !!admin, isLoading, isConfigured })
     if (!isLoading && !admin) {
-      // Not logged in, redirect to login (both admin and public modes require login)
+      // Not logged in, redirect to login
       console.log('Redirecting to login page')
       setTimeout(() => router.replace('/login'), 0)
     }
-  }, [admin, isLoading, isConfigured, router, appMode])
+  }, [admin, isLoading, isConfigured, router])
 
   const handleOpenJellyfin = async () => {
     try {
@@ -199,8 +188,8 @@ export default function Home() {
     )
   }
 
-  // If not configured, show setup (admin mode only)
-  if (appMode === 'admin' && isConfigured === false) {
+  // If not configured, show setup (only for admin users)
+  if (admin?.isAdmin && isConfigured === false) {
     return (
       <div className="flex min-h-screen items-center justify-center flex-col">
         <h1 className="text-4xl font-bold mb-4">Welcome to JellyConnect</h1>
@@ -225,7 +214,7 @@ export default function Home() {
   // User is logged in
   return (
     <>
-      <HomeContent admin={admin} appMode={appMode} onOpenJellyfin={handleOpenJellyfin} onQuickConnect={handleQuickConnect} />
+      <HomeContent admin={admin} onOpenJellyfin={handleOpenJellyfin} onQuickConnect={handleQuickConnect} />
       
       {/* Quick Connect Modal */}
       {showQuickConnectModal && (

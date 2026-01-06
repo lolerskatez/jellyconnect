@@ -3,14 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3010 -H 0.0.0.0",
-    "dev:admin": "cross-env NEXT_PUBLIC_APP_MODE=admin next dev -p 3010 -H 0.0.0.0",
-    "dev:public": "cross-env NEXT_PUBLIC_APP_MODE=public next dev -p 3020 -H 0.0.0.0",
-    "dev:both": "echo 'Run dev:admin or dev:public separately in different terminals'",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
-    "start": "cross-env NEXT_PUBLIC_APP_MODE=admin PORT=3010 next start -H 0.0.0.0",
-    "start:admin": "cross-env NEXT_PUBLIC_APP_MODE=admin PORT=3010 next start -H 0.0.0.0",
-    "start:public": "cross-env NEXT_PUBLIC_APP_MODE=public PORT=3020 next start -H 0.0.0.0",
+    "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"

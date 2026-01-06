@@ -279,6 +279,66 @@ export default function Navigation() {
                   Settings
                 </Link>
               )}
+              {admin.isAdmin && (
+                <div className="relative group">
+                  <button className="px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-1">
+                    <span>Admin</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div className="absolute left-0 mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    <Link
+                      href="/admin"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <Link
+                      href="/admin/users"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin/users' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      Manage Users
+                    </Link>
+                    <Link
+                      href="/admin/invites"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin/invites' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      Manage Invites
+                    </Link>
+                    <Link
+                      href="/admin/settings"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin/settings' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      System Settings
+                    </Link>
+                    <Link
+                      href="/admin/notifications"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin/notifications' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      System Notifications
+                    </Link>
+                    <Link
+                      href="/admin/expiry"
+                      className={`block px-4 py-2 text-sm transition-colors ${
+                        pathname === '/admin/expiry' ? 'bg-orange-600 text-white' : 'text-slate-200 hover:bg-slate-700'
+                      }`}
+                    >
+                      Account Expiry
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -415,6 +475,67 @@ export default function Navigation() {
               >
                 Settings
               </Link>
+            )}
+            {admin.isAdmin && (
+              <>
+                <div className="border-t border-slate-700 pt-2 mt-2">
+                  <div className="px-3 py-1 text-sm font-medium text-orange-400 uppercase tracking-wide">Admin</div>
+                </div>
+                <Link
+                  href="/admin"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Admin Dashboard
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin/users' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Manage Users
+                </Link>
+                <Link
+                  href="/admin/invites"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin/invites' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Manage Invites
+                </Link>
+                <Link
+                  href="/admin/settings"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin/settings' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  System Settings
+                </Link>
+                <Link
+                  href="/admin/notifications"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin/notifications' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  System Notifications
+                </Link>
+                <Link
+                  href="/admin/expiry"
+                  className={`block px-3 py-2 rounded-lg transition-colors ${
+                    pathname === '/admin/expiry' ? 'bg-orange-600' : 'hover:bg-slate-700'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Account Expiry
+                </Link>
+              </>
             )}
 
             {/* Profile links */}
