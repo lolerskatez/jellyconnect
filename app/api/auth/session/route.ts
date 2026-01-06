@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/auth'
 import { getConfig } from '@/app/lib/config'
 
 /**
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     console.log('[SESSION] Checking NextAuth session')
 
-    const session = await auth()
+    const session = await getServerSession(req, authOptions)
 
     console.log('[SESSION] NextAuth session result:', session ? 'found' : 'null')
 

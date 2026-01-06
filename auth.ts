@@ -192,14 +192,14 @@ const authOptions: NextAuthOptions = {
 
       if (!dbUser) {
         console.log('[OIDC] User not found, attempting auto-create')
-        
+
         // Extract groups from OIDC profile
         // Different providers use different claim names for groups:
         // - 'groups' (common)
         // - 'roles' (some providers)
         // - 'oidc_groups' (custom)
         const groups = profile.groups || profile.roles || profile.oidc_groups || []
-        
+
         dbUser = await autoCreateJellyfinUser(
           profile.email || '',
           profile.name || '',
@@ -218,20 +218,20 @@ const authOptions: NextAuthOptions = {
           dbUser.oidcGroups = newGroups
           console.log('[OIDC] Updated groups for existing user:', profile.email, newGroups)
         }
-        
+
         // Update display name if provided
         if (profile.name && profile.name !== dbUser.displayName) {
           dbUser.displayName = profile.name
           console.log('[OIDC] Updated display name for existing user:', profile.email, 'to:', profile.name)
         }
-        
+
         dbUser.updatedAt = new Date().toISOString()
       }
 
       if (dbUser) {
         dbUser.oidcProvider = account.provider
         dbUser.oidcProviderId = profile.email || ''
-        
+
         // Save database immediately so changes persist
         const { saveDatabaseImmediate } = await import('./app/lib/db')
         saveDatabaseImmediate()
@@ -266,7 +266,7 @@ const authOptions: NextAuthOptions = {
   },
 }
 
-// For NextAuth v4 with App Router, create handlers manually
+export { authOptions }
 const handler = NextAuth(authOptions)
 
 // Export as both GET and POST handlers
