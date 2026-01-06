@@ -28,6 +28,24 @@ const nextConfig = {
     'http://192.168.1.125:3000',
     'http://192.168.1.125:3001',
   ],
+
+  // Trust proxy headers for reverse proxy setup
+  serverExternalPackages: [],
+
+  // Trust hosts behind proxy
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Forwarded-Proto',
+            value: 'https'
+          }
+        ]
+      }
+    ]
+  }
 }
 
 module.exports = nextConfig
