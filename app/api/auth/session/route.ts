@@ -1,41 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@/app/lib/auth'
+import { auth } from '@/auth'
 import { getConfig } from '@/app/lib/config'
 
 /**
- * Check current session from cookie
+ * Check current session using NextAuth
  * Returns user info if valid session exists
  */
 export async function GET(req: NextRequest) {
   try {
-    // Get the session token from cookies
-    const token = req.cookies.get('next-auth.session-token')?.value
+    console.log('[SESSION] Checking NextAuth session')
 
-    console.log('[SESSION] Token from cookie:', token ? 'present' : 'missing')
+    const session = await auth()
 
-    if (!token) {
-      console.log('[SESSION] No token found in cookie')
-      return NextResponse.json({ user: null }, { status: 401 })
-    }
+    console.log('[SESSION] NextAuth session result:', session ? 'found' : 'null')
 
-    // Verify the token
-    console.log('[SESSION] Token received, length:', token.length)
-    console.log('[SESSION] Verifying token...')
-    const payload = await verifyAccessToken(token)
-
-    console.log('[SESSION] Token verification result:', payload ? 'valid' : 'invalid')
-
-    if (!payload) {
-      console.log('[SESSION] Token verification failed - payload is null')
+    if (!session || !session.user) {
+      console.log('[SESSION] No active session')
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
     // Get the user's Jellyfin policy to check if they're an admin
     let isAdmin = false
+    let jellyfinName = session.user.name || ''
+    let displayName = session.user.name || ''
+
     try {
       const config = getConfig()
-      if (config.jellyfinUrl && config.apiKey && payload.jellyfinId) {
-        const userResponse = await fetch(`${config.jellyfinUrl}/Users/${payload.jellyfinId}`, {
+      if (config.jellyfinUrl && config.apiKey && session.user.jellyfinId) {
+        console.log('[SESSION] Checking Jellyfin admin status for user:', session.user.jellyfinId)
+        const userResponse = await fetch(`${config.jellyfinUrl}/Users/${session.user.jellyfinId}`, {
           headers: {
             'X-Emby-Token': config.apiKey,
           },
@@ -43,11 +36,44 @@ export async function GET(req: NextRequest) {
         if (userResponse.ok) {
           const jellyfinUser = await userResponse.json()
           isAdmin = jellyfinUser.Policy?.IsAdministrator === true
-          console.log('[SESSION] Jellyfin user policy check - isAdmin:', isAdmin)
+          jellyfinName = jellyfinUser.Name || session.user.name || ''
+          console.log('[SESSION] Jellyfin user check - isAdmin:', isAdmin, 'name:', jellyfinName)
+        } else {
+          console.log('[SESSION] Failed to fetch Jellyfin user data:', userResponse.status)
         }
+      } else {
+        console.log('[SESSION] Jellyfin not configured or no jellyfinId')
       }
     } catch (error) {
       console.error('[SESSION] Error checking Jellyfin admin status:', error)
+    }
+
+    // Return session data in the format expected by the frontend
+    const userData = {
+      id: session.user.id || '',
+      jellyfinId: session.user.jellyfinId || '',
+      email: session.user.email || '',
+      name: jellyfinName,
+      displayName: displayName,
+      jellyfinName: jellyfinName,
+      isAdmin: isAdmin,
+      oidcProvider: session.user.oidcProvider || null,
+      token: 'nextauth-session-token' // Placeholder token for frontend compatibility
+    }
+
+    console.log('[SESSION] Returning user data:', {
+      id: userData.id,
+      email: userData.email,
+      isAdmin: userData.isAdmin,
+      oidcProvider: userData.oidcProvider
+    })
+
+    return NextResponse.json({ user: userData })
+  } catch (error) {
+    console.error('[SESSION] Error getting session:', error)
+    return NextResponse.json({ user: null }, { status: 500 })
+  }
+}
     }
 
     // Fetch displayName from our database
