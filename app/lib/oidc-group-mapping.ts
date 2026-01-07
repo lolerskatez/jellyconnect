@@ -3,6 +3,8 @@
  * Supports three role levels: Administrator, Power User, and User
  */
 
+import { authLogger } from './logger';
+
 export type JellyfinRole = 'admin' | 'powerUser' | 'user';
 
 export interface UserPolicy {
@@ -180,8 +182,7 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
   const groupArray = Array.isArray(groups) ? groups : [groups];
   const normalizedGroups = groupArray.map(g => g.toLowerCase().trim().replace(/\s+/g, ''));
 
-  console.log('[GROUP MAPPING] Input groups:', groupArray);
-  console.log('[GROUP MAPPING] Normalized groups:', normalizedGroups);
+  authLogger.debug('OIDC group mapping input', { inputGroups: groupArray, normalizedGroups });
 
   // Check for administrator groups (highest priority)
   // Matches: "Administrator", "Administrators", "Admin", "Admins"
@@ -191,7 +192,7 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
     g === 'admin' ||
     g === 'admins'
   )) {
-    console.log('[GROUP MAPPING] Mapped to: admin');
+    authLogger.debug('OIDC group mapped to admin role');
     return 'admin';
   }
 
@@ -205,12 +206,12 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
     g === 'power_user' ||
     g === 'power_users'
   )) {
-    console.log('[GROUP MAPPING] Mapped to: powerUser');
+    authLogger.debug('OIDC group mapped to powerUser role');
     return 'powerUser';
   }
 
   // Default to user
-  console.log('[GROUP MAPPING] Mapped to: user (default)');
+  authLogger.debug('OIDC group mapped to user role (default)');
   return 'user';
 }
 

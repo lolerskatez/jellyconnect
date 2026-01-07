@@ -1,6 +1,7 @@
 import { Jellyfin } from '@jellyfin/sdk';
 import { generateSecurePassword } from './secure-password';
 import { UserPolicy, JellyfinRole, getRolePolicyForJellyfin } from './oidc-group-mapping';
+import { jellyfinLogger } from './logger';
 
 export const jellyfin = new Jellyfin({
   clientInfo: {
@@ -32,7 +33,7 @@ export class JellyfinAuth {
       await this.api.axiosInstance.get('/System/Info/Public');
       return true;
     } catch (error) {
-      console.error('API key validation failed:', error);
+      jellyfinLogger.error('API key validation failed', { error: error instanceof Error ? error.message : 'Unknown error' })
       return false;
     }
   }
@@ -42,7 +43,7 @@ export class JellyfinAuth {
       const response = await this.api.axiosInstance.get('/Users');
       return response.data;
     } catch (error) {
-      console.error('Failed to get users:', error);
+      jellyfinLogger.error('Failed to get users', { error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -66,7 +67,7 @@ export class JellyfinAuth {
         is_admin: isAdmin,
       };
     } catch (error) {
-      console.error('Authentication failed:', error);
+      jellyfinLogger.error('Authentication failed', { error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -76,7 +77,7 @@ export class JellyfinAuth {
       const response = await this.api.axiosInstance.get(`/Users/${userId}`);
       return response.data;
     } catch (error) {
-      console.error(`Failed to get user ${userId}:`, error);
+      jellyfinLogger.error('Failed to get user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -89,7 +90,7 @@ export class JellyfinAuth {
       });
       return response.data;
     } catch (error) {
-      console.error('Failed to create user:', error);
+      jellyfinLogger.error('Failed to create user', { username, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -107,7 +108,7 @@ export class JellyfinAuth {
       // Generate a secure random password
       const securePassword = generateSecurePassword();
 
-      console.log('[JELLYFIN] Creating SSO user:', username, 'with role:', role);
+      jellyfinLogger.info('Creating SSO user', { username, role, email })
 
       // Create the user
       const createdUser = await this.createUser(username, securePassword);
@@ -121,7 +122,7 @@ export class JellyfinAuth {
       const policy = getRolePolicyForJellyfin(role);
       await this.updateUserPolicy(userId, policy);
 
-      console.log('[JELLYFIN] SSO user created successfully:', userId, 'with role:', role);
+      jellyfinLogger.info('SSO user created successfully', { userId, username, role })
 
       return {
         userId,
@@ -129,7 +130,7 @@ export class JellyfinAuth {
         password: securePassword
       };
     } catch (error) {
-      console.error('[JELLYFIN] Failed to create SSO user:', error);
+      jellyfinLogger.error('Failed to create SSO user', { username, role, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -138,7 +139,7 @@ export class JellyfinAuth {
     try {
       await this.api.axiosInstance.delete(`/Users/${userId}`);
     } catch (error) {
-      console.error(`Failed to delete user ${userId}:`, error);
+      jellyfinLogger.error('Failed to delete user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -148,7 +149,7 @@ export class JellyfinAuth {
       const response = await this.api.axiosInstance.post(`/Users/${userId}/Policy`, policy);
       return response.data;
     } catch (error) {
-      console.error(`Failed to update user policy for ${userId}:`, error);
+      jellyfinLogger.error('Failed to update user policy', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }
@@ -165,9 +166,9 @@ export class JellyfinAuth {
       };
 
       await this.updateUserPolicy(userId, updatedPolicy);
-      console.log(`Successfully disabled Jellyfin user ${userId}`);
+      jellyfinLogger.info('Successfully disabled Jellyfin user', { userId })
     } catch (error) {
-      console.error(`Failed to disable user ${userId}:`, error);
+      jellyfinLogger.error('Failed to disable user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
     }
   }

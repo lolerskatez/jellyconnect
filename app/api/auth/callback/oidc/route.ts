@@ -276,10 +276,10 @@ export async function GET(req: NextRequest) {
         if (currentUserResponse.ok) {
           const currentUser = await currentUserResponse.json()
           currentPolicy = currentUser.Policy || {}
-          console.log('[OIDC CALLBACK] Got current user policy, AuthProviderId:', currentPolicy.AuthenticationProviderId)
+          authLogger.info('Got current user policy', { authProviderId: currentPolicy.AuthenticationProviderId })
         }
       } catch (error) {
-        console.error('[OIDC CALLBACK] Failed to get current user policy:', error)
+        authLogger.error('Failed to get current user policy', { error: error instanceof Error ? error.message : 'Unknown error' })
       }
 
       // Apply the role-based policy merged with required fields from current policy
@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
         PasswordResetProviderId: currentPolicy.PasswordResetProviderId || 'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
       }
       
-      console.log('[OIDC CALLBACK] Applying role policy to new user:', {
+      authLogger.info('Applying role policy to new user', {
         userId,
         role,
         isAdministrator: policy.IsAdministrator,
@@ -310,13 +310,13 @@ export async function GET(req: NextRequest) {
 
       if (!policyResponse.ok) {
         const errorText = await policyResponse.text()
-        console.error('[OIDC CALLBACK] Failed to apply policy to user:', {
+        authLogger.error('Failed to apply policy to user', {
           status: policyResponse.status,
           error: errorText
         })
         // Continue anyway - user is created, but log the policy application failure
       } else {
-        console.log('[OIDC CALLBACK] Policy applied successfully to new user with role:', role)
+        authLogger.info('Policy applied successfully to new user', { role })
       }
 
       const newUser = {
@@ -337,7 +337,7 @@ export async function GET(req: NextRequest) {
       database.users.push(newUser)
       saveDatabaseImmediate()  // Persist immediately to ensure QuickConnect works
       user = newUser
-      console.log('[OIDC CALLBACK] User created successfully:', {
+      authLogger.info('User created successfully', {
         email: newUser.email,
         jellyfinId: userId,
         jellyfinUsername,
@@ -346,7 +346,7 @@ export async function GET(req: NextRequest) {
         groups: groupsArray
       })
     } else {
-      console.log('[OIDC CALLBACK] Existing user found:', user.email)
+      authLogger.info('Existing user found', { email: user.email })
       // Update OIDC provider info and groups
       user.oidcProvider = providerConfig.name
       user.oidcProviderId = userinfo.sub
@@ -355,7 +355,7 @@ export async function GET(req: NextRequest) {
       // Migrate legacy users (add username if missing)
       if (!user.jellyfinUsername) {
         user.jellyfinUsername = generateSecureUsername(user.email || 'user')
-        console.log('[OIDC CALLBACK] Migrated legacy user - generated username:', user.jellyfinUsername)
+        authLogger.info('Migrated legacy user - generated username', { jellyfinUsername: user.jellyfinUsername })
       }
       
       // Ensure user exists in Jellyfin (in case of sync issues)
@@ -373,7 +373,7 @@ export async function GET(req: NextRequest) {
           
           if (!checkUserResponse.ok) {
             // User doesn't exist in Jellyfin, need to recreate
-            console.log('[OIDC CALLBACK] User exists in JellyConnect but not in Jellyfin, recreating...')
+            authLogger.info('User exists in JellyConnect but not in Jellyfin, recreating')
             
             const securePassword = generateSecurePassword()
             const createUserResponse = await fetch(`${config.jellyfinUrl}/Users/New`, {
@@ -398,18 +398,18 @@ export async function GET(req: NextRequest) {
                 // Store the new encrypted password
                 user.jellyfinPasswordEncrypted = encrypt(securePassword)
                 saveDatabaseImmediate()  // Persist immediately
-                console.log('[OIDC CALLBACK] Recreated user in Jellyfin with new ID:', newUserId)
+                authLogger.info('Recreated user in Jellyfin with new ID', { newUserId })
               }
             } else {
-              console.error('[OIDC CALLBACK] Failed to recreate user in Jellyfin:', checkUserResponse.status)
+              authLogger.error('Failed to recreate user in Jellyfin', { status: checkUserResponse.status })
             }
           } else {
-            console.log('[OIDC CALLBACK] User verified to exist in Jellyfin')
+            authLogger.info('User verified to exist in Jellyfin')
             
             // Auto-fix: If user exists but doesn't have stored password, update it
             // This enables QuickConnect to work for SSO users
             if (!user.jellyfinPasswordEncrypted) {
-              console.log('[OIDC CALLBACK] User missing encrypted password, updating...')
+              authLogger.info('User missing encrypted password, updating')
               try {
                 const securePassword = generateSecurePassword()
                 
@@ -430,19 +430,19 @@ export async function GET(req: NextRequest) {
                 if (updatePwResponse.ok || updatePwResponse.status === 204) {
                   user.jellyfinPasswordEncrypted = encrypt(securePassword)
                   saveDatabaseImmediate()  // Persist immediately
-                  console.log('[OIDC CALLBACK] Password updated and encrypted for QuickConnect support')
+                  authLogger.info('Password updated and encrypted for QuickConnect support')
                 } else {
                   const errorText = await updatePwResponse.text()
-                  console.error('[OIDC CALLBACK] Failed to update password:', updatePwResponse.status, errorText)
+                  authLogger.error('Failed to update password', { status: updatePwResponse.status, error: errorText })
                 }
               } catch (pwError) {
-                console.error('[OIDC CALLBACK] Error updating password:', pwError)
+                authLogger.error('Error updating password', { error: pwError instanceof Error ? pwError.message : 'Unknown error' })
               }
             }
           }
         }
       } catch (error) {
-        console.error('[OIDC CALLBACK] Error verifying user in Jellyfin:', error)
+        authLogger.error('Error verifying user in Jellyfin', { error: error instanceof Error ? error.message : 'Unknown error' })
         // Continue anyway - don't fail the login
       }
       
@@ -457,16 +457,16 @@ export async function GET(req: NextRequest) {
       
       if (groupsChanged && groupsArray.length > 0) {
         user.oidcGroups = groupsArray
-        console.log('[OIDC CALLBACK] Updated groups for existing user:', user.email, groupsArray)
+        authLogger.info('Updated groups for existing user', { email: user.email, groups: groupsArray })
       } else {
-        console.log('[OIDC CALLBACK] Groups unchanged for existing user:', user.email, 'current groups:', user.oidcGroups)
+        authLogger.info('Groups unchanged for existing user', { email: user.email, currentGroups: user.oidcGroups })
       }
       
       // Update display name if provided
       const displayName = userinfo.name || userinfo.preferred_username
       if (displayName && displayName !== user.displayName) {
         user.displayName = displayName
-        console.log('[OIDC CALLBACK] Updated display name for existing user:', user.email, 'to:', displayName)
+        authLogger.info('Updated display name for existing user', { email: user.email, displayName })
       }
       
       // Save if anything changed
@@ -497,7 +497,7 @@ export async function GET(req: NextRequest) {
                 currentPolicy = currentUser.Policy || {}
               }
             } catch (error) {
-              console.error('[OIDC CALLBACK] Failed to get current user policy:', error)
+              authLogger.error('Failed to get current user policy for role update', { error: error instanceof Error ? error.message : 'Unknown error' })
             }
             
             const newPolicy = {
@@ -506,7 +506,7 @@ export async function GET(req: NextRequest) {
               PasswordResetProviderId: currentPolicy.PasswordResetProviderId || 'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
             }
             
-            console.log('[OIDC CALLBACK] Applying role update for existing user:', {
+            authLogger.info('Applying role update for existing user', {
               email: user.email,
               userId: user.jellyfinId,
               groups: groupsArray,
@@ -524,19 +524,19 @@ export async function GET(req: NextRequest) {
             })
             
             if (policyResponse.ok) {
-              console.log('[OIDC CALLBACK] Successfully updated user role in Jellyfin to:', newRole)
+              authLogger.info('Successfully updated user role in Jellyfin', { newRole })
             } else {
               const errorText = await policyResponse.text()
-              console.error('[OIDC CALLBACK] Failed to update user role in Jellyfin:', {
+              authLogger.error('Failed to update user role in Jellyfin', {
                 status: policyResponse.status,
                 error: errorText
               })
             }
           } else {
-            console.warn('[OIDC CALLBACK] Cannot update role - missing Jellyfin config or user ID')
+            authLogger.warn('Cannot update role - missing Jellyfin config or user ID')
           }
         } catch (error) {
-          console.error('[OIDC CALLBACK] Error updating user role:', error)
+          authLogger.error('Error updating user role', { error: error instanceof Error ? error.message : 'Unknown error' })
           // Don't fail the login if role update fails
         }
       }
@@ -554,11 +554,11 @@ export async function GET(req: NextRequest) {
       oidcProvider: providerConfig.name,
     })
 
-    console.log('[OIDC CALLBACK] Session token created, length:', sessionToken.length)
+    authLogger.info('Session token created', { tokenLength: sessionToken.length })
 
     // Redirect to callback complete page which will verify session and redirect to home
     const redirectUrl = new URL('/auth/callback/complete', baseUrl)
-    console.log('[OIDC CALLBACK] Redirecting to:', redirectUrl.toString())
+    authLogger.info('Redirecting to callback complete page', { redirectUrl: redirectUrl.toString() })
     
     const response = NextResponse.redirect(redirectUrl)
 
@@ -575,12 +575,12 @@ export async function GET(req: NextRequest) {
     
     // Log the Set-Cookie header
     const setCookieHeader = response.headers.get('Set-Cookie')
-    console.log('[OIDC CALLBACK] Set-Cookie header:', setCookieHeader ? setCookieHeader.substring(0, 100) + '...' : 'NONE')
-    console.log('[OIDC CALLBACK] Cookie options:', JSON.stringify(cookieOptions))
+    authLogger.info('Set-Cookie header set', { setCookieHeader: setCookieHeader ? setCookieHeader.substring(0, 100) + '...' : 'NONE' })
+    authLogger.debug('Cookie options', cookieOptions)
 
     return response
   } catch (error) {
-    console.error('[OIDC CALLBACK] Unexpected error:', error)
+    authLogger.error('Unexpected error in OIDC callback', { error: error instanceof Error ? error.message : 'Unknown error' })
     return NextResponse.redirect(
       new URL(`/login?error=server_error&message=${encodeURIComponent((error as Error).message.substring(0, 100))}`, baseUrl)
     )

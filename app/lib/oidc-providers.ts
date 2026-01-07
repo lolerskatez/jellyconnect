@@ -1,4 +1,6 @@
 // Generic OIDC provider using discovery URL and endpoints
+import { authLogger } from './logger';
+
 export function createCustomOIDCProvider(config: {
   name: string
   discoveryUrl: string
@@ -16,13 +18,15 @@ export function createCustomOIDCProvider(config: {
     wellKnownUrl = `${wellKnownUrl}/.well-known/openid-configuration`
   }
 
-  console.log('[OIDC] Creating provider with name:', config.name)
-  console.log('[OIDC] Client ID:', config.clientId)
-  console.log('[OIDC] WellKnown URL:', wellKnownUrl)
-  console.log('[OIDC] Endpoints:', {
-    authorization: config.authorizationEndpoint || 'from discovery',
-    token: config.tokenEndpoint || 'from discovery',
-    userinfo: config.userinfoEndpoint || 'from discovery',
+  authLogger.info('Creating OIDC provider', {
+    name: config.name,
+    clientId: config.clientId,
+    wellKnownUrl,
+    endpoints: {
+      authorization: config.authorizationEndpoint || 'from discovery',
+      token: config.tokenEndpoint || 'from discovery',
+      userinfo: config.userinfoEndpoint || 'from discovery',
+    }
   })
 
   // Create OAuth provider 
@@ -44,7 +48,7 @@ export function createCustomOIDCProvider(config: {
     },
     redirectUri: `${process.env.NEXTAUTH_URL}/api/auth/callback/oidc`,
     profile(profile: any) {
-      console.log('[OIDC] Profile received:', profile)
+      authLogger.debug('OIDC profile received', { sub: profile.sub, email: profile.email, name: profile.name })
       return {
         id: profile.sub,
         name: profile.name || profile.preferred_username || 'User',
@@ -76,11 +80,11 @@ export function getEnabledProviders() {
     const providerConfig = getOIDCProviderConfig()
 
     if (providerConfig && providerConfig.discoveryUrl && providerConfig.clientId) {
-      console.log('[OIDC] Loading custom provider from database:', providerConfig.name)
+      authLogger.info('Loading custom OIDC provider from database', { name: providerConfig.name })
       providers.push(createCustomOIDCProvider(providerConfig))
     }
   } catch (error) {
-    console.log('[OIDC] No custom OIDC provider configured in database:', error instanceof Error ? error.message : 'Unknown error')
+    authLogger.info('No custom OIDC provider configured in database', { error: error instanceof Error ? error.message : 'Unknown error' })
   }
 
   return providers
