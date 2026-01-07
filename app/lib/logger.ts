@@ -40,3 +40,4 @@ export const configLogger = logger.child({ module: 'config' }) as any;
 export const servicesLogger = logger.child({ module: 'services' }) as any;
 export const authSettingsLogger = logger.child({ module: 'auth-settings' }) as any;
 export const settingsLogger = logger.child({ module: 'settings' }) as any;
+export const pluginLogger = logger.child({ module: 'plugin' }) as any;
