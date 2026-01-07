@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPasswordResetToken, markPasswordResetTokenUsed, getUserById } from '@/app/lib/db/queries';
 import { getConfig } from '@/app/lib/config';
+import { strictRateLimit } from '@/app/lib/rate-limit';
 
 /**
  * Validate and use a password reset token
  * GET /api/auth/password-reset/[token] - Validate token
  * POST /api/auth/password-reset/[token] - Use token to reset password
  */
-export async function GET(
+async function getPasswordResetHandler(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
@@ -59,7 +60,7 @@ export async function GET(
   }
 }
 
-export async function POST(
+async function postPasswordResetHandler(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
@@ -154,4 +155,12 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  return strictRateLimit(request, () => getPasswordResetHandler(request, { params }));
+}
+
+export async function POST(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  return strictRateLimit(request, () => postPasswordResetHandler(request, { params }));
 }

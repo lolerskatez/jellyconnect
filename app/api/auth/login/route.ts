@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
+import { authRateLimit } from '@/app/lib/rate-limit'
 
-export async function POST(request: NextRequest) {
+async function loginHandler(request: NextRequest) {
   try {
     const { username, password } = await request.json()
 
@@ -60,4 +61,8 @@ export async function POST(request: NextRequest) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
+}
+
+export async function POST(request: NextRequest) {
+  return authRateLimit(request, () => loginHandler(request));
 }

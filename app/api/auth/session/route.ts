@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/auth'
+import { apiRateLimit } from '@/app/lib/rate-limit'
 
 /**
  * Get current user session
  * Returns user info if valid session exists, 401 if not
  */
-export async function GET(req: NextRequest) {
+async function getSessionHandler(req: NextRequest) {
   try {
     console.log('[SESSION] Checking session')
     
@@ -23,4 +24,8 @@ export async function GET(req: NextRequest) {
     console.error('[SESSION] Error:', error)
     return NextResponse.json({ user: null }, { status: 401 })
   }
+}
+
+export async function GET(req: NextRequest) {
+  return apiRateLimit(req, () => getSessionHandler(req));
 }

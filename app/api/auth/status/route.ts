@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
+import { apiRateLimit } from '@/app/lib/rate-limit'
 
-export async function GET() {
+async function getStatusHandler() {
   const config = getConfig()
 
   // Check if OIDC is properly configured (not placeholder values)
@@ -16,4 +17,8 @@ export async function GET() {
   )
 
   return NextResponse.json({ isOidcConfigured })
+}
+
+export async function GET(request: NextRequest) {
+  return apiRateLimit(request, () => getStatusHandler());
 }

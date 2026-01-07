@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { authRateLimit } from '@/app/lib/rate-limit'
 
 /**
  * Logout endpoint - clears the session cookie
  */
-export async function POST() {
+async function postLogoutHandler(request: NextRequest) {
   const response = NextResponse.json({ success: true })
   
   // Clear the session cookie
@@ -19,7 +20,7 @@ export async function POST() {
 }
 
 // Also support GET for simple redirects
-export async function GET() {
+async function getLogoutHandler(request: NextRequest) {
   const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL || 'http://localhost:3000'
   
   const response = NextResponse.redirect(new URL('/login', baseUrl))
@@ -34,4 +35,12 @@ export async function GET() {
   })
   
   return response
+}
+
+export async function POST(request: NextRequest) {
+  return authRateLimit(request, () => postLogoutHandler(request));
+}
+
+export async function GET(request: NextRequest) {
+  return authRateLimit(request, () => getLogoutHandler(request));
 }

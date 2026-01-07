@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthSettings, getOIDCProviderConfig } from '@/app/lib/auth-settings'
 import { getEnabledProviders } from '@/app/lib/oidc-providers'
+import { apiRateLimit } from '@/app/lib/rate-limit'
 
-export async function GET(request: NextRequest) {
+async function getProvidersHandler(request: NextRequest) {
   try {
     const authSettings = getAuthSettings()
     const enabledProviders = getEnabledProviders()
@@ -28,4 +29,8 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching auth providers:', error)
     return NextResponse.json({ error: 'Failed to fetch providers' }, { status: 500 })
   }
+}
+
+export async function GET(request: NextRequest) {
+  return apiRateLimit(request, () => getProvidersHandler(request));
 }
