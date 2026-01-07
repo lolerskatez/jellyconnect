@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
-import { userLogger } from '@/app/lib/logger'
+import { usersLogger } from '@/app/lib/logger'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const config = getConfig()
-    const { id } = await params
     const res = await fetch(`${config.jellyfinUrl}/Users/${id}`, {
       headers: { 'X-Emby-Token': config.apiKey }
     })
@@ -33,7 +33,7 @@ export async function GET(
     
     return NextResponse.json(user)
   } catch (error) {
-    userLogger.error('Failed to fetch user', { userId: id, error: error instanceof Error ? error.message : String(error) })
+    usersLogger.error('Failed to fetch user', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to fetch user' },
       { status: 500 }
@@ -45,9 +45,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const config = getConfig()
-    const { id } = await params
     const res = await fetch(`${config.jellyfinUrl}/Users/${id}`, {
       method: 'DELETE',
       headers: { 'X-Emby-Token': config.apiKey }
@@ -55,7 +55,7 @@ export async function DELETE(
     if (!res.ok) throw new Error('Failed to delete user')
     return NextResponse.json({ success: true })
   } catch (error) {
-    userLogger.error('Failed to delete user', { userId: id, error: error instanceof Error ? error.message : String(error) })
+    usersLogger.error('Failed to delete user', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to delete user' },
       { status: 500 }
@@ -67,9 +67,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const config = getConfig()
-    const { id } = await params
     const body = await request.json()
 
     // First, fetch the current user to get existing policy fields
@@ -106,7 +106,7 @@ export async function POST(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    userLogger.error('Failed to update user policy', { userId: id, error: error instanceof Error ? error.message : String(error) })
+    usersLogger.error('Failed to update user policy', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update user policy' },
       { status: 500 }
@@ -140,12 +140,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       if (displayName !== undefined) dbUpdates.displayName = displayName;
       
       updateUser(id, dbUpdates);
-      userLogger.info('User profile updated', { userId: id, updates: dbUpdates });
+      usersLogger.info('User profile updated', { userId: id, updates: dbUpdates });
     }
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    userLogger.error('Failed to update user', { userId: id, error: error instanceof Error ? error.message : String(error) });
+    usersLogger.error('Failed to update user', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }

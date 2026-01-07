@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
-import { userLogger } from '@/app/lib/logger'
+import { usersLogger } from '@/app/lib/logger'
 
 /**
  * Change password for a local Jellyfin user
@@ -10,9 +10,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const config = getConfig()
-    const { id } = await params
     const body = await request.json()
     const { currentPassword, newPassword } = body
 
@@ -67,7 +67,7 @@ export async function POST(
           )
         }
       } catch (error) {
-        userLogger.error('Error verifying current password', { userId: id, error: error instanceof Error ? error.message : String(error) })
+        usersLogger.error('Error verifying current password', { userId: id, error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
           { error: 'Failed to verify current password' },
           { status: 500 }
@@ -91,7 +91,7 @@ export async function POST(
 
       if (!updateRes.ok && updateRes.status !== 204) {
         const errorText = await updateRes.text()
-        userLogger.error('Password update failed', { userId: id, status: updateRes.status, error: errorText })
+        usersLogger.error('Password update failed', { userId: id, status: updateRes.status, error: errorText })
         return NextResponse.json(
           { error: 'Failed to update password in Jellyfin' },
           { status: 500 }
@@ -100,14 +100,14 @@ export async function POST(
 
       return NextResponse.json({ success: true, message: 'Password changed successfully' })
     } catch (error) {
-      userLogger.error('Error updating password', { userId: id, error: error instanceof Error ? error.message : String(error) })
+      usersLogger.error('Error updating password', { userId: id, error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
       )
     }
   } catch (error) {
-    userLogger.error('Password change error', { userId: id, error: error instanceof Error ? error.message : String(error) })
+    usersLogger.error('Password change error', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'An error occurred while changing password' },
       { status: 500 }

@@ -2,7 +2,7 @@ import { getUserContacts, getNotificationSettings } from './db/queries';
 import { emailService } from './email';
 import { discordService } from './discord';
 import { NotificationType } from '../../lib/notifications-types';
-import { notificationsLogger } from './logger';
+import { notificationLogger } from './logger';
 
 // Notification types
 export interface NotificationData {
@@ -38,13 +38,13 @@ export async function sendNotification(data: NotificationData): Promise<void> {
   const settings = getNotificationSettings(data.userId);
 
   if (!contacts) {
-    notificationsLogger.warn('No contact information found for user', { userId: data.userId })
+    notificationLogger.warn('No contact information found for user', { userId: data.userId })
     return;
   }
 
   // Check if user wants to receive this notification type
   if (!shouldReceiveNotificationType(settings, data.type)) {
-    notificationsLogger.info('User has disabled notifications', { userId: data.userId, type: data.type })
+    notificationLogger.info('User has disabled notifications', { userId: data.userId, type: data.type })
     return;
   }
 
@@ -73,14 +73,14 @@ async function sendEmail(to: string, subject: string, message: string): Promise<
     const success = await emailService.sendEmail(to, subject, htmlMessage, message);
 
     if (!success) {
-      notificationsLogger.info('Email service not configured - logging email details', {
+      notificationLogger.info('Email service not configured - logging email details', {
         to,
         subject,
         messageLength: message.length
       })
     }
   } catch (error) {
-    notificationsLogger.error('Failed to send email', { to, error: error instanceof Error ? error.message : 'Unknown error' })
+    notificationLogger.error('Failed to send email', { to, error: error instanceof Error ? error.message : 'Unknown error' })
     throw error;
   }
 }
@@ -95,14 +95,14 @@ async function sendDiscordMessage(discordUsername: string, subject: string, mess
     const success = await discordService.sendDirectMessageByUsername(discordUsername, discordMessage);
 
     if (!success) {
-      notificationsLogger.info('Discord service not configured or user not found - logging message details', {
+      notificationLogger.info('Discord service not configured or user not found - logging message details', {
         discordUsername,
         subject,
         messageLength: message.length
       })
     }
   } catch (error) {
-    notificationsLogger.error('Failed to send Discord message', { discordUsername, error: error instanceof Error ? error.message : 'Unknown error' })
+    notificationLogger.error('Failed to send Discord message', { discordUsername, error: error instanceof Error ? error.message : 'Unknown error' })
     throw error;
   }
 }

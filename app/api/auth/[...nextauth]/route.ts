@@ -1,6 +1,6 @@
 import { handlers } from '@/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { apiLogger, logApiRequest } from '@/app/lib/logger'
+import { apiLogger } from '@/app/lib/logger'
 
 // Wrap handlers to log errors and details
 export async function GET(req: NextRequest, context: any) {

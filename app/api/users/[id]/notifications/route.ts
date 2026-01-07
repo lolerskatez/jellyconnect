@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNotificationSettings, upsertNotificationSettings, generateId } from '@/app/lib/db/queries';
-import { userLogger } from '@/app/lib/logger';
+import { usersLogger } from '@/app/lib/logger';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
     const settings = getNotificationSettings(id);
 
     if (!settings) {
@@ -31,7 +31,7 @@ export async function GET(
       systemAlerts: settings.systemAlerts
     });
   } catch (error) {
-    userLogger.error('Failed to fetch notification settings', { userId: id, error: error instanceof Error ? error.message : String(error) });
+    usersLogger.error('Failed to fetch notification settings', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch notification settings' }, { status: 500 });
   }
 }
@@ -40,8 +40,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
     const { 
       emailEnabled, 
       discordEnabled, 
@@ -83,7 +83,7 @@ export async function PUT(
       }
     });
   } catch (error) {
-    userLogger.error('Failed to update notification settings', { userId: id, error: error instanceof Error ? error.message : String(error) });
+    usersLogger.error('Failed to update notification settings', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update notification settings' }, { status: 500 });
   }
 }

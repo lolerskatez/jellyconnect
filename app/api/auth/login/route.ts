@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
 import { authRateLimit } from '@/app/lib/rate-limit'
 import { loginSchema } from '@/app/lib/validation'
-import { authLogger, logAuthEvent } from '@/app/lib/logger'
+import { authLogger } from '@/app/lib/logger'
 
 async function loginHandler(request: NextRequest) {
   try {

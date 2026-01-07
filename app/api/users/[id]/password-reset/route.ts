@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { userLogger } from '@/app/lib/logger';
+import { usersLogger } from '@/app/lib/logger';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    userLogger.info('Password reset API called', { userId: id });
-    const { id } = await params;
-    userLogger.info('Processing password reset', { userId: id });
+    usersLogger.info('Password reset API called', { userId: id });
+    usersLogger.info('Processing password reset', { userId: id });
 
     return NextResponse.json({
       success: true,
@@ -17,7 +17,7 @@ export async function POST(
     });
 
   } catch (error) {
-    userLogger.error('Password reset error', { userId: id, error: error instanceof Error ? error.message : String(error) });
+    usersLogger.error('Password reset error', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed' },
       { status: 500 }

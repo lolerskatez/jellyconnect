@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserContacts } from '@/app/lib/db/queries';
 import { emailService } from '@/app/lib/email';
 import { discordService } from '@/app/lib/discord';
-import { notificationsLogger } from '@/app/lib/logger';
+import { notificationLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
-    notificationsLogger.error('Failed to send test notification', { userId, error: error instanceof Error ? error.message : String(error) });
+    notificationLogger.error('Failed to send test notification', { userId, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to send notification' },
       { status: 500 }

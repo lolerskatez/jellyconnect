@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
     }
 
     const auth = await authRes.json()
-    setupLogger.info('Jellyfin auth successful', { userId, isAdmin })
     const token = auth.AccessToken
     const userId = auth.User.Id
     const isAdmin = auth.User.Policy?.IsAdministrator || false
+    setupLogger.info('Jellyfin auth successful', { userId, isAdmin })
 
     if (!isAdmin) {
       return NextResponse.json({
