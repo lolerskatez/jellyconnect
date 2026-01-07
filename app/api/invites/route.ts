@@ -3,14 +3,21 @@ import { createInvite, getActiveInvites, deleteInvite, reactivateInvite, updateI
 import { emailService } from '@/app/lib/email';
 import { createInviteSchema } from '@/app/lib/validation';
 import { invitesLogger } from '@/app/lib/logger';
+import { successResponse, errorResponse, validationErrorResponse } from '@/app/lib/api-response';
 
 export async function GET() {
   try {
     const invites = getActiveInvites();
-    return NextResponse.json(invites);
+    return NextResponse.json(
+      successResponse(invites, 'Invites retrieved successfully'),
+      { status: 200 }
+    );
   } catch (error) {
     invitesLogger.error('Failed to fetch invites', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Failed to fetch invites', 'INVITES_FETCH_ERROR', 500),
+      { status: 500 }
+    );
   }
 }
 
@@ -22,7 +29,7 @@ export async function POST(request: NextRequest) {
     const validationResult = createInviteSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.issues },
+        validationErrorResponse(validationResult.error.issues),
         { status: 400 }
       );
     }
@@ -63,18 +70,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      id,
-      code,
-      profile,
-      maxUses,
-      expiresAt,
-      email,
-      createdBy
-    });
+    return NextResponse.json(
+      successResponse({
+        id,
+        code,
+        profile,
+        maxUses,
+        expiresAt,
+        email,
+        createdBy
+      }, 'Invite created successfully'),
+      { status: 201 }
+    );
   } catch (error) {
     invitesLogger.error('Failed to create invite', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Failed to create invite', 'INVITE_CREATE_ERROR', 500),
+      { status: 500 }
+    );
   }
 }
 
@@ -83,14 +96,23 @@ export async function DELETE(request: NextRequest) {
 
   try {
     if (!id) {
-      return NextResponse.json({ error: 'Invite ID is required' }, { status: 400 });
+      return NextResponse.json(
+        validationErrorResponse([{ path: 'id', message: 'Invite ID is required' }]),
+        { status: 400 }
+      );
     }
 
     deleteInvite(id);
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      successResponse({}, 'Invite deleted successfully'),
+      { status: 200 }
+    );
   } catch (error) {
     invitesLogger.error('Failed to delete invite', { inviteId: id, error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to delete invite' }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Failed to delete invite', 'INVITE_DELETE_ERROR', 500),
+      { status: 500 }
+    );
   }
 }
 
@@ -99,20 +121,35 @@ export async function PUT(request: NextRequest) {
 
   try {
     if (!id) {
-      return NextResponse.json({ error: 'Invite ID is required' }, { status: 400 });
+      return NextResponse.json(
+        validationErrorResponse([{ path: 'id', message: 'Invite ID is required' }]),
+        { status: 400 }
+      );
     }
 
     if (action === 'reactivate') {
       reactivateInvite(id);
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        successResponse({}, 'Invite reactivated successfully'),
+        { status: 200 }
+      );
     } else if (action === 'update' && updates) {
       updateInvite(id, updates);
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        successResponse({}, 'Invite updated successfully'),
+        { status: 200 }
+      );
     } else {
-      return NextResponse.json({ error: 'Invalid action or missing updates' }, { status: 400 });
+      return NextResponse.json(
+        validationErrorResponse([{ path: 'action', message: 'Invalid action or missing updates' }]),
+        { status: 400 }
+      );
     }
   } catch (error) {
     invitesLogger.error('Failed to update invite', { inviteId: id, action, error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to update invite' }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Failed to update invite', 'INVITE_UPDATE_ERROR', 500),
+      { status: 500 }
+    );
   }
 }

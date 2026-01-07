@@ -3,17 +3,24 @@ import { getConfig } from '@/app/lib/config';
 import { createUser, generateId } from '@/app/lib/db/queries';
 import { createUserSchema } from '@/app/lib/validation';
 import { usersLogger } from '@/app/lib/logger';
+import { successResponse, errorResponse, validationErrorResponse } from '@/app/lib/api-response';
 
 export async function GET() {
   try {
     const config = getConfig();
 
     if (!config.jellyfinUrl) {
-      return NextResponse.json({ error: 'Jellyfin server URL not configured' }, { status: 500 });
+      return NextResponse.json(
+        errorResponse('Jellyfin server URL not configured', 'JELLYFIN_CONFIG_ERROR', 500),
+        { status: 500 }
+      );
     }
 
     if (!config.apiKey) {
-      return NextResponse.json({ error: 'Jellyfin API key not configured' }, { status: 500 });
+      return NextResponse.json(
+        errorResponse('Jellyfin API key not configured', 'JELLYFIN_CONFIG_ERROR', 500),
+        { status: 500 }
+      );
     }
 
     const usersRes = await fetch(`${config.jellyfinUrl}/Users`, {
@@ -22,9 +29,10 @@ export async function GET() {
 
     if (!usersRes.ok) {
       usersLogger.error('Jellyfin API error fetching users', { status: usersRes.status, statusText: usersRes.statusText });
-      return NextResponse.json({
-        error: `Failed to fetch users from Jellyfin: ${usersRes.status} ${usersRes.statusText}`
-      }, { status: 500 });
+      return NextResponse.json(
+        errorResponse(`Failed to fetch users from Jellyfin: ${usersRes.status} ${usersRes.statusText}`, 'JELLYFIN_API_ERROR', 500),
+        { status: 500 }
+      );
     }
 
     const users = await usersRes.json();
@@ -39,16 +47,23 @@ export async function GET() {
         }
         return user;
       });
-      return NextResponse.json(usersWithOidc);
+      return NextResponse.json(
+        successResponse(usersWithOidc, 'Users retrieved successfully'),
+        { status: 200 }
+      );
     } catch (error) {
       usersLogger.warn('Could not fetch oidcProvider from database', { error: error instanceof Error ? error.message : String(error) });
-      return NextResponse.json(users);
+      return NextResponse.json(
+        successResponse(users, 'Users retrieved successfully'),
+        { status: 200 }
+      );
     }
   } catch (error) {
     usersLogger.error('Error fetching users', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({
-      error: `Failed to fetch users: ${error instanceof Error ? error.message : 'Unknown error'}`
-    }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Unknown error', 'USERS_FETCH_ERROR', 500),
+      { status: 500 }
+    );
   }
 }
 
@@ -61,7 +76,7 @@ export async function POST(request: NextRequest) {
     const validationResult = createUserSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.issues },
+        validationErrorResponse(validationResult.error.issues),
         { status: 400 }
       );
     }
@@ -103,9 +118,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(newUser);
+    return NextResponse.json(
+      successResponse(newUser, 'User created successfully'),
+      { status: 201 }
+    );
   } catch (error) {
     usersLogger.error('Failed to create user', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+    return NextResponse.json(
+      errorResponse(error instanceof Error ? error.message : 'Failed to create user', 'USER_CREATE_ERROR', 500),
+      { status: 500 }
+    );
   }
 }

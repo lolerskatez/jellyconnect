@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { database } from '@/app/lib/db'
 import { getConfig } from '@/app/lib/config'
 import { adminLogger } from '@/app/lib/logger'
+import { successResponse, errorResponse } from '@/app/lib/api-response'
 
 export async function GET() {
   try {
@@ -58,32 +59,35 @@ export async function GET() {
     // Calculate OIDC users
     const oidcUsers = database.users.filter(u => u.oidcProvider).length
     
-    return NextResponse.json({
-      users: {
-        total: totalLocalUsers,
-        jellyfin: jellyfinUserCount,
-        withExpiry: usersWithExpiry,
-        expiringSoon,
-        expired: expiredUsers,
-        oidc: oidcUsers,
-      },
-      invites: {
-        active: activeInvites,
-        total: totalInvites,
-        usages: totalInviteUsages,
-      },
-      notifications: {
-        usersConfigured: usersWithNotifications,
-      },
-      system: {
-        jellyfinConnected,
-        databaseUsers: totalLocalUsers,
-      }
-    })
+    return NextResponse.json(
+      successResponse({
+        users: {
+          total: totalLocalUsers,
+          jellyfin: jellyfinUserCount,
+          withExpiry: usersWithExpiry,
+          expiringSoon,
+          expired: expiredUsers,
+          oidc: oidcUsers,
+        },
+        invites: {
+          active: activeInvites,
+          total: totalInvites,
+          usages: totalInviteUsages,
+        },
+        notifications: {
+          usersConfigured: usersWithNotifications,
+        },
+        system: {
+          jellyfinConnected,
+          databaseUsers: totalLocalUsers,
+        }
+      }, 'Statistics retrieved successfully'),
+      { status: 200 }
+    )
   } catch (error) {
     adminLogger.error('Error fetching statistics', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
+      errorResponse(error instanceof Error ? error.message : 'Failed to fetch statistics', 'STATISTICS_FETCH_ERROR', 500),
       { status: 500 }
     )
   }

@@ -3,6 +3,7 @@ import { getConfig } from '@/app/lib/config'
 import { authRateLimit } from '@/app/lib/rate-limit'
 import { loginSchema } from '@/app/lib/validation'
 import { authLogger } from '@/app/lib/logger'
+import { successResponse, errorResponse, validationErrorResponse, forbiddenResponse, unauthorizedResponse } from '@/app/lib/api-response'
 
 async function loginHandler(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ async function loginHandler(request: NextRequest) {
     const validationResult = loginSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.issues },
+        validationErrorResponse(validationResult.error.issues),
         { status: 400 }
       )
     }
@@ -21,7 +22,10 @@ async function loginHandler(request: NextRequest) {
 
     const config = getConfig()
     if (!config.jellyfinUrl || !config.apiKey) {
-      return NextResponse.json({ error: 'Jellyfin not configured' }, { status: 500 })
+      return NextResponse.json(
+        errorResponse('Jellyfin not configured', 'JELLYFIN_CONFIG_ERROR', 500),
+        { status: 500 }
+      )
     }
 
     // Authenticate with Jellyfin
@@ -38,7 +42,10 @@ async function loginHandler(request: NextRequest) {
     })
 
     if (!authRes.ok) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      return NextResponse.json(
+        unauthorizedResponse('Invalid credentials'),
+        { status: 401 }
+      )
     }
 
     const authData = await authRes.json()
@@ -46,7 +53,10 @@ async function loginHandler(request: NextRequest) {
 
     // Check if user is administrator (required for login)
     if (!user.Policy?.IsAdministrator) {
-      return NextResponse.json({ error: 'Administrator access required' }, { status: 403 })
+      return NextResponse.json(
+        forbiddenResponse('Administrator access required'),
+        { status: 403 }
+      )
     }
 
     // Fetch displayName from our database
@@ -61,16 +71,22 @@ async function loginHandler(request: NextRequest) {
     }
 
     authLogger.info('Login successful', { userId: user.Id })
-    return NextResponse.json({
-      user,
-      token: authData.AccessToken,
-      displayName
-    })
+    return NextResponse.json(
+      successResponse({
+        user,
+        token: authData.AccessToken,
+        displayName
+      }, 'Login successful'),
+      { status: 200 }
+    )
 
   } catch (error) {
     authLogger.error('Login error', { error: error instanceof Error ? error.message : String(error) })
     authLogger.warn('Login failed')
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 })
+    return NextResponse.json(
+      errorResponse('Login failed', 'LOGIN_ERROR', 500),
+      { status: 500 }
+    )
   }
 }
 

@@ -1,6 +1,19 @@
-// import { accountExpiryManager } from './app/lib/account-expiry';
+import { assertEnvironmentValid } from './app/lib/env-validator';
 
-// Validate required environment variables on startup
+// Validate environment on startup
+if (typeof window === 'undefined') {
+  // Only run in Node.js environment (not in browser)
+  try {
+    assertEnvironmentValid();
+  } catch (error) {
+    console.error('Failed to start application due to environment validation errors');
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
+  }
+}
+
+// Legacy validation for reference (kept for backward compatibility)
 function validateEnvironmentVariables() {
   const requiredVars: Record<string, string> = {
     'NEXTAUTH_SECRET': 'NextAuth secret for session encryption',

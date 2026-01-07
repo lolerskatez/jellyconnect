@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authRateLimit } from '@/app/lib/rate-limit'
+import { successResponse } from '@/app/lib/api-response'
 
 /**
  * Logout endpoint - clears the session cookie
  */
 async function postLogoutHandler(request: NextRequest) {
-  const response = NextResponse.json({ success: true })
-  
-  // Clear the session cookie
+  const response = NextResponse.json(
+    successResponse({}, 'Logout successful'),
+    { status: 200 }
+  )
   response.cookies.set('next-auth.session-token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

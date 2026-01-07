@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/app/lib/db'
+import { successResponse, errorResponse, validationErrorResponse } from '@/app/lib/api-response'
 
 export async function GET(request: Request) {
   try {
@@ -49,23 +50,29 @@ export async function GET(request: Request) {
       actionCounts[entry.action] = (actionCounts[entry.action] || 0) + 1
     })
     
-    return NextResponse.json({
-      activities: enrichedActivities,
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
-      },
-      actionTypes: Object.entries(actionCounts).map(([action, count]) => ({
-        action,
-        count,
-      })),
-    })
+    return NextResponse.json(
+      successResponse(
+        {
+          activities: enrichedActivities,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + limit < total,
+          },
+          actionTypes: Object.entries(actionCounts).map(([action, count]) => ({
+            action,
+            count,
+          })),
+        },
+        'Activity log retrieved successfully'
+      ),
+      { status: 200 }
+    )
   } catch (error) {
     console.error('[ACTIVITY] Error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch activity log' },
+      errorResponse(error instanceof Error ? error.message : 'Failed to fetch activity log', 'ACTIVITY_FETCH_ERROR', 500),
       { status: 500 }
     )
   }
@@ -79,7 +86,7 @@ export async function POST(request: Request) {
     
     if (!action) {
       return NextResponse.json(
-        { error: 'Action is required' },
+        validationErrorResponse([{ path: 'action', message: 'Action is required' }]),
         { status: 400 }
       )
     }
@@ -96,11 +103,14 @@ export async function POST(request: Request) {
     
     database.auditLog.push(entry)
     
-    return NextResponse.json({ success: true, entry })
+    return NextResponse.json(
+      successResponse({ entry }, 'Activity entry created successfully'),
+      { status: 200 }
+    )
   } catch (error) {
     console.error('[ACTIVITY] Error creating entry:', error)
     return NextResponse.json(
-      { error: 'Failed to create activity entry' },
+      errorResponse(error instanceof Error ? error.message : 'Failed to create activity entry', 'ACTIVITY_CREATE_ERROR', 500),
       { status: 500 }
     )
   }
