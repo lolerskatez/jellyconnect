@@ -60,7 +60,7 @@ async function loginHandler(request: NextRequest) {
       authLogger.warn('Could not fetch displayName from database', { error: error instanceof Error ? error.message : String(error), userId: user.Id })
     }
 
-    logAuthEvent('login_success', user.Id, undefined, undefined, true)
+    authLogger.info('Login successful', { userId: user.Id })
     return NextResponse.json({
       user,
       token: authData.AccessToken,
@@ -69,7 +69,7 @@ async function loginHandler(request: NextRequest) {
 
   } catch (error) {
     authLogger.error('Login error', { error: error instanceof Error ? error.message : String(error) })
-    logAuthEvent('login_failed', undefined, undefined, undefined, false)
+    authLogger.warn('Login failed')
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }

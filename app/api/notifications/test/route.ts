@@ -5,9 +5,9 @@ import { discordService } from '@/app/lib/discord';
 import { notificationLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { userId, subject, message } = await request.json();
+  const { userId, subject, message } = await request.json();
 
+  try {
     if (!userId || !subject || !message) {
       return NextResponse.json(
         { error: 'Missing required fields: userId, subject, message' },
@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
     // Send test email if user has email configured
     if (contacts.email) {
       try {
-        notificationsLogger.info('Sending test email', { userId, email: contacts.email });
+        notificationLogger.info('Sending test email', { userId, email: contacts.email });
         const htmlMessage = message.replace(/\n/g, '<br>');
         const success = await emailService.sendEmail(contacts.email, subject, htmlMessage, message);
         results.email = success ? 'sent' : 'not_configured';
-        notificationsLogger.info('Test email result', { userId, result: results.email });
+        notificationLogger.info('Test email result', { userId, result: results.email });
       } catch (error) {
-        notificationsLogger.error('Failed to send test email', { userId, error: error instanceof Error ? error.message : String(error) });
+        notificationLogger.error('Failed to send test email', { userId, error: error instanceof Error ? error.message : String(error) });
         results.email = 'failed';
       }
     } else {
@@ -45,13 +45,13 @@ export async function POST(request: NextRequest) {
     // Send test Discord message if user has Discord username configured
     if (contacts.discordUsername) {
       try {
-        notificationsLogger.info('Sending test Discord DM', { userId, discordUsername: contacts.discordUsername });
+        notificationLogger.info('Sending test Discord DM', { userId, discordUsername: contacts.discordUsername });
         const discordMessage = `**${subject}**\n\n${message}`;
         const success = await discordService.sendDirectMessageByUsername(contacts.discordUsername, discordMessage);
         results.discord = success ? 'sent' : 'failed';
-        notificationsLogger.info('Test Discord result', { userId, result: results.discord });
+        notificationLogger.info('Test Discord result', { userId, result: results.discord });
       } catch (error) {
-        notificationsLogger.error('Failed to send test Discord message', { userId, error: error instanceof Error ? error.message : String(error) });
+        notificationLogger.error('Failed to send test Discord message', { userId, error: error instanceof Error ? error.message : String(error) });
         results.discord = 'failed';
       }
     }

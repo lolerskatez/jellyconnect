@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const { id } = await request.json();
+  const { id } = await request.json();
 
+  try {
     if (!id) {
       return NextResponse.json({ error: 'Invite ID is required' }, { status: 400 });
     }
@@ -95,9 +95,9 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  try {
-    const { id, action, updates } = await request.json();
+  const { id, action, updates } = await request.json();
 
+  try {
     if (!id) {
       return NextResponse.json({ error: 'Invite ID is required' }, { status: 400 });
     }

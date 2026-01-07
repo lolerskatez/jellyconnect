@@ -26,7 +26,7 @@ export async function GET(
         user.oidcProvider = undefined
       }
     } catch (error) {
-      userLogger.warn('Could not fetch oidcProvider from database', { userId: id, error: error instanceof Error ? error.message : String(error) })
+      usersLogger.warn('Could not fetch oidcProvider from database', { userId: id, error: error instanceof Error ? error.message : String(error) })
       // If we can't check the database, assume local user
       user.oidcProvider = undefined
     }

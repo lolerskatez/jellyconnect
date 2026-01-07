@@ -6,8 +6,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const inviteId = params.id;
+
   try {
-    const inviteId = params.id;
 
     if (inviteId) {
       // Get usages for a specific invite

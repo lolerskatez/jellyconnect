@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, context: any) {
     const response = await handlers.GET(req, context)
 
     const duration = Date.now() - startTime
-    logApiRequest('GET', pathname, response.status, duration)
+    apiLogger.info('Auth API GET request', { pathname, status: response.status, duration: `${duration}ms` })
 
     // Log response details for redirects
     if (response.status >= 300 && response.status < 400) {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, context: any) {
 
     const duration = Date.now() - startTime
     const url = new URL(req.url)
-    logApiRequest('POST', url.pathname, response.status, duration)
+    apiLogger.info('Auth API POST request', { pathname: url.pathname, status: response.status, duration: `${duration}ms` })
 
     return response
   } catch (error) {

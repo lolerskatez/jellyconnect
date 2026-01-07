@@ -3,10 +3,10 @@ import { getExpiringUsers } from '../../../lib/db/queries';
 import { adminLogger } from '@/app/lib/logger';
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '7');
+  const { searchParams } = new URL(request.url);
+  const days = parseInt(searchParams.get('days') || '7');
 
+  try {
     const expiringUsers = getExpiringUsers(days);
 
     return NextResponse.json(expiringUsers);

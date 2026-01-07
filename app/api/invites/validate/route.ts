@@ -3,15 +3,15 @@ import { getInviteByCode, incrementInviteUsage, recordInviteUsage, generateId } 
 import { invitesLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { code, userId } = await request.json();
+  const { code, userId } = await request.json();
 
+  try {
     if (!code) {
       return NextResponse.json({ error: 'Invite code is required' }, { status: 400 });
     }
 
-    invitesLogger.info('Validating invite code', { code, found: !!invite })
     const invite = getInviteByCode(code);
+    invitesLogger.info('Validating invite code', { code, found: !!invite })
 
     if (!invite) {
       return NextResponse.json({ error: 'Invalid or expired invite code' }, { status: 400 });
