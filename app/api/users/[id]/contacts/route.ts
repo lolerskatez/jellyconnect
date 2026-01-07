@@ -24,7 +24,6 @@ export async function PUT(
 ) {
   const { id } = await params;
   try {
-    const { id } = await params;
     const { displayName, email, discordUsername } = await request.json();
 
     // Validate email format if provided

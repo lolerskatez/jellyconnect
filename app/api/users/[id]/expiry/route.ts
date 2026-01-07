@@ -6,8 +6,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
     const user = await getUserById(id);
 
     if (!user) {
@@ -25,8 +25,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
     const { expiresAt } = await request.json();
 
     // Validate expiry date if provided

@@ -115,9 +115,9 @@ export async function POST(
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const config = getConfig();
-    const { id } = await params;
     const { name, password, email, discordUsername, displayName } = await request.json();
 
     const updateData: any = {};
