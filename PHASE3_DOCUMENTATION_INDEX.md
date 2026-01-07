@@ -211,7 +211,7 @@ project-root/
 ├── PHASE3_QUICK_REFERENCE.md ................ Quick reference
 ├── PHASE3_DOCUMENTATION_INDEX.md ............ This file
 │
-└── plugin/JellyfinOIDCPlugin/
+└── plugin/jellyfinoidcplugin/
     ├── web/configurationpage.html ........... UI configuration (modified)
     ├── Extensions/
     │   └── ServiceCollectionExtensions.cs ... DI setup (created)
@@ -352,7 +352,7 @@ Before proceeding, verify you have:
 
 ### For Hands-On Learning
 1. Clone the repository
-2. Review the source code in `plugin/JellyfinOIDCPlugin/`
+2. Review the source code in `plugin/jellyfinoidcplugin/`
 3. Read relevant sections of [PHASE3_COMPLETION_SUMMARY.md](PHASE3_COMPLETION_SUMMARY.md)
 4. Build the project: `dotnet build`
 5. Deploy following [PHASE3_DEPLOYMENT_GUIDE.md](PHASE3_DEPLOYMENT_GUIDE.md)
@@ -363,7 +363,7 @@ Before proceeding, verify you have:
 ## 🏆 Phase 3 at a Glance
 
 **What:** Jellyfin OIDC Plugin with JellyConnect Integration  
-**Where:** `plugin/JellyfinOIDCPlugin/`  
+**Where:** `plugin/jellyfinoidcplugin/`  
 **When:** 2024-01-01  
 **Why:** Enable advanced account linking and policy management  
 **How:** Web UI configuration + Dependency Injection + OIDC integration  
@@ -392,7 +392,7 @@ Before proceeding, verify you have:
 ## Navigation
 
 - **← Back to Project Root:** Check project directory
-- **→ See Plugin Source:** `plugin/JellyfinOIDCPlugin/`
+- **→ See Plugin Source:** `plugin/jellyfinoidcplugin/`
 - **→ Read Build Output:** Check `build-output.txt`
 - **→ Check Logs:** Review logs in deployment documentation
 

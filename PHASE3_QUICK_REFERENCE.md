@@ -17,7 +17,7 @@ Phase 3 completes the Jellyfin OIDC Plugin integration with three remaining task
 
 ### File to Update
 ```
-plugin/JellyfinOIDCPlugin/web/configurationpage.html
+plugin/jellyfinoidcplugin/web/configurationpage.html
 ```
 
 ### What to Add
@@ -60,7 +60,7 @@ Add a new form section for JellyConnect URL. Insert before the submit button:
 
 ### File to Update
 ```
-plugin/JellyfinOIDCPlugin/Program.cs
+plugin/jellyfinoidcplugin/Program.cs
 ```
 
 ### Current Structure (Example)
@@ -233,7 +233,7 @@ If no tests exist, at minimum:
 #### "Missing type JellyConnectApiClient"
 **Solution**: Check `JellyConnectApiClient.cs` is in correct location:
 ```
-plugin/JellyfinOIDCPlugin/Clients/JellyConnectApiClient.cs
+plugin/jellyfinoidcplugin/Clients/JellyConnectApiClient.cs
 ```
 
 #### "DI registration fails"

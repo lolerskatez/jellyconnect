@@ -199,9 +199,9 @@ app/api/plugin/link-account/route.ts
 app/api/plugin/get-user-policy/route.ts
 app/api/plugin/get-config/route.ts
 
-plugin/JellyfinOIDCPlugin/Clients/JellyConnectApiClient.cs
-plugin/JellyfinOIDCPlugin/Configuration/PluginConfiguration.cs
-plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs
+plugin/jellyfinoidcplugin/Clients/JellyConnectApiClient.cs
+plugin/jellyfinoidcplugin/Configuration/PluginConfiguration.cs
+plugin/jellyfinoidcplugin/Controllers/OidcController.cs
 ```
 
 ---

@@ -25,7 +25,7 @@ plugin/JellyfinOIDCPlugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll
 ### Option A: Docker Deployment
 ```bash
 # Copy DLL to Jellyfin plugins directory
-docker cp plugin/JellyfinOIDCPlugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll \
+docker cp plugin/jellyfinoidcplugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll \
   <jellyfin-container-id>:/config/plugins/
 
 # Restart Jellyfin

@@ -378,13 +378,13 @@ Quick References
   • This Certificate ........................ Completion certificate
 
 Source Code
-  • plugin/JellyfinOIDCPlugin/web/configurationpage.html
-  • plugin/JellyfinOIDCPlugin/Extensions/ServiceCollectionExtensions.cs
-  • plugin/JellyfinOIDCPlugin/Plugin.cs
-  • plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs
+  • plugin/jellyfinoidcplugin/web/configurationpage.html
+  • plugin/jellyfinoidcplugin/Extensions/ServiceCollectionExtensions.cs
+  • plugin/jellyfinoidcplugin/Plugin.cs
+  • plugin/jellyfinoidcplugin/Controllers/OidcController.cs
 
 Build Artifacts
-  • plugin/JellyfinOIDCPlugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll
+  • plugin/jellyfinoidcplugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll
 
 
 TECHNICAL CONTACT
@@ -406,7 +406,7 @@ For questions about Phase 3 implementation, refer to:
    • Test execution: PHASE3_TESTING_CHECKLIST.md
 
 4. Code Review
-   • Source files in plugin/JellyfinOIDCPlugin/
+   • Source files in plugin/jellyfinoidcplugin/
    • Comments and documentation in each file
 
 

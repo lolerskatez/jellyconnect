@@ -18,7 +18,7 @@ Phase 3 has been successfully completed! The Jellyfin OIDC Plugin now includes:
 ✅ **Production Build** - Release DLL ready for deployment  
 
 **Build Artifacts:**
-- Plugin DLL: `plugin/JellyfinOIDCPlugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll` (75 KB)
+- Plugin DLL: `plugin/jellyfinoidcplugin/bin/Release/publish/JellyfinOIDCPlugin.v2.dll` (75 KB)
 - All dependencies included and verified
 - Zero compilation errors
 
@@ -28,7 +28,7 @@ Phase 3 has been successfully completed! The Jellyfin OIDC Plugin now includes:
 
 ### 1. Web UI Configuration (COMPLETE ✅)
 
-**File:** `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+**File:** `plugin/jellyfinoidcplugin/web/configurationpage.html`
 
 **Added:**
 - Collapsible section "JellyConnect Integration (Optional)"
@@ -60,8 +60,8 @@ Jellyfin Admin → Dashboard → Plugins → OIDC Authentication
 ### 2. Dependency Injection Setup (COMPLETE ✅)
 
 **Files:**
-- Created: `plugin/JellyfinOIDCPlugin/Extensions/ServiceCollectionExtensions.cs`
-- Modified: `plugin/JellyfinOIDCPlugin/Plugin.cs`
+- Created: `plugin/jellyfinoidcplugin/Extensions/ServiceCollectionExtensions.cs`
+- Modified: `plugin/jellyfinoidcplugin/Plugin.cs`
 
 **Added:**
 - `ServiceCollectionExtensions` class with `AddJellyConnectIntegration()` method
@@ -109,7 +109,7 @@ public void RegisterServices(IServiceCollection serviceCollection)
 
 ### 3. OIDC Integration (COMPLETE ✅)
 
-**File:** `plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs`
+**File:** `plugin/jellyfinoidcplugin/Controllers/OidcController.cs`
 
 **Fixed:**
 - Token validation method signatures (ValidateTokenAsync)

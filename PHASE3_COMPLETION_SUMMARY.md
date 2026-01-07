@@ -43,8 +43,8 @@ Phase 3 of the Jellyfin OIDC Plugin integration has been successfully completed.
 
 ### 2. ✅ Dependency Injection Setup
 **Files Created/Modified:**
-- **Created:** `plugin/JellyfinOIDCPlugin/Extensions/ServiceCollectionExtensions.cs` (32 lines)
-- **Modified:** `plugin/JellyfinOIDCPlugin/Plugin.cs`
+- **Created:** `plugin/jellyfinoidcplugin/Extensions/ServiceCollectionExtensions.cs` (32 lines)
+- **Modified:** `plugin/jellyfinoidcplugin/Plugin.cs`
 
 **What was added:**
 - New `ServiceCollectionExtensions` class with `AddJellyConnectIntegration()` extension method
