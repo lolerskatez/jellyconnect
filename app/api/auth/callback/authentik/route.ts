@@ -14,8 +14,6 @@ export async function GET(req: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
-    console.log('[CALLBACK] Authentik callback received:', { code: code?.substring(0, 20) + '...', state, error })
-
     authLogger.info('Authentik callback received', { codePrefix: code?.substring(0, 20), state, error })
 
     // Check for errors from Authentik
@@ -32,7 +30,6 @@ export async function GET(req: NextRequest) {
     }
 
     if (!state) {
-      console.error('[CALLBACK] No state received')
       authLogger.error('No state received in Authentik callback')
       return NextResponse.redirect(new URL('/login?error=no_state', req.url))
     }
@@ -42,12 +39,6 @@ export async function GET(req: NextRequest) {
     const clientId = 'l8bcn01TTCN3BbK04rXlbezEgld2G2Zx6BvBzTbV'
     const clientSecret = process.env.OIDC_CLIENT_SECRET || ''
     const redirectUri = `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host') || req.headers.get('host')}/api/auth/callback/authentik`
-
-    console.log('[CALLBACK] Exchanging code for tokens:', {
-      tokenEndpoint,
-      clientId,
-      redirectUri,
-    })
 
     authLogger.info('Exchanging Authentik code for tokens', { tokenEndpoint, clientId, redirectUri })
 
@@ -74,9 +65,9 @@ export async function GET(req: NextRequest) {
     }
 
     const tokens = await tokenResponse.json()
-    console.log('[CALLBACK] Tokens received:', {
-      accessToken: tokens.access_token?.substring(0, 20) + '...',
-      idToken: tokens.id_token?.substring(0, 20) + '...',
+    authLogger.info('Authentik tokens received', {
+      accessTokenPrefix: tokens.access_token?.substring(0, 20),
+      idTokenPrefix: tokens.id_token?.substring(0, 20),
     })
 
     // Fetch user info
@@ -89,14 +80,14 @@ export async function GET(req: NextRequest) {
 
     if (!userinfoResponse.ok) {
       const error = await userinfoResponse.text()
-      console.error('[CALLBACK] Userinfo request failed:', error)
+      authLogger.error('Authentik userinfo request failed', { error })
       return NextResponse.redirect(
         new URL(`/login?error=userinfo_failed&message=${encodeURIComponent(error.substring(0, 100))}`, req.url)
       )
     }
 
     const userinfo = await userinfoResponse.json()
-    console.log('[CALLBACK] User info received:', {
+    authLogger.info('Authentik user info received', {
       sub: userinfo.sub,
       email: userinfo.email,
       name: userinfo.name,
@@ -107,12 +98,12 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       // Auto-create user in Jellyfin
-      console.log('[CALLBACK] Creating new user:', userinfo.email)
+      authLogger.info('Creating new Authentik user', { email: userinfo.email })
       const jellyfinUrl = process.env.JELLYFIN_SERVER_URL || 'http://localhost:8096'
       const apiKey = (await import('@/app/lib/config')).getConfig().apiKey
 
       if (!apiKey) {
-        console.error('[CALLBACK] Jellyfin API key not configured')
+        authLogger.error('Jellyfin API key not configured for Authentik user creation')
         return NextResponse.redirect(new URL('/login?error=jellyfin_not_configured', req.url))
       }
 
@@ -129,7 +120,7 @@ export async function GET(req: NextRequest) {
 
       if (!createUserResponse.ok) {
         const error = await createUserResponse.text()
-        console.error('[CALLBACK] Failed to create Jellyfin user:', error)
+        authLogger.error('Failed to create Jellyfin user for Authentik', { error })
         return NextResponse.redirect(new URL('/login?error=user_creation_failed', req.url))
       }
 
@@ -146,9 +137,9 @@ export async function GET(req: NextRequest) {
 
       database.users.push(newUser)
       user = newUser
-      console.log('[CALLBACK] User created:', newUser.email)
+      authLogger.info('Authentik user created', { email: newUser.email })
     } else {
-      console.log('[CALLBACK] Existing user found:', user.email)
+      authLogger.info('Existing Authentik user found', { email: user.email })
     }
 
     // At this point, user is always defined (either found or newly created)
@@ -163,7 +154,7 @@ export async function GET(req: NextRequest) {
       oidcProvider: 'authentik',
     })
 
-    console.log('[CALLBACK] Session token created:', sessionToken.substring(0, 20) + '...')
+    authLogger.info('Authentik session token created', { tokenPrefix: sessionToken.substring(0, 20) })
 
     // Redirect to home with session set
     // Note: NextAuth session handling - we'll set this in the response
@@ -180,7 +171,7 @@ export async function GET(req: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('[CALLBACK] Unexpected error:', error)
+    authLogger.error('Unexpected error in Authentik callback', { error: error instanceof Error ? error.message : 'Unknown error' })
     return NextResponse.redirect(
       new URL(`/login?error=server_error&message=${encodeURIComponent((error as Error).message.substring(0, 100))}`, req.url)
     )

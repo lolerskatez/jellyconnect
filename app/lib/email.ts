@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { getConfig } from './config';
+import { emailLogger } from './logger';
 
 export interface EmailConfig {
   host: string;
@@ -26,7 +27,7 @@ export class EmailService {
       const dbConfig = getConfig();
 
       if (!dbConfig.smtp?.host || !dbConfig.smtp?.user || !dbConfig.smtp?.pass) {
-        console.warn('Email service not configured in database. Set SMTP settings in the admin panel.');
+        emailLogger.warn('Email service not configured in database - set SMTP settings in admin panel')
         return;
       }
 
@@ -41,22 +42,22 @@ export class EmailService {
         from: dbConfig.smtp.from || dbConfig.smtp.user
       };
 
-      this.transporter = nodemailer.createTransport({
+      this.transporter = nodemailer.createTransporter({
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,
         auth: this.config.auth,
       });
 
-      console.log('Email service initialized successfully from database config');
+      emailLogger.info('Email service initialized successfully from database config')
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      emailLogger.error('Failed to initialize email service', { error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 
   async sendEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
     if (!this.transporter || !this.config) {
-      console.log('Email service not configured, logging instead:', { to, subject });
+      emailLogger.info('Email service not configured - logging instead', { to, subject })
       return false;
     }
 
@@ -70,10 +71,10 @@ export class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent successfully:', result.messageId);
+      emailLogger.info('Email sent successfully', { messageId: result.messageId, to, subject })
       return true;
     } catch (error) {
-      console.error('Failed to send email:', error);
+      emailLogger.error('Failed to send email', { to, subject, error: error instanceof Error ? error.message : 'Unknown error' })
       return false;
     }
   }

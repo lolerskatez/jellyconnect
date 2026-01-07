@@ -1,4 +1,5 @@
 import { getConfig } from './config';
+import { discordLogger } from './logger';
 
 export interface DiscordConfig {
   botToken: string;
@@ -17,7 +18,7 @@ export class DiscordService {
       const dbConfig = getConfig();
 
       if (!dbConfig.discord?.botToken) {
-        console.warn('Discord bot not configured in database. Set Discord bot token in the admin panel.');
+        discordLogger.warn('Discord bot not configured in database - set Discord bot token in admin panel')
         return;
       }
 
@@ -25,39 +26,39 @@ export class DiscordService {
         botToken: dbConfig.discord.botToken,
       };
 
-      console.log('Discord service initialized successfully from database config');
+      discordLogger.info('Discord service initialized successfully from database config')
     } catch (error) {
-      console.error('Failed to initialize Discord service:', error);
+      discordLogger.error('Failed to initialize Discord service', { error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 
   async sendDirectMessageByUsername(username: string, content: string): Promise<boolean> {
     if (!this.config?.botToken) {
-      console.log('[Discord] Bot not configured, logging instead:', { username, content });
+      discordLogger.info('Discord bot not configured - logging instead', { username, contentLength: content.length })
       return false;
     }
 
     try {
-      console.log(`[Discord] Attempting to send DM to user: ${username}`);
+      discordLogger.info('Attempting to send DM to user', { username })
       
       // Search for the user by username
       const userId = await this.getUserIdByUsername(username);
       if (!userId) {
-        console.warn(`[Discord] User not found: ${username}`);
+        discordLogger.warn('Discord user not found', { username })
         return false;
       }
 
       // Send DM to the user
       return await this.sendDirectMessage(userId, content);
     } catch (error) {
-      console.error(`[Discord] Failed to send Discord DM to ${username}:`, error);
+      discordLogger.error('Failed to send Discord DM', { username, error: error instanceof Error ? error.message : 'Unknown error' })
       return false;
     }
   }
 
   private async getUserIdByUsername(username: string): Promise<string | null> {
     if (!this.config?.botToken) {
-      console.warn('Discord bot token not configured');
+      discordLogger.warn('Discord bot token not configured')
       return null;
     }
 
@@ -70,12 +71,13 @@ export class DiscordService {
       });
 
       if (!guildsResponse.ok) {
-        console.error('Failed to fetch bot guilds:', guildsResponse.status, await guildsResponse.text());
+        const errorText = await guildsResponse.text()
+        discordLogger.error('Failed to fetch bot guilds', { status: guildsResponse.status, error: errorText })
         return null;
       }
 
       const guilds = await guildsResponse.json();
-      console.log(`[Discord] Bot is in ${guilds.length} guilds, searching for user: ${username}`);
+      discordLogger.info('Searching for Discord user across guilds', { username, guildCount: guilds.length })
 
       // Search for the user in each guild
       for (const guild of guilds) {
@@ -91,34 +93,34 @@ export class DiscordService {
             const members = await membersResponse.json();
             if (members.length > 0) {
               const user = members[0].user;
-              console.log(`[Discord] Found user ${username} (ID: ${user.id}) in guild ${guild.id}`);
+              discordLogger.info('Found Discord user in guild', { username, userId: user.id, guildId: guild.id })
               return user.id;
             }
           } else {
-            console.debug(`[Discord] Members search failed in guild ${guild.id}:`, membersResponse.status);
+            discordLogger.debug('Members search failed in guild', { guildId: guild.id, status: membersResponse.status })
           }
         } catch (guildError) {
           // Continue to next guild if this one fails
-          console.debug(`[Discord] Failed to search guild ${guild.id}:`, guildError);
+          discordLogger.debug('Failed to search guild', { guildId: guild.id, error: guildError instanceof Error ? guildError.message : 'Unknown error' })
         }
       }
 
-      console.warn(`[Discord] User "${username}" not found in any of the bot's shared servers`);
+      discordLogger.warn('Discord user not found in any shared servers', { username })
       return null;
     } catch (error) {
-      console.error('[Discord] Failed to lookup user by username:', error);
+      discordLogger.error('Failed to lookup Discord user by username', { username, error: error instanceof Error ? error.message : 'Unknown error' })
       return null;
     }
   }
 
   async sendDirectMessage(userId: string, content: string): Promise<boolean> {
     if (!this.config?.botToken) {
-      console.log('[Discord] Bot not configured for DMs, logging instead:', { userId, content });
+      discordLogger.info('Discord bot not configured for DMs - logging instead', { userId, contentLength: content.length })
       return false;
     }
 
     try {
-      console.log(`[Discord] Sending DM to user ID: ${userId}`);
+      discordLogger.info('Sending Discord DM to user', { userId })
       
       // First create a DM channel
       const dmResponse = await fetch('https://discord.com/api/users/@me/channels', {
@@ -134,12 +136,12 @@ export class DiscordService {
 
       if (!dmResponse.ok) {
         const error = await dmResponse.text();
-        console.error(`[Discord] Failed to create DM channel for ${userId}:`, dmResponse.status, error);
+        discordLogger.error('Failed to create Discord DM channel', { userId, status: dmResponse.status, error })
         return false;
       }
 
       const dmChannel = await dmResponse.json();
-      console.log(`[Discord] Created DM channel: ${dmChannel.id}`);
+      discordLogger.info('Created Discord DM channel', { userId, channelId: dmChannel.id })
 
       // Then send the message
       const messageResponse = await fetch(`https://discord.com/api/channels/${dmChannel.id}/messages`, {
@@ -154,15 +156,15 @@ export class DiscordService {
       });
 
       if (messageResponse.ok) {
-        console.log(`[Discord] DM sent successfully to user: ${userId}`);
+        discordLogger.info('Discord DM sent successfully', { userId })
         return true;
       }
 
       const error = await messageResponse.text();
-      console.error(`[Discord] Failed to send Discord DM to ${userId}:`, messageResponse.status, error);
+      discordLogger.error('Failed to send Discord DM', { userId, status: messageResponse.status, error })
       return false;
     } catch (error) {
-      console.error(`[Discord] Exception sending DM to ${userId}:`, error);
+      discordLogger.error('Exception sending Discord DM', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       return false;
     }
   }

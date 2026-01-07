@@ -29,16 +29,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Jellyfin not configured' }, { status: 500 })
     }
 
-    console.log('[Jellyfin Login] Authenticating user with token:', token.substring(0, 20) + '...')
-    console.log('[Jellyfin Login] Full token:', token)
-    console.log('[Jellyfin Login] Jellyfin URL:', config.jellyfinUrl)
-
     jellyfinLogger.info('Authenticating user with token', { tokenPrefix: token.substring(0, 20), jellyfinUrl: config.jellyfinUrl })
 
     // Verify the token is valid with Jellyfin
     const authHeader = `MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0", Token="${token}"`
-    console.log('[Jellyfin Login] Auth header:', authHeader)
-    
     jellyfinLogger.debug('Auth header created', { authHeaderPrefix: authHeader.substring(0, 50) })
     
     const validateRes = await fetch(`${config.jellyfinUrl}/Users/Me`, {
