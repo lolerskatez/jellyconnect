@@ -70,19 +70,19 @@ This checklist provides a comprehensive testing plan for Phase 3 implementation.
   - Setup: Open plugin settings page
   - Test: Scroll to "JellyConnect Integration (Optional)" section
   - Expected: Input field with ID="txtJellyConnectUrl" is visible
-  - File: `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+  - File: `plugin/jellyfinoidcplugin/web/configurationpage.html`
 
 - [ ] **Configuration loads on page load**
   - Setup: Set JellyConnect URL to "https://test.local"
   - Test: Refresh plugin settings page
   - Expected: Previously saved URL appears in input field
-  - File: `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+  - File: `plugin/jellyfinoidcplugin/web/configurationpage.html`
 
 - [ ] **Configuration saves on submit**
   - Setup: Enter new JellyConnect URL: "https://new-test.local"
   - Test: Click Save button
   - Expected: Configuration is persisted (success message shown)
-  - File: `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+  - File: `plugin/jellyfinoidcplugin/web/configurationpage.html`
 
 - [ ] **Configuration persists across sessions**
   - Setup: Save JellyConnect URL: "https://persistent.local"

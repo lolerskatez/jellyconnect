@@ -344,7 +344,7 @@ The plugin will gracefully handle JellyConnect API failures:
 ## Building the Plugin
 
 ```bash
-cd plugin/JellyfinOIDCPlugin
+cd plugin/jellyfinoidcplugin
 dotnet build
 dotnet publish -c Release
 ```

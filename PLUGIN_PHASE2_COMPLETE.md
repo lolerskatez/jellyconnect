@@ -8,7 +8,7 @@ The Jellyfin OIDC Plugin has been successfully updated to integrate with JellyCo
 
 ### ✅ Configuration Updates
 
-**File**: `plugin/JellyfinOIDCPlugin/Configuration/PluginConfiguration.cs`
+**File**: `plugin/jellyfinoidcplugin/Configuration/PluginConfiguration.cs`
 
 Added:
 - `JellyConnectUrl` property for configuring JellyConnect server URL
@@ -16,7 +16,7 @@ Added:
 
 ### ✅ Dependency Injection
 
-**File**: `plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs`
+**File**: `plugin/jellyfinoidcplugin/Controllers/OidcController.cs`
 
 Updated:
 - Added `using JellyfinOIDCPlugin.Clients;` import
@@ -191,7 +191,7 @@ Return TokenExchangeResponse
 To complete the plugin integration, the following steps are needed:
 
 ### 1. Web UI Configuration
-- **File**: `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+- **File**: `plugin/jellyfinoidcplugin/web/configurationpage.html`
 - **Task**: Add JellyConnect URL input field to configuration page
 - **Example**:
   ```html
@@ -203,7 +203,7 @@ To complete the plugin integration, the following steps are needed:
   ```
 
 ### 2. Dependency Injection Setup
-- **File**: `plugin/JellyfinOIDCPlugin/Program.cs`
+- **File**: `plugin/jellyfinoidcplugin/Program.cs`
 - **Task**: Register `JellyConnectApiClient` in DI container
 - **Purpose**: Inject client into OidcController for use
 - **Example**:

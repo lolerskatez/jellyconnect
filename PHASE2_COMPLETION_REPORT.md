@@ -391,7 +391,7 @@ npm test           # Should show 15/15 passing
 
 ### For Phase 3
 ```bash
-cd plugin/JellyfinOIDCPlugin
+cd plugin/jellyfinoidcplugin
 dotnet build                    # Verify compilation
 dotnet publish -c Release       # Create release package
 ```

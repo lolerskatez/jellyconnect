@@ -12,7 +12,7 @@ This session focused on **Phase 2** of the Jellyfin OIDC Plugin integration with
 
 ### 1. Configuration Enhancement ✅
 
-**Updated**: `plugin/JellyfinOIDCPlugin/Configuration/PluginConfiguration.cs`
+**Updated**: `plugin/jellyfinoidcplugin/Configuration/PluginConfiguration.cs`
 
 Added JellyConnect URL configuration property:
 ```csharp
@@ -23,7 +23,7 @@ This allows administrators to configure the JellyConnect server URL through the 
 
 ### 2. Controller Updates ✅
 
-**Updated**: `plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs`
+**Updated**: `plugin/jellyfinoidcplugin/Controllers/OidcController.cs`
 
 #### Imports
 - Added `using JellyfinOIDCPlugin.Clients;` for API client access
@@ -57,7 +57,7 @@ All 5 endpoints remain ready:
 
 ### 4. C# Client Library (From Phase 1) ✅
 
-`plugin/JellyfinOIDCPlugin/Clients/JellyConnectApiClient.cs` (410 lines)
+`plugin/jellyfinoidcplugin/Clients/JellyConnectApiClient.cs` (410 lines)
 - Provides HTTP communication layer
 - Request/response models
 - Error handling and logging
@@ -233,12 +233,12 @@ catch (Exception ex)
 ## What's Remaining (Phase 3)
 
 ### 1. Web UI Configuration
-**File**: `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+**File**: `plugin/jellyfinoidcplugin/web/configurationpage.html`
 **Task**: Add JellyConnect URL input field
 **Status**: 🔄 TODO (Phase 3)
 
 ### 2. Dependency Injection
-**File**: `plugin/JellyfinOIDCPlugin/Program.cs`
+**File**: `plugin/jellyfinoidcplugin/Program.cs`
 **Task**: Register `JellyConnectApiClient` in DI container
 **Status**: 🔄 TODO (Phase 3)
 

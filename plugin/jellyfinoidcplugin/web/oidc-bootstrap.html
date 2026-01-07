@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OIDC Plugin Loader</title>
+</head>
+<body style="display:none;">
+    <!-- This page loads the OIDC loader globally -->
+    <script>
+        // Bootstrap the OIDC loader immediately
+        (function() {
+            console.log('[OIDC Bootstrap] Starting global loader injection');
+            
+            // Create and append loader script
+            var loaderScript = document.createElement('script');
+            loaderScript.src = '/api/oidc/loader.js?v=' + new Date().getTime();
+            loaderScript.async = true;
+            loaderScript.type = 'text/javascript';
+            loaderScript.onerror = function() {
+                console.error('[OIDC Bootstrap] Failed to load loader script');
+            };
+            loaderScript.onload = function() {
+                console.log('[OIDC Bootstrap] Loader script loaded');
+            };
+            
+            document.head.appendChild(loaderScript);
+            console.log('[OIDC Bootstrap] Loader script appended');
+        })();
+    </script>
+</body>
+</html>

@@ -67,14 +67,14 @@
 ## 🔄 Phase 3 - Web UI & Build (To Do)
 
 ### 3.1 Web UI Configuration
-- [ ] Update `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+- [ ] Update `plugin/jellyfinoidcplugin/web/configurationpage.html`
   - [ ] Add JellyConnect URL input field
   - [ ] Add helpful placeholder text
   - [ ] Add description/help text
   - [ ] Bind to PluginConfiguration.JellyConnectUrl
 
 ### 3.2 Dependency Injection Setup
-- [ ] Update `plugin/JellyfinOIDCPlugin/Program.cs`
+- [ ] Update `plugin/jellyfinoidcplugin/Program.cs`
   - [ ] Register `HttpClient` factory
   - [ ] Register `JellyConnectApiClient` in DI container
   - [ ] Condition registration on JellyConnectUrl being configured

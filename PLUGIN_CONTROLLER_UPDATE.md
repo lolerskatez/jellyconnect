@@ -8,7 +8,7 @@ The Jellyfin OIDC Plugin's `OidcController` has been updated to integrate with J
 
 ### 1. Configuration Updates
 
-**File**: `plugin/JellyfinOIDCPlugin/Configuration/PluginConfiguration.cs`
+**File**: `plugin/jellyfinoidcplugin/Configuration/PluginConfiguration.cs`
 
 Added new configuration property:
 ```csharp
@@ -22,7 +22,7 @@ This allows administrators to configure the JellyConnect API endpoint in the plu
 
 ### 2. Controller Dependency Injection
 
-**File**: `plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs`
+**File**: `plugin/jellyfinoidcplugin/Controllers/OidcController.cs`
 
 **Imports Added**:
 ```csharp
@@ -256,7 +256,7 @@ The plugin's web configuration page needs to be updated to include:
 </div>
 ```
 
-See `plugin/JellyfinOIDCPlugin/web/configurationpage.html` for implementation.
+See `plugin/jellyfinoidcplugin/web/configurationpage.html` for implementation.
 
 ## Dependency Injection Configuration
 

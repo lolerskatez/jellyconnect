@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: 'A Next.js project for Jellyfin authentication',
   icons: {
     icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 }
 

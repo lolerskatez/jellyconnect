@@ -45,7 +45,7 @@ Five new API endpoints for the Jellyfin OIDC Plugin to communicate with JellyCon
 - Helps debug integration issues
 
 ### 3. Plugin API Client
-- Created `plugin/JellyfinOIDCPlugin/Clients/JellyConnectApiClient.cs`
+- Created `plugin/jellyfinoidcplugin/Clients/JellyConnectApiClient.cs`
 - C# client library for the Jellyfin plugin
 - Handles HTTP communication with JellyConnect API
 - Includes request/response models
@@ -226,7 +226,7 @@ Documentation:
 
 ### Plugin Changes (To Be Done)
 ```
-plugin/JellyfinOIDCPlugin/
+plugin/jellyfinoidcplugin/
 ├── Clients/
 │   └── JellyConnectApiClient.cs  ← New: JellyConnect API client
 ├── Controllers/

@@ -1,0 +1,38 @@
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.userprefs
+*.suo
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+packages/
+.nuget/
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+
+# Build output
+out/
+dist/
+release/

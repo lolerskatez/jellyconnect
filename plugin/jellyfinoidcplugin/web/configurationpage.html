@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>OIDC Authentication</title>
+    <!-- Global OIDC Injector - Runs on all pages -->
+    <script async defer src="/api/oidc/global.js"></script>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage oidcConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form class="oidcConfigurationForm">
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">OIDC Authentication Settings</h2>
+                        </div>
+                        <p><i>Note:</i> Making changes to this configuration requires a restart of Jellyfin.</p>
+
+                        <div class="verticalSection" is="emby-collapse" title="OpenID Connect Configuration">
+                            <div class="collapseContent">
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtOidEndpoint" label="OIDC Authority" />
+                                    <div class="fieldDescription">The base URL of your OIDC provider (e.g., https://auth.example.com)</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtOidClientId" label="Client ID" />
+                                    <div class="fieldDescription">The OIDC application client ID</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="password" id="txtOidSecret" label="Client Secret" />
+                                    <div class="fieldDescription">The OIDC application client secret</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtOidScopes" label="OAuth Scopes (space-separated)" />
+                                    <div class="fieldDescription">Default: openid profile email</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtRoleClaim" label="Role Claim Name" />
+                                    <div class="fieldDescription">The OIDC claim containing user roles/groups (e.g., 'groups')</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtRedirectUri" label="Redirect URI" />
+                                    <div class="fieldDescription">The callback URL (auto-generated if blank): http://JELLYFIN_URL/auth/oidc/callback</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtLogoutUri" label="Logout URI (Optional)" />
+                                    <div class="fieldDescription">URL to redirect to after logout (leave blank to stay on login page)</div>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtCertificatePath" label="Certificate Path (Optional)" />
+                                    <div class="fieldDescription">Path to certificate for OIDC validation (if needed)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="verticalSection" is="emby-collapse" title="JellyConnect Integration (Optional)">
+                            <div class="collapseContent">
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="url" id="txtJellyConnectUrl" label="JellyConnect Server URL (Optional)" />
+                                    <div class="fieldDescription">The URL of your JellyConnect server (e.g., https://jellyconnect.example.com). Leave blank to disable JellyConnect integration. When configured, the plugin will validate tokens and link accounts with JellyConnect.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="verticalSection" is="emby-collapse" title="Additional Settings">
+                            <div class="collapseContent">
+                                <div class="inputContainer" style="margin-top: 20px;">
+                                    <input is="emby-checkbox" id="chkAutoCreateUser" type="checkbox" />
+                                    <label for="chkAutoCreateUser">Automatically create users from OIDC claims</label>
+                                </div>
+
+                                <div class="inputContainer">
+                                    <input is="emby-checkbox" id="chkAllowRememberMe" type="checkbox" />
+                                    <label for="chkAllowRememberMe">Allow "Remember Me" option on login</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                                <span>${Save}</span>
+                            </button>
+                            <button is="emby-button" type="button" class="raised button-cancel block btnCancel" onclick="history.back();">
+                                <span>${ButtonCancel}</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var OidcConfigurationPage = {
+                pluginUniqueId: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6"
+            };
+
+            // Wait for elements to be ready
+            function getElements() {
+                return {
+                    txtOidEndpoint: document.querySelector("#txtOidEndpoint"),
+                    txtOidClientId: document.querySelector("#txtOidClientId"),
+                    txtOidSecret: document.querySelector("#txtOidSecret"),
+                    txtOidScopes: document.querySelector("#txtOidScopes"),
+                    txtRoleClaim: document.querySelector("#txtRoleClaim"),
+                    txtRedirectUri: document.querySelector("#txtRedirectUri"),
+                    txtLogoutUri: document.querySelector("#txtLogoutUri"),
+                    txtCertificatePath: document.querySelector("#txtCertificatePath"),
+                    txtJellyConnectUrl: document.querySelector("#txtJellyConnectUrl"),
+                    chkAutoCreateUser: document.querySelector("#chkAutoCreateUser"),
+                    chkAllowRememberMe: document.querySelector("#chkAllowRememberMe")
+                };
+            }
+
+            document.querySelector('.oidcConfigurationPage').addEventListener("pageshow", function () {
+                Dashboard.showLoadingMsg();
+
+                window.ApiClient.getPluginConfiguration(OidcConfigurationPage.pluginUniqueId).then(function (config) {
+                    console.log('[OIDC Config] Loaded configuration:', config);
+                    
+                    const elements = getElements();
+
+                    // Load values with null checks
+                    if (elements.txtOidEndpoint) elements.txtOidEndpoint.value = config.OidEndpoint || '';
+                    if (elements.txtOidClientId) elements.txtOidClientId.value = config.OidClientId || '';
+                    if (elements.txtOidSecret) elements.txtOidSecret.value = config.OidSecret || '';
+                    if (elements.txtRoleClaim) elements.txtRoleClaim.value = config.RoleClaim || 'groups';
+                    if (elements.txtRedirectUri) elements.txtRedirectUri.value = config.RedirectUri || '';
+                    if (elements.txtLogoutUri) elements.txtLogoutUri.value = config.LogoutUri || '';
+                    if (elements.txtCertificatePath) elements.txtCertificatePath.value = config.CertificatePath || '';
+                    if (elements.txtJellyConnectUrl) elements.txtJellyConnectUrl.value = config.JellyConnectUrl || '';
+                    if (elements.chkAutoCreateUser) elements.chkAutoCreateUser.checked = config.AutoCreateUser !== false;
+                    if (elements.chkAllowRememberMe) elements.chkAllowRememberMe.checked = config.AllowRememberMe !== false;
+
+                    if (config.OidScopes && Array.isArray(config.OidScopes)) {
+                        if (elements.txtOidScopes) elements.txtOidScopes.value = config.OidScopes.join(' ');
+                    } else {
+                        if (elements.txtOidScopes) elements.txtOidScopes.value = 'openid profile email';
+                    }
+
+                    Dashboard.hideLoadingMsg();
+                }).catch(function(error) {
+                    console.error('[OIDC Config] Error loading configuration:', error);
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            document.querySelector(".oidcConfigurationForm").addEventListener("submit", function(e){
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                const elements = getElements();
+
+                const scopes = (elements.txtOidScopes?.value || 'openid profile email')
+                    .split(/\s+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+
+                const config = {
+                    OidEndpoint: elements.txtOidEndpoint?.value || '',
+                    OidClientId: elements.txtOidClientId?.value || '',
+                    OidSecret: elements.txtOidSecret?.value || '',
+                    OidScopes: scopes.length > 0 ? scopes : ['openid', 'profile', 'email'],
+                    RoleClaim: elements.txtRoleClaim?.value || 'groups',
+                    RedirectUri: elements.txtRedirectUri?.value || null,
+                    LogoutUri: elements.txtLogoutUri?.value || null,
+                    CertificatePath: elements.txtCertificatePath?.value || null,
+                    JellyConnectUrl: elements.txtJellyConnectUrl?.value || null,
+                    AutoCreateUser: elements.chkAutoCreateUser?.checked ?? true,
+                    AllowRememberMe: elements.chkAllowRememberMe?.checked ?? true
+                };
+
+                console.log('[OIDC Config] Saving configuration:', config);
+
+                window.ApiClient.updatePluginConfiguration(OidcConfigurationPage.pluginUniqueId, config)
+                    .then(function() {
+                        console.log('[OIDC Config] Configuration saved successfully');
+                        Dashboard.processPluginConfigurationUpdateResult({});
+                    })
+                    .catch(function(error) {
+                        console.error('[OIDC Config] Error saving configuration:', error);
+                        Dashboard.hideLoadingMsg();
+                    });
+
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -9,7 +9,7 @@ Phase 3 of the Jellyfin OIDC Plugin integration has been successfully completed.
 ## Phase 3 Tasks Completed
 
 ### 1. ✅ Web UI Configuration
-**File:** `plugin/JellyfinOIDCPlugin/web/configurationpage.html`
+**File:** `plugin/jellyfinoidcplugin/web/configurationpage.html`
 
 **What was added:**
 - New collapsible section "JellyConnect Integration (Optional)" in plugin settings
@@ -136,7 +136,7 @@ linkAccountResponse.Success                // ✅ Correct
 ## Integration Points
 
 ### 1. OIDC Callback Flow
-**File:** `plugin/JellyfinOIDCPlugin/Controllers/OidcController.cs`
+**File:** `plugin/jellyfinoidcplugin/Controllers/OidcController.cs`
 
 **Callback method:**
 - Validates OIDC token with JellyConnect via `ValidateTokenAsync()`

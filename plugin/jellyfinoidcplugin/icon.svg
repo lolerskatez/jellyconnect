@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#1e88e5"/>
+  <circle cx="64" cy="50" r="20" fill="#ffffff"/>
+  <path d="M 30 80 Q 30 65 50 65 L 78 65 Q 98 65 98 80 L 98 110 Q 98 115 93 115 L 35 115 Q 30 115 30 110 Z" fill="#ffffff" opacity="0.8"/>
+  <text x="64" y="125" font-size="8" fill="#ffffff" text-anchor="middle" font-weight="bold">OIDC</text>
+</svg>
