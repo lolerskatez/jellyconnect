@@ -3,16 +3,28 @@ import { saveConfig } from '@/app/lib/config'
 import { buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
 import { updateAuthSettings } from '@/app/lib/auth-settings'
 import { saveDatabaseImmediate } from '@/app/lib/db'
+import { setupSchema } from '@/app/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { 
-      jellyfinUrl, 
-      adminUsername, 
+
+    // Validate input
+    const validationResult = setupSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validationResult.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const {
+      jellyfinUrl,
+      adminUsername,
       adminPassword,
+      adminEmail,
       smtpHost,
       smtpPort,
       smtpSecure,
@@ -24,15 +36,10 @@ export async function POST(request: NextRequest) {
       oidcProviderName,
       oidcDiscoveryUrl,
       oidcClientId,
-      oidcClientSecret
-    } = body
-
-    console.log('Setup request received:', { jellyfinUrl, adminUsername, adminPassword: '***' })
-
-    // Basic validation
-    if (!jellyfinUrl || !adminUsername || !adminPassword) {
-      return NextResponse.json({ error: 'Jellyfin URL, admin username, and password are required' }, { status: 400 })
-    }
+      oidcClientSecret,
+      enableRegistration,
+      enableNotifications
+    } = validationResult.data;
 
     const processedUrl = buildJellyfinBaseUrl(jellyfinUrl)
     console.log('Processed Jellyfin URL:', processedUrl)

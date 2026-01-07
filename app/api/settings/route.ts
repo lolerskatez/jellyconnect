@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig, saveConfig } from '../../lib/config';
+import { updateSettingsSchema } from '@/app/lib/validation';
 
 export async function GET() {
   try {
@@ -35,30 +36,24 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate the input
-    if (!body.jellyfinUrl || !body.smtp || !body.discord) {
+    // Validate input
+    const validationResult = updateSettingsSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid settings format' },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       );
     }
+
+    const { jellyfinUrl, smtp, discord } = validationResult.data;
 
     // Get current config and update only the notification settings
     const currentConfig = getConfig();
     const updatedConfig = {
       ...currentConfig,
-      jellyfinUrl: body.jellyfinUrl || '',
-      smtp: {
-        host: body.smtp.host || '',
-        port: body.smtp.port || 587,
-        secure: body.smtp.secure || false,
-        user: body.smtp.user || '',
-        pass: body.smtp.pass || '',
-        from: body.smtp.from || body.smtp.user || '',
-      },
-      discord: {
-        botToken: body.discord.botToken || '',
-      }
+      jellyfinUrl: jellyfinUrl,
+      smtp: smtp,
+      discord: discord
     };
 
     // Save the updated config

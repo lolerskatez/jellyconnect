@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
+import { quickConnectSchema } from '@/app/lib/validation';
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  // Validate input
+  const validationResult = quickConnectSchema.safeParse(body);
+  if (!validationResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: validationResult.error.issues },
+      { status: 400 }
+    );
+  }
+
+  const { code: secret } = validationResult.data;
+
   const config = getConfig();
-  const { secret } = await request.json();
   try {
     const res = await fetch(`${config.jellyfinUrl}/QuickConnect/Connect?secret=${secret}`, {
       method: 'GET',

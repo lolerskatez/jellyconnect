@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createInvite, getActiveInvites, deleteInvite, reactivateInvite, updateInvite, generateId, generateInviteCode } from '@/app/lib/db/queries';
 import { emailService } from '@/app/lib/email';
+import { createInviteSchema } from '@/app/lib/validation';
 
 export async function GET() {
   try {
@@ -14,11 +15,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { profile, maxUses, expiresAt, createdBy, email } = await request.json();
+    const body = await request.json();
 
-    if (!profile || !createdBy) {
-      return NextResponse.json({ error: 'Profile and createdBy are required' }, { status: 400 });
+    // Validate input
+    const validationResult = createInviteSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validationResult.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { profile, maxUses, expiresAt, createdBy, email } = validationResult.data;
 
     const id = generateId();
     const code = generateInviteCode();

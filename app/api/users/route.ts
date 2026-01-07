@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
 import { createUser, generateId } from '@/app/lib/db/queries';
+import { createUserSchema } from '@/app/lib/validation';
 
 export async function GET() {
   try {
@@ -53,13 +54,18 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const config = getConfig();
-    const { name, password, email, discordUsername, displayName, inviteId } = await request.json();
+    const body = await request.json();
 
-    console.log('[User Create] Received inviteId:', inviteId);
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    // Validate input
+    const validationResult = createUserSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validationResult.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { name, password, email, discordUsername, displayName, inviteId } = validationResult.data;
 
     const newUserRes = await fetch(`${config.jellyfinUrl}/Users/New`, {
       method: 'POST',

@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
 import { authRateLimit } from '@/app/lib/rate-limit'
+import { loginSchema } from '@/app/lib/validation'
 
 async function loginHandler(request: NextRequest) {
   try {
-    const { username, password } = await request.json()
+    const body = await request.json()
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
+    // Validate input
+    const validationResult = loginSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validationResult.error.issues },
+        { status: 400 }
+      )
     }
+
+    const { username, password } = validationResult.data
 
     const config = getConfig()
     if (!config.jellyfinUrl || !config.apiKey) {

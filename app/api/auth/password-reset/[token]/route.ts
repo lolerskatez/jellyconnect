@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPasswordResetToken, markPasswordResetTokenUsed, getUserById } from '@/app/lib/db/queries';
 import { getConfig } from '@/app/lib/config';
 import { strictRateLimit } from '@/app/lib/rate-limit';
+import { resetPasswordSchema } from '@/app/lib/validation';
 
 /**
  * Validate and use a password reset token
@@ -68,14 +69,17 @@ async function postPasswordResetHandler(
     const config = getConfig();
     const { token } = await params;
     const body = await request.json();
-    const { newPassword } = body;
 
-    if (!newPassword || newPassword.length < 8) {
+    // Validate input
+    const validationResult = resetPasswordSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       );
     }
+
+    const { newPassword } = validationResult.data;
 
     const resetToken = getPasswordResetToken(token);
     if (!resetToken) {
