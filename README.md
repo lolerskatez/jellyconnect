@@ -6,6 +6,7 @@ A comprehensive Next.js application for Jellyfin user management with authentica
 
 - **Jellyfin Authentication**: Direct authentication using Jellyfin server credentials
 - **SSO/OIDC Authentication**: Single Sign-On support with any OIDC provider (Authentik, Keycloak, Okta, etc.)
+- **Jellyfin OIDC Plugin Integration**: Seamless integration with Jellyfin's OIDC Plugin for automatic account linking and role synchronization
 - **Role-Based Access Control**: Granular permissions system with Admin, Moderator, and User roles
 - **User Management**: Create, view, update, and delete Jellyfin users with role-based access
 - **Invite System**: Generate and manage user invites with customizable profiles and usage limits
@@ -139,6 +140,9 @@ Complete the setup at the admin portal.
 - **[Deployment Guide](DEPLOYMENT.md)** - Production deployment with Docker, systemd, or PM2; reverse proxy setup; SSL/TLS configuration
 - **[Testing Guide](TESTING.md)** - Unit tests, manual testing checklists, API testing, performance and security testing
 - **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues with SSO, cookies, session persistence, and debugging steps
+- **[Plugin SSO Integration Guide](PLUGIN_SSO_README.md)** - Jellyfin OIDC Plugin integration for seamless account linking and role synchronization
+- **[Plugin Integration Plan](PLUGIN_INTEGRATION_PLAN.md)** - Architecture and design details for the plugin integration
+- **[Plugin Controller Update](PLUGIN_CONTROLLER_UPDATE.md)** - Detailed documentation of plugin controller changes and implementation
 
 ## Configuration
 
