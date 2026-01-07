@@ -66,6 +66,11 @@ npm test
    - **Jellyfin Admin Username**: Your Jellyfin admin username (used only for initial setup)
    - **Jellyfin Admin Password**: Your Jellyfin admin password (used only for initial setup)
 
+   **Optional Services** (can be configured later in Settings):
+   - **Email Notifications**: SMTP server details for sending emails
+   - **Discord Notifications**: Bot token for Discord notifications
+   - **SSO/OIDC Authentication**: OpenID Connect provider configuration for single sign-on
+
    The application will automatically generate an API key for secure communication with Jellyfin and discard the admin credentials.
 
 5. Save the configuration. The app will now be ready to use.

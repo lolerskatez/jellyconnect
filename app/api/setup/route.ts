@@ -1,19 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveConfig } from '@/app/lib/config'
 import { buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
+import { updateAuthSettings } from '@/app/lib/auth-settings'
+import { saveDatabaseImmediate } from '@/app/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { jellyfinUrl, adminUsername, adminPassword } = body
+    const { 
+      jellyfinUrl, 
+      adminUsername, 
+      adminPassword,
+      smtpHost,
+      smtpPort,
+      smtpSecure,
+      smtpUser,
+      smtpPass,
+      smtpFrom,
+      discordBotToken,
+      oidcEnabled,
+      oidcProviderName,
+      oidcDiscoveryUrl,
+      oidcClientId,
+      oidcClientSecret
+    } = body
 
     console.log('Setup request received:', { jellyfinUrl, adminUsername, adminPassword: '***' })
 
     // Basic validation
     if (!jellyfinUrl || !adminUsername || !adminPassword) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
+      return NextResponse.json({ error: 'Jellyfin URL, admin username, and password are required' }, { status: 400 })
     }
 
     const processedUrl = buildJellyfinBaseUrl(jellyfinUrl)
@@ -113,7 +131,35 @@ export async function POST(request: NextRequest) {
     saveConfig({
       jellyfinUrl: processedUrl,
       apiKey,
+      smtp: smtpHost ? {
+        host: smtpHost,
+        port: smtpPort || 587,
+        secure: smtpSecure || false,
+        user: smtpUser || '',
+        pass: smtpPass || '',
+        from: smtpFrom || smtpUser || '',
+      } : undefined,
+      discord: discordBotToken ? {
+        botToken: discordBotToken,
+      } : undefined,
+      oidcEnabled: oidcEnabled || false,
+      oidcProviderName: oidcProviderName || '',
+      oidcDiscoveryUrl: oidcDiscoveryUrl || '',
+      oidcClientId: oidcClientId || '',
+      oidcClientSecret: oidcClientSecret || '',
     })
+
+    // Also update auth settings if OIDC is configured
+    if (oidcEnabled && oidcDiscoveryUrl && oidcClientId) {
+      updateAuthSettings({
+        oidcEnabled: true,
+        oidcProviderName: oidcProviderName || '',
+        oidcDiscoveryUrl,
+        oidcClientId,
+        oidcClientSecret: oidcClientSecret || '',
+      })
+      saveDatabaseImmediate()
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

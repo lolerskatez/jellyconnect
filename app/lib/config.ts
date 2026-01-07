@@ -20,6 +20,9 @@ interface Config {
   discord?: {
     botToken: string
   }
+  oidcEnabled?: boolean
+  oidcProviderName?: string
+  oidcDiscoveryUrl?: string
 }
 
 const configPath = path.join(process.cwd(), 'data', 'config.json')
@@ -43,6 +46,9 @@ const defaultConfig: Config = {
   discord: {
     botToken: process.env.DISCORD_BOT_TOKEN || '',
   },
+  oidcEnabled: process.env.OIDC_ENABLED === 'true',
+  oidcProviderName: process.env.OIDC_PROVIDER_NAME || '',
+  oidcDiscoveryUrl: process.env.OIDC_DISCOVERY_URL || '',
 }
 
 export function getConfig(): Config {
@@ -69,6 +75,9 @@ export function getConfig(): Config {
       discord: {
         botToken: parsed.discord?.botToken || defaultConfig.discord!.botToken,
       },
+      oidcEnabled: parsed.oidcEnabled ?? false,
+      oidcProviderName: parsed.oidcProviderName || '',
+      oidcDiscoveryUrl: parsed.oidcDiscoveryUrl || '',
     }
   } catch (error) {
     return defaultConfig
