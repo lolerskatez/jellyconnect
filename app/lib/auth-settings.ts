@@ -1,4 +1,4 @@
-import { database } from './db'
+import { database, markDatabaseChanged } from './db'
 
 export function getAuthSettings() {
   let settings = database.authSettings[0]
@@ -13,6 +13,7 @@ export function getAuthSettings() {
       updatedAt: new Date().toISOString(),
     }
     database.authSettings.push(settings)
+    markDatabaseChanged()
   }
   
   return settings
@@ -21,6 +22,7 @@ export function getAuthSettings() {
 export function updateAuthSettings(updates: Partial<typeof database.authSettings[0]>) {
   const settings = getAuthSettings()
   Object.assign(settings, updates, { updatedAt: new Date().toISOString() })
+  markDatabaseChanged()
   return settings
 }
 

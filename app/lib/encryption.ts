@@ -5,7 +5,7 @@ const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 const SALT_LENGTH = 32;
 const KEY_LENGTH = 32;
-const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_ITERATIONS = 600000; // Increased from 100000 for better security
 
 // Static salt for key derivation (stored in env or generated once)
 // This ensures the same key is derived each time for the same secret

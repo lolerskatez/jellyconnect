@@ -176,15 +176,27 @@ function saveDatabase(db: Database): void {
 
 // In-memory database instance
 let database = loadDatabase();
+let hasUnsavedChanges = false;
 
 // Save database periodically (every 30 seconds)
 const saveInterval = setInterval(() => {
-  saveDatabase(database);
+  if (hasUnsavedChanges) {
+    saveDatabase(database);
+    hasUnsavedChanges = false;
+  }
 }, 30000);
 
 // Export function to trigger immediate save
 export function saveDatabaseImmediate(): void {
-  saveDatabase(database);
+  if (hasUnsavedChanges) {
+    saveDatabase(database);
+    hasUnsavedChanges = false;
+  }
+}
+
+// Export function to mark database as changed
+export function markDatabaseChanged(): void {
+  hasUnsavedChanges = true;
 }
 
 // Save on process exit

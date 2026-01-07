@@ -1,4 +1,4 @@
-import { database, saveDatabaseImmediate } from './index';
+import { database, saveDatabaseImmediate, markDatabaseChanged } from './index';
 import { randomBytes } from 'crypto';
 
 // User operations
@@ -14,6 +14,7 @@ export function createUser(id: string, jellyfinId: string, email?: string, disco
     updatedAt: new Date().toISOString()
   };
   database.users.push(user);
+  markDatabaseChanged();
   return user;
 }
 
@@ -31,6 +32,7 @@ export function updateUser(id: string, updates: Partial<{
   const user = database.users.find(u => u.id === id);
   if (user) {
     Object.assign(user, updates, { updatedAt: new Date().toISOString() });
+    markDatabaseChanged();
   }
   return user;
 }
@@ -72,6 +74,7 @@ export function createInvite(id: string, code: string, createdBy: string, profil
     email
   };
   database.invites.push(invite);
+  markDatabaseChanged();
   return invite;
 }
 
@@ -89,6 +92,7 @@ export function incrementInviteUsage(id: string) {
   const invite = database.invites.find(i => i.id === id);
   if (invite) {
     invite.usedCount++;
+    markDatabaseChanged();
   }
 }
 
@@ -114,8 +118,8 @@ export function recordInviteUsage(id: string, inviteId: string, usedBy: string) 
   } else {
     console.log('[recordInviteUsage] WARNING: Invite not found with id:', inviteId);
   }
-
-  return usage;
+  
+  markDatabaseChanged();
 }
 
 export function getActiveInvites() {
@@ -128,6 +132,7 @@ export function deactivateInvite(id: string) {
   const invite = database.invites.find(i => i.id === id);
   if (invite) {
     invite.isActive = false;
+    markDatabaseChanged();
   }
 }
 
@@ -137,6 +142,7 @@ export function deleteInvite(id: string) {
     database.invites.splice(index, 1);
     // Also remove associated usage records
     database.inviteUsages = database.inviteUsages.filter(u => u.inviteId !== id);
+    markDatabaseChanged();
   }
 }
 
@@ -180,6 +186,7 @@ export function logAudit(id: string, userId: string | undefined, action: string,
     createdAt: new Date().toISOString()
   };
   database.auditLog.push(entry);
+  markDatabaseChanged();
   return entry;
 }
 
@@ -209,6 +216,7 @@ export function upsertNotificationSettings(id: string, userId: string, settings:
     };
     database.notificationSettings.push(existing);
   }
+  markDatabaseChanged();
   return existing;
 }
 
@@ -285,6 +293,7 @@ export function createPasswordResetToken(userId: string, createdBy?: string, exp
   };
 
   database.passwordResetTokens.push(resetToken);
+  markDatabaseChanged();
   saveDatabaseImmediate();
   return token;
 }
@@ -305,6 +314,7 @@ export function markPasswordResetTokenUsed(token: string): boolean {
   const resetToken = database.passwordResetTokens.find(t => t.token === token);
   if (resetToken && !resetToken.used) {
     resetToken.used = true;
+    markDatabaseChanged();
     saveDatabaseImmediate();
     return true;
   }
