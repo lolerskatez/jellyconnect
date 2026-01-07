@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createInvite, getActiveInvites, deleteInvite, reactivateInvite, updateInvite, generateId, generateInviteCode } from '@/app/lib/db/queries';
 import { emailService } from '@/app/lib/email';
 import { createInviteSchema } from '@/app/lib/validation';
+import { invitesLogger } from '@/app/lib/logger';
 
 export async function GET() {
   try {
     const invites = getActiveInvites();
     return NextResponse.json(invites);
   } catch (error) {
-    console.error('Failed to fetch invites:', error);
+    invitesLogger.error('Failed to fetch invites', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -55,9 +56,9 @@ export async function POST(request: NextRequest) {
 
       try {
         await emailService.sendEmail(email, subject, html);
-        console.log(`Invite email sent to ${email}`);
+        invitesLogger.info('Invite email sent', { email });
       } catch (emailError) {
-        console.error('Failed to send invite email:', emailError);
+        invitesLogger.error('Failed to send invite email', { email, error: emailError instanceof Error ? emailError.message : String(emailError) });
         // Don't fail the invite creation if email fails
       }
     }
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       createdBy
     });
   } catch (error) {
-    console.error('Failed to create invite:', error);
+    invitesLogger.error('Failed to create invite', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
@@ -88,7 +89,7 @@ export async function DELETE(request: NextRequest) {
     deleteInvite(id);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete invite:', error);
+    invitesLogger.error('Failed to delete invite', { inviteId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to delete invite' }, { status: 500 });
   }
 }
@@ -111,7 +112,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid action or missing updates' }, { status: 400 });
     }
   } catch (error) {
-    console.error('Failed to update invite:', error);
+    invitesLogger.error('Failed to update invite', { inviteId: id, action, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update invite' }, { status: 500 });
   }
 }

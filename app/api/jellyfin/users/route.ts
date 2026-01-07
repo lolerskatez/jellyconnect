@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
 import { JellyfinAuth, buildJellyfinBaseUrl } from '@/app/lib/jellyfin';
+import { jellyfinLogger } from '@/app/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     const users = await jellyfin.getUsers();
     return NextResponse.json({ users });
   } catch (error) {
-    console.error('Failed to fetch users:', error);
+    jellyfinLogger.error('Failed to fetch users', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch users', details: String(error) },
       { status: 500 }

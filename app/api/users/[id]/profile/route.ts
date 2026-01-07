@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserById } from '@/app/lib/db/queries'
+import { userLogger } from '@/app/lib/logger'
 
 export async function GET(
   request: NextRequest,
@@ -23,7 +24,7 @@ export async function GET(
       discordUsername: user.discordUsername
     })
   } catch (error) {
-    console.error('Failed to fetch user profile:', error)
+    userLogger.error('Failed to fetch user profile', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to fetch user profile' },
       { status: 500 }

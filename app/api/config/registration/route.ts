@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { configLogger } from '@/app/lib/logger';
 
 const CONFIG_PATH = join(process.cwd(), 'data', 'config.json');
 
@@ -16,7 +17,7 @@ function loadConfig(): Config {
     const data = readFileSync(CONFIG_PATH, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    console.error('Failed to load config:', error);
+    configLogger.error('Failed to load config', { error: error instanceof Error ? error.message : String(error) });
     return { jellyfinUrl: '', apiKey: '', enableRegistration: true };
   }
 }
@@ -25,7 +26,7 @@ function saveConfig(config: Config): void {
   try {
     writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   } catch (error) {
-    console.error('Failed to save config:', error);
+    configLogger.error('Failed to save config', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -37,7 +38,7 @@ export async function GET() {
       enableRegistration: config.enableRegistration ?? true,
     });
   } catch (error) {
-    console.error('Failed to get registration setting:', error);
+    configLogger.error('Failed to get registration setting', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to get registration setting' },
       { status: 500 }
@@ -76,7 +77,7 @@ export async function PUT(request: NextRequest) {
       enableRegistration: config.enableRegistration,
     });
   } catch (error) {
-    console.error('Failed to update registration setting:', error);
+    configLogger.error('Failed to update registration setting', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update registration setting' },
       { status: 500 }

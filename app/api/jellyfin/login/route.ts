@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
+import { jellyfinLogger } from '@/app/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,9 +33,13 @@ export async function GET(request: NextRequest) {
     console.log('[Jellyfin Login] Full token:', token)
     console.log('[Jellyfin Login] Jellyfin URL:', config.jellyfinUrl)
 
+    jellyfinLogger.info('Authenticating user with token', { tokenPrefix: token.substring(0, 20), jellyfinUrl: config.jellyfinUrl })
+
     // Verify the token is valid with Jellyfin
     const authHeader = `MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0", Token="${token}"`
     console.log('[Jellyfin Login] Auth header:', authHeader)
+    
+    jellyfinLogger.debug('Auth header created', { authHeaderPrefix: authHeader.substring(0, 50) })
     
     const validateRes = await fetch(`${config.jellyfinUrl}/Users/Me`, {
       headers: {
@@ -44,11 +49,7 @@ export async function GET(request: NextRequest) {
 
     if (!validateRes.ok) {
       const errorText = await validateRes.text()
-      console.error('[Jellyfin Login] Token validation failed!')
-      console.error('[Jellyfin Login] Status:', validateRes.status)
-      console.error('[Jellyfin Login] Response:', errorText)
-      console.error('[Jellyfin Login] Full token:', token)
-      console.error('[Jellyfin Login] Auth header:', authHeader)
+      jellyfinLogger.error('Token validation failed', { status: validateRes.status, error: errorText, tokenPrefix: token.substring(0, 20) })
 
       // Token is invalid/expired - return error instead of redirect
       return new NextResponse(
@@ -119,14 +120,14 @@ export async function GET(request: NextRequest) {
     })
 
     if (!userRes.ok) {
-      console.error('[Jellyfin Login] Failed to get user info:', userRes.status)
+      jellyfinLogger.error('Failed to get user info', { status: userRes.status })
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('message', 'Failed to get user information. Please log in again.')
       return NextResponse.redirect(loginUrl)
     }
 
     const userData = await userRes.json()
-    console.log('[Jellyfin Login] User info retrieved:', userData.Name)
+    jellyfinLogger.info('User info retrieved', { userName: userData.Name })
 
     // IMPORTANT: localStorage is domain-specific! 
     // We can't set localStorage on localhost:3001 and expect Jellyfin at 192.168.1.183:8097 to read it.
@@ -252,7 +253,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('[Jellyfin Login] Error:', error)
+    jellyfinLogger.error('Jellyfin login error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

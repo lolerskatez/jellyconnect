@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/app/lib/db'
 import { getConfig } from '@/app/lib/config'
+import { adminLogger } from '@/app/lib/logger'
 
 export async function GET() {
   try {
@@ -47,7 +48,7 @@ export async function GET() {
           jellyfinConnected = true
         }
       } catch (error) {
-        console.error('[STATISTICS] Failed to fetch Jellyfin users:', error)
+        adminLogger.error('Failed to fetch Jellyfin users for statistics', { error: error instanceof Error ? error.message : String(error) })
       }
     }
     
@@ -80,7 +81,7 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('[STATISTICS] Error:', error)
+    adminLogger.error('Error fetching statistics', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
       { status: 500 }

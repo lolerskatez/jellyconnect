@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
 import { createUser, generateId } from '@/app/lib/db/queries';
 import { createUserSchema } from '@/app/lib/validation';
+import { usersLogger } from '@/app/lib/logger';
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
     });
 
     if (!usersRes.ok) {
-      console.error(`Jellyfin API error: ${usersRes.status} ${usersRes.statusText}`);
+      usersLogger.error('Jellyfin API error fetching users', { status: usersRes.status, statusText: usersRes.statusText });
       return NextResponse.json({
         error: `Failed to fetch users from Jellyfin: ${usersRes.status} ${usersRes.statusText}`
       }, { status: 500 });
@@ -40,11 +41,11 @@ export async function GET() {
       });
       return NextResponse.json(usersWithOidc);
     } catch (error) {
-      console.log('Could not fetch oidcProvider from database:', error);
+      usersLogger.warn('Could not fetch oidcProvider from database', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(users);
     }
   } catch (error) {
-    console.error('Error fetching users:', error);
+    usersLogger.error('Error fetching users', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({
       error: `Failed to fetch users: ${error instanceof Error ? error.message : 'Unknown error'}`
     }, { status: 500 });
@@ -81,14 +82,14 @@ export async function POST(request: NextRequest) {
 
         // Record invite usage if inviteId was provided
         if (inviteId) {
-          console.log('[User Create] Recording invite usage for inviteId:', inviteId, 'userId:', newUser.Id);
+          usersLogger.info('Recording invite usage', { inviteId, userId: newUser.Id });
           const { recordInviteUsage } = await import('@/app/lib/db/queries');
           const { saveDatabaseImmediate } = await import('@/app/lib/db');
           recordInviteUsage(generateId(), inviteId, newUser.Id);
           saveDatabaseImmediate();
-          console.log('[User Create] Invite usage recorded and saved');
+          usersLogger.info('Invite usage recorded and saved');
         } else {
-          console.log('[User Create] No inviteId provided, skipping usage recording');
+          usersLogger.info('No inviteId provided, skipping usage recording');
         }
 
         // Send welcome notification if contact info provided
@@ -97,14 +98,14 @@ export async function POST(request: NextRequest) {
           await sendWelcomeNotification(newUser.Id, name);
         }
       } catch (dbError) {
-        console.error('Failed to store user in database:', dbError);
+        usersLogger.error('Failed to store user in database', { error: dbError instanceof Error ? dbError.message : String(dbError) });
         // Don't fail the request if DB storage fails
       }
     }
 
     return NextResponse.json(newUser);
   } catch (error) {
-    console.error(error);
+    usersLogger.error('Failed to create user', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 }

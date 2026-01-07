@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccountExpiryManager } from '../../../lib/account-expiry';
+import { adminLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
       message: 'Expiry check completed'
     });
   } catch (error) {
-    console.error('Error triggering expiry check:', error);
+    adminLogger.error('Error triggering expiry check', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({
       error: 'Failed to trigger expiry check'
     }, { status: 500 });

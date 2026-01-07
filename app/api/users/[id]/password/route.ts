@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
+import { userLogger } from '@/app/lib/logger'
 
 /**
  * Change password for a local Jellyfin user
@@ -66,7 +67,7 @@ export async function POST(
           )
         }
       } catch (error) {
-        console.error('Error verifying current password:', error)
+        userLogger.error('Error verifying current password', { userId: id, error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
           { error: 'Failed to verify current password' },
           { status: 500 }
@@ -90,7 +91,7 @@ export async function POST(
 
       if (!updateRes.ok && updateRes.status !== 204) {
         const errorText = await updateRes.text()
-        console.error('Password update failed:', updateRes.status, errorText)
+        userLogger.error('Password update failed', { userId: id, status: updateRes.status, error: errorText })
         return NextResponse.json(
           { error: 'Failed to update password in Jellyfin' },
           { status: 500 }
@@ -99,14 +100,14 @@ export async function POST(
 
       return NextResponse.json({ success: true, message: 'Password changed successfully' })
     } catch (error) {
-      console.error('Error updating password:', error)
+      userLogger.error('Error updating password', { userId: id, error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('Password change error:', error)
+    userLogger.error('Password change error', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'An error occurred while changing password' },
       { status: 500 }

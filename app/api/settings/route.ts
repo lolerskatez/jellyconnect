@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig, saveConfig } from '../../lib/config';
 import { updateSettingsSchema } from '@/app/lib/validation';
+import { settingsLogger } from '@/app/lib/logger';
 
 export async function GET() {
   try {
@@ -24,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Failed to fetch settings:', error);
+    settingsLogger.error('Failed to fetch settings', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch settings' },
       { status: 500 }
@@ -67,7 +68,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to save settings:', error);
+    settingsLogger.error('Failed to save settings', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to save settings' },
       { status: 500 }

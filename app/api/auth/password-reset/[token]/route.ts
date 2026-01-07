@@ -3,6 +3,7 @@ import { getPasswordResetToken, markPasswordResetTokenUsed, getUserById } from '
 import { getConfig } from '@/app/lib/config';
 import { strictRateLimit } from '@/app/lib/rate-limit';
 import { resetPasswordSchema } from '@/app/lib/validation';
+import { authLogger } from '@/app/lib/logger';
 
 /**
  * Validate and use a password reset token
@@ -53,7 +54,7 @@ async function getPasswordResetHandler(
     });
 
   } catch (error) {
-    console.error('Error validating password reset token:', error);
+    authLogger.error('Error validating password reset token', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to validate token' },
       { status: 500 }
@@ -137,7 +138,7 @@ async function postPasswordResetHandler(
 
     if (!updateRes.ok && updateRes.status !== 204) {
       const errorText = await updateRes.text();
-      console.error('Password update failed:', updateRes.status, errorText);
+      authLogger.error('Password update failed in Jellyfin', { status: updateRes.status, error: errorText, userId: user.id });
       return NextResponse.json(
         { error: 'Failed to update password in Jellyfin' },
         { status: 500 }
@@ -153,7 +154,7 @@ async function postPasswordResetHandler(
     });
 
   } catch (error) {
-    console.error('Error resetting password:', error);
+    authLogger.error('Error resetting password', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to reset password' },
       { status: 500 }

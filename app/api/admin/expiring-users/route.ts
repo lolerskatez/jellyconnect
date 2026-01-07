@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getExpiringUsers } from '../../../lib/db/queries';
+import { adminLogger } from '@/app/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(expiringUsers);
   } catch (error) {
-    console.error('Error fetching expiring users:', error);
+    adminLogger.error('Error fetching expiring users', { days, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

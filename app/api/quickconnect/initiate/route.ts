@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
+import { quickConnectLogger } from '@/app/lib/logger';
 
 export async function POST() {
   try {
@@ -11,7 +12,7 @@ export async function POST() {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error(error);
+    quickConnectLogger.error('Failed to initiate Quick Connect', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to initiate Quick Connect' }, { status: 500 });
   }
 }

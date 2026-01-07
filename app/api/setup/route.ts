@@ -4,6 +4,7 @@ import { buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
 import { updateAuthSettings } from '@/app/lib/auth-settings'
 import { saveDatabaseImmediate } from '@/app/lib/db'
 import { setupSchema } from '@/app/lib/validation'
+import { setupLogger } from '@/app/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,11 +43,11 @@ export async function POST(request: NextRequest) {
     } = validationResult.data;
 
     const processedUrl = buildJellyfinBaseUrl(jellyfinUrl)
-    console.log('Processed Jellyfin URL:', processedUrl)
+    setupLogger.info('Setup started', { processedUrl })
 
     // Authenticate as admin to get token
     // Note: Jellyfin requires proper X-Emby-Authorization header format
-    console.log('Attempting to authenticate with Jellyfin...')
+    setupLogger.info('Attempting to authenticate with Jellyfin', { adminUsername })
     let authRes: Response
     try {
       authRes = await fetch(`${processedUrl}/Users/AuthenticateByName`, {
@@ -61,34 +62,34 @@ export async function POST(request: NextRequest) {
         })
       })
     } catch (fetchError) {
-      console.error('Failed to connect to Jellyfin server:', fetchError)
+      setupLogger.error('Failed to connect to Jellyfin server', { error: fetchError instanceof Error ? fetchError.message : String(fetchError), url: processedUrl })
       const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Unable to connect to Jellyfin server. Please check the URL and ensure the server is running and accessible.',
         details: `Connection failed to ${processedUrl}. Error: ${errorMessage}`
       }, { status: 500 })
     }
 
-    console.log('Jellyfin auth response status:', authRes.status)
+    setupLogger.info('Jellyfin auth response', { status: authRes.status })
 
     if (!authRes.ok) {
       const errorText = await authRes.text()
-      console.error('Jellyfin auth failed:', authRes.status, errorText)
+      setupLogger.error('Jellyfin auth failed', { status: authRes.status, error: errorText })
       // Return more helpful error message
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Invalid Jellyfin credentials or authentication failed',
         details: errorText
       }, { status: 401 })
     }
 
     const auth = await authRes.json()
-    console.log('Jellyfin auth successful, got token and userId')
+    setupLogger.info('Jellyfin auth successful', { userId, isAdmin })
     const token = auth.AccessToken
     const userId = auth.User.Id
     const isAdmin = auth.User.Policy?.IsAdministrator || false
 
     if (!isAdmin) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'The provided user is not an administrator. API key creation requires administrator privileges.',
         details: 'Please use an administrator account for setup.'
       }, { status: 403 })
@@ -96,8 +97,8 @@ export async function POST(request: NextRequest) {
 
     // Create an API key using the authenticated token
     // According to Jellyfin API docs: POST /Auth/Keys?app=<appName>
-    console.log('Creating API key with authenticated token...')
-    
+    setupLogger.info('Creating API key', { userId })
+
     let apiKeyRes: Response
     try {
       // Use the X-Emby-Token header for authenticated API calls
@@ -109,9 +110,9 @@ export async function POST(request: NextRequest) {
         }
       })
     } catch (fetchError) {
-      console.error('Failed to create API key:', fetchError)
+      setupLogger.error('Failed to create API key', { error: fetchError instanceof Error ? fetchError.message : String(fetchError) })
       const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Failed to create API key',
         details: `Connection error: ${errorMessage}`
       }, { status: 500 })
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     if (!apiKeyRes.ok) {
       const errorText = await apiKeyRes.text()
-      console.error('API key creation failed:', apiKeyRes.status, errorText)
+      setupLogger.error('API key creation failed', { status: apiKeyRes.status, error: errorText })
       return NextResponse.json({ 
         error: 'Failed to create API key',
         details: `${apiKeyRes.status}: ${errorText}`
@@ -128,13 +129,13 @@ export async function POST(request: NextRequest) {
 
     // According to Jellyfin API docs, successful response is 204 with no content
     // In that case, we can use the token we already have
-    console.log('API key created successfully (HTTP 204 No Content)')
+    setupLogger.info('API key created successfully (HTTP 204 No Content)')
     
     // For API key, we can use the access token obtained from authentication
     // Or we can query /Auth/Keys to get the newly created key
     const apiKey = token
 
-    console.log('API key created successfully')
+    setupLogger.info('API key created successfully')
     saveConfig({
       jellyfinUrl: processedUrl,
       apiKey,
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Unexpected error during setup:', error)
+    setupLogger.error('Unexpected error during setup', { error: error instanceof Error ? error.message : String(error) })
     const errorMessage = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ 
       error: 'An unexpected error occurred during setup',

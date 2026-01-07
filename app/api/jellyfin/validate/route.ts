@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig, saveConfig } from '@/app/lib/config';
 import { JellyfinAuth, buildJellyfinBaseUrl } from '@/app/lib/jellyfin';
+import { jellyfinLogger } from '@/app/lib/logger';
 
 export async function GET(request: NextRequest) {
   const baseUrl = request.headers.get('x-jellyfin-url');
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('API key validation error:', error);
+    jellyfinLogger.error('API key validation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'API key validation failed', details: String(error) },
       { status: 400 }

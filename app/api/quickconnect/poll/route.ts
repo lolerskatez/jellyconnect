@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/app/lib/config';
 import { quickConnectSchema } from '@/app/lib/validation';
+import { quickConnectLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error(error);
+    quickConnectLogger.error('Failed to poll Quick Connect', { secret, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to poll Quick Connect' }, { status: 500 });
   }
 }

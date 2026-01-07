@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/auth'
 import { apiRateLimit } from '@/app/lib/rate-limit'
+import { authLogger } from '@/app/lib/logger'
 
 /**
  * Get current user session
@@ -9,19 +10,19 @@ import { apiRateLimit } from '@/app/lib/rate-limit'
  */
 async function getSessionHandler(req: NextRequest) {
   try {
-    console.log('[SESSION] Checking session')
+    authLogger.debug('Checking session')
     
     const session = await getServerSession(authOptions)
     
     if (!session?.user) {
-      console.log('[SESSION] No active session')
+      authLogger.debug('No active session')
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
-    console.log('[SESSION] Session found for:', session.user.email)
+    authLogger.info('Session found', { userEmail: session.user.email })
     return NextResponse.json({ user: session.user })
   } catch (error) {
-    console.error('[SESSION] Error:', error)
+    authLogger.error('Session check error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ user: null }, { status: 401 })
   }
 }

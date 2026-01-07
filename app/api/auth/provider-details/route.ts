@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthSettings } from '@/app/lib/auth-settings'
+import { authLogger } from '@/app/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,11 +23,11 @@ export async function GET(request: NextRequest) {
     }
     
     // Otherwise, fetch from discovery URL
-    console.log('[PROVIDER-DETAILS] Fetching from discovery URL:', settings.oidcDiscoveryUrl)
+    authLogger.info('Fetching OIDC discovery document', { discoveryUrl: settings.oidcDiscoveryUrl })
     const discoveryResponse = await fetch(settings.oidcDiscoveryUrl)
     
     if (!discoveryResponse.ok) {
-      console.error('[PROVIDER-DETAILS] Failed to fetch discovery document:', discoveryResponse.status)
+      authLogger.error('Failed to fetch OIDC discovery document', { status: discoveryResponse.status, discoveryUrl: settings.oidcDiscoveryUrl })
       return NextResponse.json({ error: 'Failed to fetch provider discovery' }, { status: 500 })
     }
     
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       discoveryUrl: settings.oidcDiscoveryUrl,
     })
   } catch (error) {
-    console.error('[PROVIDER-DETAILS] Error:', error)
+    authLogger.error('Error fetching provider details', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch provider details' }, { status: 500 })
   }
 }

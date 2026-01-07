@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getInviteByCode, incrementInviteUsage, recordInviteUsage, generateId } from '@/app/lib/db/queries';
+import { invitesLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,9 +10,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invite code is required' }, { status: 400 });
     }
 
-    console.log('[Invite Validate] Looking for code:', code);
+    invitesLogger.info('Validating invite code', { code, found: !!invite })
     const invite = getInviteByCode(code);
-    console.log('[Invite Validate] Found invite:', invite);
 
     if (!invite) {
       return NextResponse.json({ error: 'Invalid or expired invite code' }, { status: 400 });
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       email: invite.email
     });
   } catch (error) {
-    console.error('Failed to validate invite:', error);
+    invitesLogger.error('Failed to validate invite', { code, userId, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to validate invite' }, { status: 500 });
   }
 }

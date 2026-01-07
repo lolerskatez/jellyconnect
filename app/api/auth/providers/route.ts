@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthSettings, getOIDCProviderConfig } from '@/app/lib/auth-settings'
 import { getEnabledProviders } from '@/app/lib/oidc-providers'
 import { apiRateLimit } from '@/app/lib/rate-limit'
+import { authLogger } from '@/app/lib/logger'
 
 async function getProvidersHandler(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ async function getProvidersHandler(request: NextRequest) {
     
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error fetching auth providers:', error)
+    authLogger.error('Error fetching auth providers', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch providers' }, { status: 500 })
   }
 }

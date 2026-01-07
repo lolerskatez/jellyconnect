@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserContacts } from '@/app/lib/db/queries';
 import { emailService } from '@/app/lib/email';
 import { discordService } from '@/app/lib/discord';
+import { notificationsLogger } from '@/app/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,13 +29,13 @@ export async function POST(request: NextRequest) {
     // Send test email if user has email configured
     if (contacts.email) {
       try {
-        console.log(`[TEST] Sending email to: ${contacts.email}`);
+        notificationsLogger.info('Sending test email', { userId, email: contacts.email });
         const htmlMessage = message.replace(/\n/g, '<br>');
         const success = await emailService.sendEmail(contacts.email, subject, htmlMessage, message);
         results.email = success ? 'sent' : 'not_configured';
-        console.log(`[TEST] Email result: ${results.email}`);
+        notificationsLogger.info('Test email result', { userId, result: results.email });
       } catch (error) {
-        console.error('[TEST] Failed to send test email:', error);
+        notificationsLogger.error('Failed to send test email', { userId, error: error instanceof Error ? error.message : String(error) });
         results.email = 'failed';
       }
     } else {
@@ -44,20 +45,20 @@ export async function POST(request: NextRequest) {
     // Send test Discord message if user has Discord username configured
     if (contacts.discordUsername) {
       try {
-        console.log(`[TEST] Sending Discord DM to: ${contacts.discordUsername}`);
+        notificationsLogger.info('Sending test Discord DM', { userId, discordUsername: contacts.discordUsername });
         const discordMessage = `**${subject}**\n\n${message}`;
         const success = await discordService.sendDirectMessageByUsername(contacts.discordUsername, discordMessage);
         results.discord = success ? 'sent' : 'failed';
-        console.log(`[TEST] Discord result: ${results.discord}`);
+        notificationsLogger.info('Test Discord result', { userId, result: results.discord });
       } catch (error) {
-        console.error('[TEST] Failed to send test Discord message:', error);
+        notificationsLogger.error('Failed to send test Discord message', { userId, error: error instanceof Error ? error.message : String(error) });
         results.discord = 'failed';
       }
     }
 
     return NextResponse.json({ success: true, results });
   } catch (error) {
-    console.error('[TEST] Failed to send test notification:', error);
+    notificationsLogger.error('Failed to send test notification', { userId, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to send notification' },
       { status: 500 }

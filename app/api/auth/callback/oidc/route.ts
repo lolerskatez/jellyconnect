@@ -4,6 +4,7 @@ import { getOIDCProviderConfigWithEndpoints } from '@/app/lib/auth-settings'
 import { generateSecurePassword, generateSecureUsername } from '@/app/lib/secure-password'
 import { mapGroupsToRole, getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
 import { encrypt } from '@/app/lib/encryption'
+import { authLogger } from '@/app/lib/logger'
 
 // Get the base URL for redirects - derive from request to support both admin and public servers
 function getBaseUrl(req: NextRequest): string {
@@ -12,17 +13,17 @@ function getBaseUrl(req: NextRequest): string {
     const { getAuthSettings } = require('@/app/lib/auth-settings')
     const settings = getAuthSettings()
     if (settings.appUrl) {
-      console.log('[OIDC CALLBACK] Using appUrl from settings:', settings.appUrl)
+      authLogger.info('Using appUrl from settings for OIDC callback', { appUrl: settings.appUrl })
       return settings.appUrl
     }
   } catch (e) {
-    console.log('[OIDC CALLBACK] Could not load appUrl from settings:', e instanceof Error ? e.message : 'Unknown error')
+    authLogger.warn('Could not load appUrl from settings', { error: e instanceof Error ? e.message : 'Unknown error' })
   }
   
   // Priority 2: Use environment variable (most reliable for production)
   const envUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_NEXTAUTH_URL
   if (envUrl) {
-    console.log('[OIDC CALLBACK] Using NEXTAUTH_URL from environment:', envUrl)
+    authLogger.info('Using NEXTAUTH_URL from environment for OIDC callback', { envUrl })
     return envUrl
   }
   
@@ -31,7 +32,7 @@ function getBaseUrl(req: NextRequest): string {
   const forwardedProto = req.headers.get('x-forwarded-proto')
   
   if (forwardedProto && forwardedHost) {
-    console.log('[OIDC CALLBACK] Using forwarded headers:', `${forwardedProto}://${forwardedHost}`)
+    authLogger.info('Using forwarded headers for OIDC callback base URL', { url: `${forwardedProto}://${forwardedHost}` })
     return `${forwardedProto}://${forwardedHost}`
   }
   
@@ -39,7 +40,7 @@ function getBaseUrl(req: NextRequest): string {
   const host = req.headers.get('host')
   if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
     const url = `https://${host}`
-    console.log('[OIDC CALLBACK] Using host header with HTTPS for non-localhost:', url)
+    authLogger.info('Using host header with HTTPS for OIDC callback base URL', { url })
     return url
   }
   
@@ -62,41 +63,41 @@ export async function GET(req: NextRequest) {
     const error = searchParams.get('error')
     const errorDescription = searchParams.get('error_description')
 
-    console.log('[OIDC CALLBACK] Callback received:', { code: code?.substring(0, 20) + '...', state, error })
-    console.log('[OIDC CALLBACK] Using base URL for redirects:', baseUrl)
+    authLogger.info('OIDC callback received', { codePrefix: code?.substring(0, 20), state, error })
+    authLogger.info('Using base URL for redirects', { baseUrl })
 
     // Check for errors from provider
     if (error) {
       const errorMsg = errorDescription || error
-      console.error('[OIDC CALLBACK] Provider error:', errorMsg)
+      authLogger.error('OIDC provider error', { error: errorMsg })
       return NextResponse.redirect(
         new URL(`/login?error=oidc_error&message=${encodeURIComponent(errorMsg.substring(0, 100))}`, baseUrl)
       )
     }
 
     if (!code) {
-      console.error('[OIDC CALLBACK] No authorization code received')
+      authLogger.error('No authorization code received')
       return NextResponse.redirect(new URL('/login?error=no_code', baseUrl))
     }
 
     if (!state) {
-      console.error('[OIDC CALLBACK] No state received')
+      authLogger.error('No state received')
       return NextResponse.redirect(new URL('/login?error=no_state', baseUrl))
     }
 
     // Get provider configuration from database
     const providerConfig = await getOIDCProviderConfigWithEndpoints()
     if (!providerConfig) {
-      console.error('[OIDC CALLBACK] No OIDC provider configured')
+      authLogger.error('No OIDC provider configured')
       return NextResponse.redirect(new URL('/login?error=provider_not_configured', baseUrl))
     }
 
-    console.log('[OIDC CALLBACK] Using provider:', providerConfig.name)
+    authLogger.info('Using OIDC provider', { provider: providerConfig.name })
 
     // Build redirect URI using the same baseUrl - must match what was sent to the provider
     const redirectUri = `${baseUrl}/api/auth/callback/oidc`
 
-    console.log('[OIDC CALLBACK] Exchanging code for tokens:', {
+    authLogger.info('Exchanging code for tokens', {
       provider: providerConfig.name,
       clientId: providerConfig.clientId,
       redirectUri,
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     // Exchange authorization code for tokens
     const tokenEndpoint = providerConfig.tokenEndpoint
-    console.log('[OIDC CALLBACK] Token endpoint being used:', tokenEndpoint)
+    authLogger.info('Token endpoint being used', { tokenEndpoint })
     
     // Use Basic Authentication for client credentials (more reliable with Authentik)
     const basicAuth = Buffer.from(`${providerConfig.clientId}:${providerConfig.clientSecret}`).toString('base64')
@@ -125,7 +126,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text()
-      console.error('[OIDC CALLBACK] Token exchange failed:', {
+      authLogger.error('Token exchange failed', {
         status: tokenResponse.status,
         statusText: tokenResponse.statusText,
         endpoint: tokenEndpoint,
@@ -137,16 +138,16 @@ export async function GET(req: NextRequest) {
     }
 
     const tokens = await tokenResponse.json()
-    console.log('[OIDC CALLBACK] Tokens received:', {
-      accessToken: tokens.access_token?.substring(0, 20) + '...',
-      idToken: tokens.id_token?.substring(0, 20) + '...',
+    authLogger.info('Tokens received', {
+      accessTokenPrefix: tokens.access_token?.substring(0, 20),
+      idTokenPrefix: tokens.id_token?.substring(0, 20),
       expiresIn: tokens.expires_in,
     })
 
     // Fetch user information
     const userinfoEndpoint = providerConfig.userinfoEndpoint
     
-    console.log('[OIDC CALLBACK] Fetching user info from:', userinfoEndpoint)
+    authLogger.info('Fetching user info from endpoint', { userinfoEndpoint })
     
     const userinfoResponse = await fetch(userinfoEndpoint, {
       headers: {
@@ -156,21 +157,21 @@ export async function GET(req: NextRequest) {
 
     if (!userinfoResponse.ok) {
       const error = await userinfoResponse.text()
-      console.error('[OIDC CALLBACK] Userinfo request failed:', userinfoResponse.status, error)
+      authLogger.error('Userinfo request failed', { status: userinfoResponse.status, error })
       return NextResponse.redirect(
         new URL(`/login?error=userinfo_failed&message=${encodeURIComponent(error.substring(0, 100))}`, baseUrl)
       )
     }
 
     const userinfo = await userinfoResponse.json()
-    console.log('[OIDC CALLBACK] User info received:', {
+    authLogger.info('User info received', {
       sub: userinfo.sub,
       email: userinfo.email,
       name: userinfo.name || userinfo.preferred_username,
     })
 
     if (!userinfo.email) {
-      console.error('[OIDC CALLBACK] No email in user info')
+      authLogger.error('No email in user info')
       return NextResponse.redirect(new URL('/login?error=no_email', baseUrl))
     }
 
@@ -179,12 +180,12 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       // Auto-create user in Jellyfin with enhanced features
-      console.log('[OIDC CALLBACK] Creating new user:', userinfo.email)
+      authLogger.info('Creating new user', { email: userinfo.email })
       const { getConfig } = await import('@/app/lib/config')
       const config = getConfig()
       
       if (!config.jellyfinUrl || !config.apiKey) {
-        console.error('[OIDC CALLBACK] Jellyfin not configured')
+        authLogger.error('Jellyfin not configured')
         return NextResponse.redirect(new URL('/login?error=jellyfin_not_configured', baseUrl))
       }
 
@@ -198,13 +199,13 @@ export async function GET(req: NextRequest) {
       
       // Map OIDC groups to Jellyfin role
       const role = mapGroupsToRole(groupsArray)
-      console.log('[OIDC CALLBACK] Mapped role:', role, 'from groups:', groupsArray)
+      authLogger.info('Mapped role from groups', { role, groups: groupsArray })
 
       // Use SSO provider's username (preferred_username or name), fallback to email prefix
       const jellyfinUsername = userinfo.preferred_username || userinfo.name || userinfo.email.split('@')[0]
       const securePassword = generateSecurePassword()
 
-      console.log('[OIDC CALLBACK] Creating Jellyfin user with username:', jellyfinUsername, 'and role:', role)
+      authLogger.info('Creating Jellyfin user', { jellyfinUsername, role })
 
       let userId: string | null = null
       let jellyfinUser: any = null
@@ -223,10 +224,10 @@ export async function GET(req: NextRequest) {
 
       if (!createUserResponse.ok) {
         const error = await createUserResponse.text()
-        console.log('[OIDC CALLBACK] User creation returned error:', createUserResponse.status, error)
+        authLogger.warn('User creation returned error, checking for existing user', { status: createUserResponse.status, error })
         
         // If user creation failed, try to find existing user with this username
-        console.log('[OIDC CALLBACK] Checking if user already exists in Jellyfin...')
+        authLogger.info('Checking if user already exists in Jellyfin')
         try {
           const usersResponse = await fetch(`${config.jellyfinUrl}/Users`, {
             headers: {
@@ -241,17 +242,17 @@ export async function GET(req: NextRequest) {
             )
             
             if (existingUser) {
-              console.log('[OIDC CALLBACK] Found existing Jellyfin user:', existingUser.Name, existingUser.Id)
+              authLogger.info('Found existing Jellyfin user', { name: existingUser.Name, id: existingUser.Id })
               userId = existingUser.Id
               jellyfinUser = existingUser
             }
           }
         } catch (findError) {
-          console.error('[OIDC CALLBACK] Error finding existing user:', findError)
+          authLogger.error('Error finding existing user', { error: findError instanceof Error ? findError.message : 'Unknown error' })
         }
         
         if (!userId) {
-          console.error('[OIDC CALLBACK] Failed to create or find Jellyfin user')
+          authLogger.error('Failed to create or find Jellyfin user')
           return NextResponse.redirect(new URL('/login?error=user_creation_failed', baseUrl))
         }
       } else {
@@ -260,7 +261,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (!userId) {
-        console.error('[OIDC CALLBACK] No user ID returned from Jellyfin')
+        authLogger.error('No user ID returned from Jellyfin')
         return NextResponse.redirect(new URL('/login?error=invalid_user_response', baseUrl))
       }
 

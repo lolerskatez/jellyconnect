@@ -3,6 +3,7 @@ import { getConfig } from '@/app/lib/config'
 import { verifyAccessToken } from '@/app/lib/auth'
 import { database } from '@/app/lib/db'
 import { decrypt } from '@/app/lib/encryption'
+import { quickConnectLogger } from '@/app/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
 
     console.log('[Quick Connect Authorize] Attempting to authorize code:', code, 'for user:', user.email || user.jellyfinId)
 
+    quickConnectLogger.info('Attempting to authorize Quick Connect code', { code, userId: user.id, userEmail: user.email, jellyfinId: user.jellyfinId })
+
     // BEST APPROACH: Authenticate as the user using their stored credentials
     // This properly associates the QuickConnect authorization with the correct user
     if (user.jellyfinPasswordEncrypted && user.jellyfinUsername) {
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
 
             if (authorizeRes.ok) {
               const result = await authorizeRes.json()
-              console.log('[Quick Connect Authorize] Successfully authorized with user token for:', user.jellyfinUsername)
+              quickConnectLogger.info('Successfully authorized Quick Connect with user token', { userId: user.jellyfinId, username: user.jellyfinUsername })
               return NextResponse.json({ 
                 success: true, 
                 userId: user.jellyfinId, 
@@ -82,14 +85,14 @@ export async function POST(request: NextRequest) {
                 authorized: result 
               })
             } else {
-              console.log('[Quick Connect Authorize] User token authorization failed:', authorizeRes.status)
+              quickConnectLogger.warn('User token authorization failed', { userId: user.jellyfinId, status: authorizeRes.status })
             }
           }
         } else {
-          console.log('[Quick Connect Authorize] User authentication failed:', authResponse.status)
+          quickConnectLogger.warn('User authentication failed', { userId: user.jellyfinId, status: authResponse.status })
         }
       } catch (cryptoError) {
-        console.error('[Quick Connect Authorize] Failed to decrypt user credentials:', cryptoError)
+        quickConnectLogger.error('Failed to decrypt user credentials', { userId: user.id, error: cryptoError instanceof Error ? cryptoError.message : String(cryptoError) })
         // Fall through to admin-based approaches
       }
     }
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (authorizeRes.ok) {
       const result = await authorizeRes.json()
-      console.log('[Quick Connect Authorize] Authorized with userId parameter for:', user.jellyfinId)
+      quickConnectLogger.info('Authorized with userId parameter', { userId: user.jellyfinId })
       return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
     }
 
@@ -115,7 +118,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       errorText = 'Could not read error response'
     }
-    console.log('[Quick Connect Authorize] userId param approach failed:', authorizeRes.status, errorText)
+    quickConnectLogger.warn('userId param approach failed', { userId: user.jellyfinId, status: authorizeRes.status, error: errorText })
 
     // FALLBACK 2: Try with X-Emby-Authorization header
     authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
@@ -129,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     if (authorizeRes.ok) {
       const result = await authorizeRes.json()
-      console.log('[Quick Connect Authorize] Authorized with X-Emby-Authorization header')
+      quickConnectLogger.info('Authorized with X-Emby-Authorization header', { userId: user.jellyfinId })
       return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
     }
 
@@ -139,7 +142,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       error2 = 'Could not read error response'
     }
-    console.log('[Quick Connect Authorize] X-Emby-Authorization approach failed:', authorizeRes.status, error2)
+    quickConnectLogger.warn('X-Emby-Authorization approach failed', { userId: user.jellyfinId, status: authorizeRes.status, error: error2 })
 
     // FALLBACK 3: Basic admin authorization (will likely associate with admin user)
     authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     if (authorizeRes.ok) {
       const result = await authorizeRes.json()
-      console.warn('[Quick Connect Authorize] WARNING: Using basic admin authorization for code:', code)
+      quickConnectLogger.warn('Using basic admin authorization for Quick Connect', { code })
       return NextResponse.json({ 
         success: true, 
         warning: 'QuickConnect authorized but may be associated with admin account. You may need to manually select your profile in the app.',
@@ -166,7 +169,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       fallbackError = 'Could not read error response'
     }
-    console.error('[Quick Connect Authorize] All authorization attempts failed:', authorizeRes.status, fallbackError)
+    quickConnectLogger.error('All Quick Connect authorization attempts failed', { code, status: authorizeRes.status, error: fallbackError })
     
     return NextResponse.json({ 
       error: 'Failed to authorize Quick Connect session',
@@ -176,7 +179,7 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
 
   } catch (error) {
-    console.error('[Quick Connect Authorize] Endpoint error:', error instanceof Error ? error.message : String(error))
+    quickConnectLogger.error('Quick Connect authorization endpoint error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ 
       error: 'Failed to authorize Quick Connect',
       details: error instanceof Error ? error.message : 'Unknown error'

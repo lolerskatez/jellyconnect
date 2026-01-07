@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthSettings, updateAuthSettings } from '@/app/lib/auth-settings'
 import { saveDatabaseImmediate } from '@/app/lib/db'
+import { authSettingsLogger } from '@/app/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
     const settings = getAuthSettings()
     return NextResponse.json(settings)
   } catch (error) {
-    console.error('Error fetching auth settings:', error)
+    authSettingsLogger.error('Error fetching auth settings', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })
   }
 }
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    console.log('[AUTH SETTINGS] Saving auth settings:', JSON.stringify(body, null, 2))
+    authSettingsLogger.info('Saving auth settings', { settings: body })
     
     // Validate that forceOIDC and oidcEnabled are compatible
     if (body.forceOIDC && !body.oidcEnabled) {
@@ -27,14 +28,14 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedSettings = updateAuthSettings(body)
-    console.log('[AUTH SETTINGS] Updated settings:', JSON.stringify(updatedSettings, null, 2))
+    authSettingsLogger.info('Updated auth settings', { settings: updatedSettings })
     
     saveDatabaseImmediate()
-    console.log('[AUTH SETTINGS] Database saved to disk')
+    authSettingsLogger.info('Auth settings saved to database')
     
     return NextResponse.json(updatedSettings)
   } catch (error) {
-    console.error('Error updating auth settings:', error)
+    authSettingsLogger.error('Error updating auth settings', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 })
   }
 }

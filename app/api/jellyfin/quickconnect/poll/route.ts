@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
+import { jellyfinLogger } from '@/app/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(pollData)
 
   } catch (error) {
-    console.error('Quick Connect poll error:', error)
-    return NextResponse.json({ error: 'Failed to poll Quick Connect status' }, { status: 500 })
+    jellyfinLogger.error('Quick Connect poll error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Failed to poll Quick Connect status' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
+import { userLogger } from '@/app/lib/logger'
 
 export async function GET(
   request: NextRequest,
@@ -25,14 +26,14 @@ export async function GET(
         user.oidcProvider = undefined
       }
     } catch (error) {
-      console.log('Could not fetch oidcProvider from database:', error)
+      userLogger.warn('Could not fetch oidcProvider from database', { userId: id, error: error instanceof Error ? error.message : String(error) })
       // If we can't check the database, assume local user
       user.oidcProvider = undefined
     }
     
     return NextResponse.json(user)
   } catch (error) {
-    console.error('Failed to fetch user:', error)
+    userLogger.error('Failed to fetch user', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to fetch user' },
       { status: 500 }
@@ -54,7 +55,7 @@ export async function DELETE(
     if (!res.ok) throw new Error('Failed to delete user')
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Failed to delete user:', error)
+    userLogger.error('Failed to delete user', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to delete user' },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function POST(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Failed to update user policy:', error)
+    userLogger.error('Failed to update user policy', { userId: id, error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update user policy' },
       { status: 500 }
@@ -139,12 +140,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       if (displayName !== undefined) dbUpdates.displayName = displayName;
       
       updateUser(id, dbUpdates);
-      console.log(`User ${id} profile updated:`, dbUpdates);
+      userLogger.info('User profile updated', { userId: id, updates: dbUpdates });
     }
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error(error);
+    userLogger.error('Failed to update user', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }

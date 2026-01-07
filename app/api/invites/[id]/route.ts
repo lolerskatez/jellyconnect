@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getInviteUsages, getAllInvites } from '@/app/lib/db/queries';
+import { invitesLogger } from '@/app/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -10,9 +11,9 @@ export async function GET(
 
     if (inviteId) {
       // Get usages for a specific invite
-      console.log('[Invite Details API] Fetching usages for inviteId:', inviteId);
+      invitesLogger.info('Fetching usages for invite', { inviteId });
       const usages = getInviteUsages(inviteId);
-      console.log('[Invite Details API] Found usages:', usages.length);
+      invitesLogger.info('Found invite usages', { inviteId, count: usages.length });
       return NextResponse.json(usages);
     } else {
       // Get all invites (including inactive ones)
@@ -20,7 +21,7 @@ export async function GET(
       return NextResponse.json(invites);
     }
   } catch (error) {
-    console.error('Failed to fetch invite details:', error);
+    invitesLogger.error('Failed to fetch invite details', { inviteId, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch invite details' }, { status: 500 });
   }
 }

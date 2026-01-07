@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/app/lib/config'
 import { authRateLimit } from '@/app/lib/rate-limit'
 import { loginSchema } from '@/app/lib/validation'
+import { authLogger, logAuthEvent } from '@/app/lib/logger'
 
 async function loginHandler(request: NextRequest) {
   try {
@@ -54,11 +55,12 @@ async function loginHandler(request: NextRequest) {
       const { getUserByJellyfinId } = await import('@/app/lib/db/queries')
       const dbUser = await getUserByJellyfinId(user.Id)
       displayName = dbUser?.displayName
-      console.log('[Login] Fetched displayName from database:', displayName, 'for user:', user.Id)
+      authLogger.debug('Fetched displayName from database', { displayName, userId: user.Id })
     } catch (error) {
-      console.log('[Login] Could not fetch displayName from database:', error)
+      authLogger.warn('Could not fetch displayName from database', { error: error instanceof Error ? error.message : String(error), userId: user.Id })
     }
 
+    logAuthEvent('login_success', user.Id, undefined, undefined, true)
     return NextResponse.json({
       user,
       token: authData.AccessToken,
@@ -66,7 +68,8 @@ async function loginHandler(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Login error:', error)
+    authLogger.error('Login error', { error: error instanceof Error ? error.message : String(error) })
+    logAuthEvent('login_failed', undefined, undefined, undefined, false)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }

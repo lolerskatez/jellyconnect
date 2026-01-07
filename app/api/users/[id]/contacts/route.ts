@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserContacts, updateUser, createUser } from '../../../../lib/db/queries';
+import { userLogger } from '@/app/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,7 @@ export async function GET(
     // getUserContacts now always returns an object, even for non-existent users
     return NextResponse.json(contacts);
   } catch (error) {
-    console.error('Error fetching contacts:', error);
+    userLogger.error('Error fetching contacts', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch user contacts' }, { status: 500 });
   }
 }
@@ -47,7 +48,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
+    userLogger.error('Failed to update user contacts', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update user contacts' }, { status: 500 });
   }
 }

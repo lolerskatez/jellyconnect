@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser } from '../../../../lib/db/queries';
+import { userLogger } from '@/app/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +16,7 @@ export async function GET(
 
     return NextResponse.json({ expiresAt: user.expiresAt || null });
   } catch (error) {
-    console.error('Error fetching user expiry:', error);
+    userLogger.error('Error fetching user expiry', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch user expiry' }, { status: 500 });
   }
 }
@@ -54,7 +55,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating user expiry:', error);
+    userLogger.error('Error updating user expiry', { userId: id, error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

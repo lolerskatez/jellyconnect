@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { database } from '@/app/lib/db'
+import { authLogger } from '@/app/lib/logger'
 
 /**
  * Handle Authentik OAuth callback
@@ -15,21 +16,24 @@ export async function GET(req: NextRequest) {
 
     console.log('[CALLBACK] Authentik callback received:', { code: code?.substring(0, 20) + '...', state, error })
 
+    authLogger.info('Authentik callback received', { codePrefix: code?.substring(0, 20), state, error })
+
     // Check for errors from Authentik
     if (error) {
-      console.error('[CALLBACK] Authentik error:', error)
+      authLogger.error('Authentik error in callback', { error })
       return NextResponse.redirect(
         new URL(`/login?error=authentik_error&message=${encodeURIComponent(error)}`, req.url)
       )
     }
 
     if (!code) {
-      console.error('[CALLBACK] No authorization code received')
+      authLogger.error('No authorization code received in Authentik callback')
       return NextResponse.redirect(new URL('/login?error=no_code', req.url))
     }
 
     if (!state) {
       console.error('[CALLBACK] No state received')
+      authLogger.error('No state received in Authentik callback')
       return NextResponse.redirect(new URL('/login?error=no_state', req.url))
     }
 
@@ -44,6 +48,8 @@ export async function GET(req: NextRequest) {
       clientId,
       redirectUri,
     })
+
+    authLogger.info('Exchanging Authentik code for tokens', { tokenEndpoint, clientId, redirectUri })
 
     const tokenResponse = await fetch(tokenEndpoint, {
       method: 'POST',
@@ -61,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text()
-      console.error('[CALLBACK] Token exchange failed:', error)
+      authLogger.error('Authentik token exchange failed', { status: tokenResponse.status, error })
       return NextResponse.redirect(
         new URL(`/login?error=token_exchange_failed&message=${encodeURIComponent(error.substring(0, 100))}`, req.url)
       )

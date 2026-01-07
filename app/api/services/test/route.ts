@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { emailService } from '../../../lib/email';
 import { discordService } from '../../../lib/discord';
+import { servicesLogger } from '@/app/lib/logger';
 
 export async function GET() {
   // Reinitialize services to pick up latest config
@@ -28,7 +29,7 @@ export async function GET() {
         'Service Test\n\nThis is a test email to verify email configuration.'
       );
     } catch (error) {
-      console.error('Email test failed:', error);
+      servicesLogger.error('Email test failed', { error: error instanceof Error ? error.message : String(error) });
       results.email.testResult = false;
     }
   }
@@ -41,7 +42,7 @@ export async function GET() {
         '**JellyConnect Service Test**\n\nThis is a test message to verify Discord configuration.'
       );
     } catch (error) {
-      console.error('Discord test failed:', error);
+      servicesLogger.error('Discord test failed', { error: error instanceof Error ? error.message : String(error) });
       results.discord.testResult = false;
     }
   }
