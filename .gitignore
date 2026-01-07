@@ -42,6 +42,7 @@ coverage/
 *.tsbuildinfo
 
 # Data files
+data/
 jellyconnect-data.json
 config.json
 

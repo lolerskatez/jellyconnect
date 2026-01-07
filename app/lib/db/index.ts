@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { encrypt, decrypt } from '../encryption';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'jellyconnect-data.json');
 
@@ -126,7 +127,8 @@ function loadDatabase(): Database {
   try {
     if (fs.existsSync(DB_PATH)) {
       const data = fs.readFileSync(DB_PATH, 'utf-8');
-      const parsed = JSON.parse(data);
+      const decrypted = decrypt(data);
+      const parsed = JSON.parse(decrypted);
       
       // Ensure all required arrays exist
       const db: Database = {
@@ -164,10 +166,11 @@ function saveDatabase(db: Database): void {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    const jsonData = JSON.stringify(db, null, 2)
-    fs.writeFileSync(DB_PATH, jsonData)
+    const jsonData = JSON.stringify(db, null, 2);
+    const encrypted = encrypt(jsonData);
+    fs.writeFileSync(DB_PATH, encrypted);
   } catch (error) {
-    console.error('Failed to save database:', error)
+    console.error('Failed to save database:', error);
   }
 }
 
