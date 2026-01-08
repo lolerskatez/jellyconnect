@@ -13,31 +13,46 @@ import { verifyAccessToken } from '@/app/lib/auth'
  */
 export async function GET(req: NextRequest) {
   try {
+    authLogger.info('SSO auth request received')
+    
     // First try NextAuth session
     let session = await getServerSession(authOptions)
     let userEmail = session?.user?.email
 
+    authLogger.info('NextAuth session check', { hasSession: !!session, userEmail })
+
     // If no NextAuth session, check for custom JWT token (from OIDC callback)
     if (!userEmail) {
       const token = req.cookies.get('next-auth.session-token')?.value
+      authLogger.info('Checking custom JWT token', { hasToken: !!token })
+      
       if (token) {
         const payload = await verifyAccessToken(token)
+        authLogger.info('Custom JWT payload', { payload: payload ? { sub: payload.sub, email: payload.email } : null })
+        
         if (payload && payload.sub) {
           // Find user in database
           const dbUser = database.users.find(u => u.id === payload.sub)
           if (dbUser) {
             userEmail = dbUser.email
+            authLogger.info('Found user from custom JWT', { userEmail, userId: dbUser.id })
+          } else {
+            authLogger.warn('Custom JWT valid but user not found in database', { sub: payload.sub })
           }
+        } else {
+          authLogger.debug('Custom JWT invalid or expired')
         }
       }
     }
 
     if (!userEmail) {
+      authLogger.warn('No session found for SSO auth')
       return NextResponse.json({ error: 'No session' }, { status: 401 })
     }
 
     // Find user in database
     const user = database.users.find(u => u.email === userEmail)
+    authLogger.info('Database user lookup', { userEmail, found: !!user, userId: user?.id })
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
