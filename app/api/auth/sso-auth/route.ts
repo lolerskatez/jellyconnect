@@ -119,7 +119,46 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No Jellyfin username stored' }, { status: 400 })
     }
 
-    const authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
+    // Helper function to reset password in Jellyfin
+    const resetJellyfinPassword = async (): Promise<string | null> => {
+      if (!config.apiKey || !user.jellyfinId) {
+        authLogger.error('Cannot generate password - no API key or Jellyfin ID', { hasApiKey: !!config.apiKey, jellyfinId: user.jellyfinId })
+        return null
+      }
+      
+      const newPassword = generateSecurePassword()
+      try {
+        const resetRes = await fetch(`${config.jellyfinUrl}/Users/Password?userId=${user.jellyfinId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Emby-Token': config.apiKey,
+          },
+          body: JSON.stringify({
+            NewPw: newPassword,
+            ResetPassword: true
+          })
+        })
+        
+        if (resetRes.ok || resetRes.status === 204) {
+          user.jellyfinPasswordEncrypted = encrypt(newPassword)
+          user.updatedAt = new Date().toISOString()
+          saveDatabaseImmediate()
+          authLogger.info('Password reset and stored for SSO user', { userId: user.id })
+          return newPassword
+        } else {
+          const errorText = await resetRes.text()
+          authLogger.error('Failed to reset password in Jellyfin', { status: resetRes.status, error: errorText, userId: user.id })
+          return null
+        }
+      } catch (error) {
+        authLogger.error('Error resetting password in Jellyfin', { error: error instanceof Error ? error.message : String(error) })
+        return null
+      }
+    }
+
+    // Try to authenticate with existing or new password
+    let authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,13 +170,41 @@ export async function GET(req: NextRequest) {
       })
     })
 
+    // If authentication failed, try to reset the password and retry
     if (!authRes.ok) {
-      authLogger.error('Jellyfin authentication failed for SSO user', {
+      authLogger.warn('Jellyfin authentication failed, attempting password reset', {
         userId: user.id,
         username: user.jellyfinUsername,
         status: authRes.status
       })
-      return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+      
+      const newPassword = await resetJellyfinPassword()
+      if (newPassword) {
+        // Retry authentication with the new password
+        authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Emby-Authorization': 'MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0"'
+          },
+          body: JSON.stringify({
+            Username: user.jellyfinUsername,
+            Pw: newPassword
+          })
+        })
+        
+        if (!authRes.ok) {
+          authLogger.error('Jellyfin authentication still failed after password reset', {
+            userId: user.id,
+            username: user.jellyfinUsername,
+            status: authRes.status
+          })
+          return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+        }
+      } else {
+        authLogger.error('Could not reset password for SSO user', { userId: user.id })
+        return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+      }
     }
 
     const authData = await authRes.json()
