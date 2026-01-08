@@ -161,8 +161,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
       if (res.ok) {
         const response = await res.json()
+        console.log('[Providers] Login response:', response)
+        
         // API response is wrapped in successResponse format: { success, data: { user, token, displayName }, ... }
         const responseData = response.data
+        if (!responseData?.user) {
+          console.error('[Providers] Invalid response structure:', { response, responseData })
+          throw new Error('Invalid response structure: missing user data')
+        }
+
         const isJellyfinAdmin = responseData.user.Policy?.IsAdministrator || false
 
         // All users can log in, but admin features require admin role
@@ -188,6 +195,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         return true
       } else {
         const error = await res.json()
+        console.error('[Providers] Login failed:', { status: res.status, error })
         throw new Error(error.error || 'Login failed')
       }
     } catch (error) {
