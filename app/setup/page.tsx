@@ -117,7 +117,7 @@ export default function SetupPage() {
                 name="adminPassword"
                 type="password"
                 required
-                autoComplete="current-password"
+                autoComplete="off"
                 className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Your Jellyfin Admin Password"
                 value={config.adminPassword}
@@ -138,7 +138,7 @@ export default function SetupPage() {
                   id="smtpHost"
                   name="smtpHost"
                   type="text"
-                  autoComplete="smtp-host"
+                  autoComplete="off"
                   className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="smtp.gmail.com"
                   value={config.smtpHost}
@@ -153,7 +153,7 @@ export default function SetupPage() {
                   id="smtpPort"
                   name="smtpPort"
                   type="number"
-                  autoComplete="smtp-port"
+                  autoComplete="off"
                   className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="587"
                   value={config.smtpPort}
@@ -182,7 +182,7 @@ export default function SetupPage() {
                 id="smtpUser"
                 name="smtpUser"
                 type="email"
-                autoComplete="email"
+                autoComplete="off"
                 className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="your-email@gmail.com"
                 value={config.smtpUser}
@@ -197,7 +197,7 @@ export default function SetupPage() {
                 id="smtpPass"
                 name="smtpPass"
                 type="password"
-                autoComplete="smtp-password"
+                autoComplete="off"
                 className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Your SMTP password or app password"
                 value={config.smtpPass}
@@ -212,7 +212,7 @@ export default function SetupPage() {
                 id="smtpFrom"
                 name="smtpFrom"
                 type="email"
-                autoComplete="from-email"
+                autoComplete="off"
                 className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="noreply@yourdomain.com"
                 value={config.smtpFrom}
@@ -232,7 +232,7 @@ export default function SetupPage() {
                 id="discordBotToken"
                 name="discordBotToken"
                 type="password"
-                autoComplete="discord-token"
+                autoComplete="off"
                 className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Your Discord bot token"
                 value={config.discordBotToken}
@@ -312,6 +312,7 @@ export default function SetupPage() {
                     id="oidcClientSecret"
                     name="oidcClientSecret"
                     type="password"
+                    autoComplete="off"
                     className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Your OIDC client secret"
                     value={config.oidcClientSecret}
