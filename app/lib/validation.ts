@@ -112,23 +112,30 @@ export const testDiscordSchema = z.object({
 });
 
 // Setup validation (matches actual setup endpoint usage)
+// Transform empty strings to undefined for optional fields
+const optionalString = z.string().transform(v => v === '' ? undefined : v).pipe(z.string().optional());
+const optionalEmail = z.string().transform(v => v === '' ? undefined : v).pipe(emailSchema.optional());
+const optionalUrl = z.string().transform(v => v === '' ? undefined : v).pipe(z.string().url('Invalid URL').max(2048, 'URL too long').optional());
+const optionalMinString = (minLen: number, maxLen: number, message: string) => 
+  z.string().transform(v => v === '' ? undefined : v).pipe(z.string().min(minLen, message).max(maxLen).optional());
+
 export const setupSchema = z.object({
   jellyfinUrl: z.string().url('Invalid Jellyfin URL').max(2048, 'URL too long'),
   adminUsername: usernameSchema,
   adminPassword: passwordSchema,
-  adminEmail: emailSchema.optional(),
-  smtpHost: z.string().min(1, 'SMTP host is required').max(253, 'SMTP host too long').optional(),
+  adminEmail: optionalEmail,
+  smtpHost: optionalString,
   smtpPort: z.number().int().min(1, 'Port must be positive').max(65535, 'Invalid port number').optional(),
   smtpSecure: z.boolean().optional(),
-  smtpUser: z.string().max(254, 'SMTP user too long').optional(),
-  smtpPass: z.string().max(128, 'SMTP password too long').optional(),
-  smtpFrom: z.string().email('Invalid from email').max(254, 'From email too long').optional(),
-  discordBotToken: z.string().min(50, 'Discord bot token too short').max(100, 'Discord bot token too long').optional(),
+  smtpUser: optionalString,
+  smtpPass: optionalString,
+  smtpFrom: optionalEmail,
+  discordBotToken: optionalMinString(50, 100, 'Discord bot token too short'),
   oidcEnabled: z.boolean().optional(),
-  oidcProviderName: z.string().max(100, 'Provider name too long').optional(),
-  oidcDiscoveryUrl: z.string().url('Invalid discovery URL').max(2048, 'URL too long').optional(),
-  oidcClientId: z.string().min(1, 'Client ID is required').max(200, 'Client ID too long').optional(),
-  oidcClientSecret: z.string().min(1, 'Client secret is required').max(200, 'Client secret too long').optional(),
+  oidcProviderName: optionalString,
+  oidcDiscoveryUrl: optionalUrl,
+  oidcClientId: optionalMinString(1, 200, 'Client ID is required'),
+  oidcClientSecret: optionalMinString(1, 200, 'Client secret is required'),
   enableRegistration: z.boolean().optional(),
   enableNotifications: z.boolean().optional()
 });
