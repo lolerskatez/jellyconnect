@@ -192,32 +192,70 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Helper function to enable a disabled Jellyfin user for SSO
+    const enableJellyfinUser = async (): Promise<boolean> => {
+      if (!config.apiKey || !user.jellyfinId) return false
+      
+      try {
+        const res = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}`, {
+          headers: { 'X-Emby-Token': config.apiKey }
+        })
+        
+        if (!res.ok) {
+          authLogger.error('Failed to get user for enable', { status: res.status })
+          return false
+        }
+        
+        const jellyfinUser = await res.json()
+        
+        // Enable the user by updating their policy
+        const enableRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Policy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Emby-Token': config.apiKey
+          },
+          body: JSON.stringify({
+            ...jellyfinUser.Policy,
+            IsDisabled: false
+          })
+        })
+        
+        if (enableRes.ok || enableRes.status === 204) {
+          authLogger.info('Jellyfin user enabled via SSO', { userId: user.id, jellyfinId: user.jellyfinId })
+          return true
+        } else {
+          authLogger.error('Failed to enable Jellyfin user', { status: enableRes.status })
+          return false
+        }
+      } catch (error) {
+        authLogger.error('Error enabling Jellyfin user', { error: error instanceof Error ? error.message : String(error) })
+        return false
+      }
+    }
+
     // If authentication failed, check if user is disabled first
     if (!authRes.ok) {
-      // Check if user is disabled - this is a security measure, don't auto-enable
+      // Check if user is disabled
       const isDisabled = await checkJellyfinUserDisabled()
       if (isDisabled) {
-        authLogger.warn('SSO login attempted for disabled Jellyfin user', {
+        authLogger.warn('SSO login attempted for disabled Jellyfin user, enabling...', {
           userId: user.id,
           username: user.jellyfinUsername
         })
-        return NextResponse.json({ 
-          error: 'Account disabled. Please contact your administrator or use the account unlock feature.',
-          code: 'ACCOUNT_DISABLED',
-          userId: user.id
-        }, { status: 403 })
-      }
-      
-      authLogger.warn('Jellyfin authentication failed, attempting password reset', {
-        userId: user.id,
-        username: user.jellyfinUsername,
-        status: authRes.status
-      })
-      
-      // Try to reset the password and retry
-      const newPassword = await resetJellyfinPassword()
-      if (newPassword) {
-        // Retry authentication with the new password
+        
+        // For SSO users, automatically enable the account since they've authenticated via SSO provider
+        const enabled = await enableJellyfinUser()
+        if (!enabled) {
+          authLogger.error('Failed to enable disabled SSO user', { userId: user.id })
+          return NextResponse.json({ 
+            error: 'Account is disabled and could not be automatically enabled. Please contact your administrator.',
+            code: 'ACCOUNT_ENABLE_FAILED',
+            userId: user.id
+          }, { status: 403 })
+        }
+        
+        // Now that user is enabled, try authentication again
         authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
           method: 'POST',
           headers: {
@@ -226,23 +264,55 @@ export async function GET(req: NextRequest) {
           },
           body: JSON.stringify({
             Username: user.jellyfinUsername,
-            Pw: newPassword
+            Pw: password
           })
         })
         
         if (!authRes.ok) {
-          const errorText = await authRes.text()
-          authLogger.error('Jellyfin authentication still failed after password reset', {
+          authLogger.error('Jellyfin authentication failed even after enabling user', {
             userId: user.id,
             username: user.jellyfinUsername,
-            status: authRes.status,
-            error: errorText
+            status: authRes.status
           })
           return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
         }
       } else {
-        authLogger.error('Could not reset password for SSO user', { userId: user.id })
-        return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+        authLogger.warn('Jellyfin authentication failed, attempting password reset', {
+          userId: user.id,
+          username: user.jellyfinUsername,
+          status: authRes.status
+        })
+        
+        // Try to reset the password and retry
+        const newPassword = await resetJellyfinPassword()
+        if (newPassword) {
+          // Retry authentication with the new password
+          authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Emby-Authorization': 'MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0"'
+            },
+            body: JSON.stringify({
+              Username: user.jellyfinUsername,
+              Pw: newPassword
+            })
+          })
+          
+          if (!authRes.ok) {
+            const errorText = await authRes.text()
+            authLogger.error('Jellyfin authentication still failed after password reset', {
+              userId: user.id,
+              username: user.jellyfinUsername,
+              status: authRes.status,
+              error: errorText
+            })
+            return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+          }
+        } else {
+          authLogger.error('Could not reset password for SSO user', { userId: user.id })
+          return NextResponse.json({ error: 'Jellyfin authentication failed' }, { status: 401 })
+        }
       }
     }
 
