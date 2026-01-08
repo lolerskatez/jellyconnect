@@ -208,6 +208,22 @@ const authOptions: NextAuthOptions = {
         // - 'roles' (some providers)
         // - 'oidc_groups' (custom)
         const groups = profile.groups || profile.roles || profile.oidc_groups || []
+        authLogger.info('OIDC groups extracted', { 
+          email: profile.email, 
+          groups, 
+          groupsType: Array.isArray(groups) ? 'array' : typeof groups,
+          profileGroups: profile.groups,
+          profileRoles: profile.roles,
+          profileOidcGroups: profile.oidc_groups
+        })
+
+        // Map groups to role and log the result
+        const mappedRole = mapGroupsToRole(Array.isArray(groups) ? groups : [groups])
+        authLogger.info('OIDC role mapping result', { 
+          email: profile.email, 
+          groups, 
+          mappedRole 
+        })
 
         dbUser = await autoCreateJellyfinUser(
           profile.email || '',
