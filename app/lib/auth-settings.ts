@@ -36,6 +36,11 @@ export function isOIDCEnabled(): boolean {
   return settings.oidcEnabled && !!settings.oidcDiscoveryUrl && !!settings.oidcClientId
 }
 
+export function getAppUrl(): string {
+  const settings = getAuthSettings()
+  return settings.appUrl || process.env.NEXTAUTH_URL || ''
+}
+
 export function getOIDCProviderConfig() {
   const settings = getAuthSettings()
   

@@ -7,6 +7,7 @@ import { generateSecurePassword, generateSecureUsername } from "./app/lib/secure
 import { mapGroupsToRole } from "./app/lib/oidc-group-mapping"
 import { authLogger } from "./app/lib/logger"
 import { encrypt } from "./app/lib/encryption"
+import { getAppUrl } from "./app/lib/auth-settings"
 
 declare module "next-auth" {
   interface Session {
@@ -173,7 +174,7 @@ const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production' || process.env.NEXTAUTH_URL?.startsWith('https'),
+        secure: process.env.NODE_ENV === 'production' || getAppUrl().startsWith('https'),
       },
     },
   },

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 export default function SetupPage() {
   const [config, setConfig] = useState({
+    appUrl: '',
     jellyfinUrl: '',
     adminUsername: '',
     adminPassword: '',
@@ -76,6 +77,26 @@ export default function SetupPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {/* Jellyfin Configuration */}
           <div className="space-y-4">
+            <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600 pb-2">Application Configuration</h3>
+            <div>
+              <label htmlFor="appUrl" className="block text-sm font-medium text-slate-300">
+                Application URL
+              </label>
+              <input
+                id="appUrl"
+                name="appUrl"
+                type="url"
+                required
+                autoComplete="url"
+                className="mt-1 block w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="https://your-domain.com"
+                value={config.appUrl}
+                onChange={handleChange}
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                The full URL where JellyConnect is accessible (used for SSO redirects and cookies)
+              </p>
+            </div>
             <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600 pb-2">Jellyfin Server</h3>
             <div>
               <label htmlFor="jellyfinUrl" className="block text-sm font-medium text-slate-300">

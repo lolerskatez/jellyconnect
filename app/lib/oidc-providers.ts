@@ -1,5 +1,6 @@
 // Generic OIDC provider using discovery URL and endpoints
 import { authLogger } from './logger';
+import { getAppUrl } from './auth-settings';
 
 export function createCustomOIDCProvider(config: {
   name: string
@@ -46,7 +47,7 @@ export function createCustomOIDCProvider(config: {
       clientSecret: config.clientSecret,
       params: {},
     },
-    redirectUri: `${process.env.NEXTAUTH_URL}/api/auth/callback/oidc`,
+    redirectUri: `${getAppUrl()}/api/auth/callback/oidc`,
     profile(profile: any) {
       authLogger.debug('OIDC profile received', { sub: profile.sub, email: profile.email, name: profile.name })
       return {

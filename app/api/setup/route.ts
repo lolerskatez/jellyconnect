@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const {
+      appUrl,
       jellyfinUrl,
       adminUsername,
       adminPassword,
@@ -158,16 +159,15 @@ export async function POST(request: NextRequest) {
     })
 
     // Also update auth settings if OIDC is configured
-    if (oidcEnabled && oidcDiscoveryUrl && oidcClientId) {
-      updateAuthSettings({
-        oidcEnabled: true,
-        oidcProviderName: oidcProviderName || '',
-        oidcDiscoveryUrl,
-        oidcClientId,
-        oidcClientSecret: oidcClientSecret || '',
-      })
-      saveDatabaseImmediate()
-    }
+    updateAuthSettings({
+      appUrl,
+      oidcEnabled: oidcEnabled || false,
+      oidcProviderName: oidcProviderName || '',
+      oidcDiscoveryUrl: oidcDiscoveryUrl || '',
+      oidcClientId: oidcClientId || '',
+      oidcClientSecret: oidcClientSecret || '',
+    })
+    saveDatabaseImmediate()
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -120,6 +120,7 @@ const optionalMinString = (minLen: number, maxLen: number, message: string) =>
   z.string().transform(v => v === '' ? undefined : v).pipe(z.string().min(minLen, message).max(maxLen).optional());
 
 export const setupSchema = z.object({
+  appUrl: z.string().url('Invalid application URL').max(2048, 'URL too long'),
   jellyfinUrl: z.string().url('Invalid Jellyfin URL').max(2048, 'URL too long'),
   adminUsername: usernameSchema,
   adminPassword: passwordSchema,
