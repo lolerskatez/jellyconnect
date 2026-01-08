@@ -5,6 +5,8 @@ import { apiRateLimit } from '@/app/lib/rate-limit'
 import { authLogger } from '@/app/lib/logger'
 import { verifyAccessToken } from '@/app/lib/auth'
 import { database } from '@/app/lib/db'
+import { getConfig } from '@/app/lib/config'
+import { JellyfinAuth } from '@/app/lib/jellyfin'
 
 /**
  * Get current user session
@@ -32,6 +34,26 @@ async function getSessionHandler(req: NextRequest) {
         if (user) {
           authLogger.info('Custom JWT session found', { userEmail: user.email, jellyfinId: user.jellyfinId })
 
+          // Check Jellyfin policy to determine admin status
+          let isAdmin = false
+          try {
+            const config = getConfig()
+            if (config.jellyfinUrl && config.apiKey) {
+              const jellyfinAuth = new JellyfinAuth(config.jellyfinUrl, config.apiKey)
+              const jellyfinUser = await jellyfinAuth.getUserById(user.jellyfinId)
+              isAdmin = jellyfinUser.Policy?.IsAdministrator || false
+              authLogger.debug('Checked Jellyfin admin status', { userId: user.id, isAdmin })
+            } else {
+              authLogger.warn('Cannot check Jellyfin admin status - missing config', { userId: user.id })
+            }
+          } catch (error) {
+            authLogger.error('Failed to check Jellyfin admin status', { 
+              userId: user.id, 
+              error: error instanceof Error ? error.message : String(error) 
+            })
+            // Default to false on error
+          }
+
           // Return user data in NextAuth-compatible format
           const userData = {
             id: user.id,
@@ -39,6 +61,7 @@ async function getSessionHandler(req: NextRequest) {
             email: user.email,
             name: user.displayName,
             oidcProvider: user.oidcProvider,
+            isAdmin: isAdmin,
             token: user.jellyfinPasswordEncrypted ? '' : '', // Jellyfin token not stored in session for security
           }
 
