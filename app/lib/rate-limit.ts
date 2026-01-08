@@ -105,15 +105,15 @@ function cleanupOldEntries() {
 // Pre-configured rate limiters for common use cases
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 attempts per 15 minutes for auth endpoints
+  maxRequests: 20, // 20 attempts per 15 minutes (relaxed for testing)
 });
 
 export const apiRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 60, // 60 requests per minute for general API
+  maxRequests: 120, // 120 requests per minute for general API
 });
 
 export const strictRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 10, // 10 requests per minute for sensitive operations
+  maxRequests: 30, // 30 requests per minute for sensitive operations
 });
