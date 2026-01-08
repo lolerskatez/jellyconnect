@@ -69,11 +69,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             if (sessionRes.ok) {
               const sessionData = await sessionRes.json()
               if (sessionData.user) {
-                const sessionToken = sessionData.user.token
+                const sessionToken = sessionData.user.token // May be empty for SSO users
                 const isAdmin = sessionData.user.isAdmin === true
                 const role = isAdmin ? UserRole.ADMIN : UserRole.USER
                 const permissions = getRolePermissions(role)
-                console.log('[Providers] Session found from cookie, isAdmin:', isAdmin, 'permissions:', permissions, 'displayName:', sessionData.user.displayName, 'jellyfinName:', sessionData.user.jellyfinName)
+                console.log('[Providers] Session found from cookie, isAdmin:', isAdmin, 'permissions:', permissions, 'displayName:', sessionData.user.displayName, 'jellyfinName:', sessionData.user.jellyfinName, 'oidcProvider:', sessionData.user.oidcProvider)
                 const sessionUserData = JSON.stringify({
                   id: sessionData.user.id,
                   name: sessionData.user.jellyfinName || sessionData.user.email?.split('@')[0] || 'User',
@@ -82,14 +82,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   isAdmin: isAdmin,
                   role: role,
                   permissions: permissions,
-                  token: sessionToken,
+                  token: sessionToken || 'sso-session', // Use placeholder for SSO users
                   oidcProvider: sessionData.user.oidcProvider,
                 })
                 // Store in localStorage for next visit
-                if (sessionToken && typeof window !== 'undefined') {
-                  localStorage.setItem('jellyfin_token', sessionToken)
+                if (typeof window !== 'undefined') {
+                  // For SSO users, we don't store a real token, just mark as authenticated
+                  if (sessionToken) {
+                    localStorage.setItem('jellyfin_token', sessionToken)
+                  } else {
+                    localStorage.setItem('jellyfin_token', 'sso-session')
+                  }
                   localStorage.setItem('user_data', sessionUserData)
-                  token = sessionToken
+                  token = sessionToken || 'sso-session' // Use placeholder for SSO users
                   userData = sessionUserData
                 }
               }
