@@ -167,12 +167,7 @@ const ROLE_POLICIES: Record<JellyfinRole, UserPolicy> = {
 
 /**
  * Maps OIDC groups to Jellyfin roles
- * Customize this mapping based on your OIDC provider's group names
- * 
- * Supported group names (case-insensitive):
- * - Administrator: "Administrator", "Administrators", "Admin", "Admins"
- * - Power User: "Power User", "Power Users", "PowerUser", "PowerUsers"
- * - User: "User", "Users" (default fallback)
+ * Uses configurable mappings from database, falls back to default patterns if not configured
  */
 export function mapGroupsToRole(groups: string[] | string | undefined): JellyfinRole {
   if (!groups) {
@@ -184,29 +179,65 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
 
   authLogger.debug('OIDC group mapping input', { inputGroups: groupArray, normalizedGroups });
 
+  // Try to get configured mappings from database
+  try {
+    const { getAuthSettings } = require('./auth-settings');
+    const authSettings = getAuthSettings();
+
+    // Check admin groups first (highest priority)
+    if (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) {
+      const configuredAdminGroups = authSettings.oidcAdminGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredAdminGroups.includes(g))) {
+        authLogger.debug('OIDC group mapped to admin role (configured)');
+        return 'admin';
+      }
+    }
+
+    // Check power user groups (medium priority)
+    if (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) {
+      const configuredPowerUserGroups = authSettings.oidcPowerUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredPowerUserGroups.includes(g))) {
+        authLogger.debug('OIDC group mapped to powerUser role (configured)');
+        return 'powerUser';
+      }
+    }
+
+    // Check user groups (lowest priority, explicit configuration)
+    if (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0) {
+      const configuredUserGroups = authSettings.oidcUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredUserGroups.includes(g))) {
+        authLogger.debug('OIDC group mapped to user role (configured)');
+        return 'user';
+      }
+    }
+  } catch (error) {
+    authLogger.warn('Failed to load auth settings for group mapping, using defaults', { error: error instanceof Error ? error.message : String(error) });
+  }
+
+  // Fallback to default patterns if no configuration or error
   // Check for administrator groups (highest priority)
   // Matches: "Administrator", "Administrators", "Admin", "Admins"
-  if (normalizedGroups.some(g => 
-    g === 'administrator' || 
+  if (normalizedGroups.some(g =>
+    g === 'administrator' ||
     g === 'administrators' ||
     g === 'admin' ||
     g === 'admins'
   )) {
-    authLogger.debug('OIDC group mapped to admin role');
+    authLogger.debug('OIDC group mapped to admin role (fallback)');
     return 'admin';
   }
 
   // Check for power user groups (medium priority)
   // Matches: "Power User", "Power Users", "PowerUser", "PowerUsers"
-  if (normalizedGroups.some(g => 
-    g === 'poweruser' || 
+  if (normalizedGroups.some(g =>
+    g === 'poweruser' ||
     g === 'powerusers' ||
     g === 'power-user' ||
     g === 'power-users' ||
     g === 'power_user' ||
     g === 'power_users'
   )) {
-    authLogger.debug('OIDC group mapped to powerUser role');
+    authLogger.debug('OIDC group mapped to powerUser role (fallback)');
     return 'powerUser';
   }
 

@@ -100,6 +100,10 @@ interface AuthSettings {
   oidcAuthorizationEndpoint?: string;
   oidcTokenEndpoint?: string;
   oidcUserinfoEndpoint?: string;
+  // OIDC Group to Role Mappings
+  oidcAdminGroups?: string[]; // Groups that should have Administrator role
+  oidcPowerUserGroups?: string[]; // Groups that should have Power User role
+  oidcUserGroups?: string[]; // Groups that should have User role (default)
   updatedAt: string;
 }
 

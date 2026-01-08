@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronRight, InfoIcon } from "lucide-react"
+import { ChevronRight, InfoIcon, Plus, X } from "lucide-react"
 
 interface AuthSettings {
   id: string
@@ -13,6 +13,80 @@ interface AuthSettings {
   oidcDiscoveryUrl?: string
   oidcClientId?: string
   oidcClientSecret?: string
+  // OIDC Group to Role Mappings
+  oidcAdminGroups?: string[]
+  oidcPowerUserGroups?: string[]
+  oidcUserGroups?: string[]
+}
+
+interface GroupMappingInputProps {
+  groups: string[]
+  onChange: (groups: string[]) => void
+  placeholder: string
+}
+
+function GroupMappingInput({ groups, onChange, placeholder }: GroupMappingInputProps) {
+  const [inputValue, setInputValue] = useState("")
+
+  const addGroup = () => {
+    const trimmed = inputValue.trim()
+    if (trimmed && !groups.includes(trimmed)) {
+      onChange([...groups, trimmed])
+      setInputValue("")
+    }
+  }
+
+  const removeGroup = (groupToRemove: string) => {
+    onChange(groups.filter(g => g !== groupToRemove))
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addGroup()
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder={placeholder}
+          className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+        />
+        <button
+          type="button"
+          onClick={addGroup}
+          disabled={!inputValue.trim() || groups.includes(inputValue.trim())}
+          className="px-3 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:opacity-50 text-slate-300 rounded text-sm transition-colors flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" />
+          Add
+        </button>
+      </div>
+      {groups.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {groups.map((group, index) => (
+            <div key={index} className="flex items-center gap-1 bg-slate-700 px-2 py-1 rounded text-xs text-slate-300">
+              <span>{group}</span>
+              <button
+                type="button"
+                onClick={() => removeGroup(group)}
+                className="hover:text-red-400 transition-colors"
+                aria-label={`Remove group ${group}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function AuthSettingsComponent() {
@@ -248,25 +322,54 @@ export default function AuthSettingsComponent() {
                 />
               </div>
 
-              {/* Redirect URI */}
-              <div className="pt-2 border-t border-slate-700">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Redirect URI</label>
-                <p className="text-xs text-slate-400 mb-2">Configure this in your OIDC provider:</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={`${settings.appUrl || appUrl}/api/auth/callback/oidc`}
-                    className="flex-1 px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent cursor-text"
-                    aria-label="OIDC redirect URI for your provider configuration"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(`${settings.appUrl || appUrl}/api/auth/callback/oidc`)}
-                    className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-sm transition-colors whitespace-nowrap"
-                  >
-                    Copy
-                  </button>
+              {/* OIDC Group to Role Mappings */}
+              <div className="pt-6 border-t border-slate-700 space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-slate-200 mb-3">OIDC Group to Role Mappings</h4>
+                  <p className="text-xs text-slate-400 mb-4">Configure which OIDC groups map to which Jellyfin user roles. Groups are checked in order of priority (Admin → Power User → User).</p>
+
+                  {/* Administrator Groups */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-slate-300 mb-2">Administrator Groups</label>
+                    <GroupMappingInput
+                      groups={settings.oidcAdminGroups || []}
+                      onChange={(groups) => handleChange('oidcAdminGroups', groups)}
+                      placeholder="e.g., Administrators, Admin"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Users in these groups will have full administrator access</p>
+                  </div>
+
+                  {/* Power User Groups */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-slate-300 mb-2">Power User Groups</label>
+                    <GroupMappingInput
+                      groups={settings.oidcPowerUserGroups || []}
+                      onChange={(groups) => handleChange('oidcPowerUserGroups', groups)}
+                      placeholder="e.g., Power Users, Editors"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Users in these groups can manage media and access all libraries</p>
+                  </div>
+
+                  {/* User Groups */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-slate-300 mb-2">User Groups</label>
+                    <GroupMappingInput
+                      groups={settings.oidcUserGroups || []}
+                      onChange={(groups) => handleChange('oidcUserGroups', groups)}
+                      placeholder="e.g., Users, Viewers"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Users in these groups have basic access (default for all other users)</p>
+                  </div>
+
+                  <div className="bg-blue-900/10 border border-blue-700/30 rounded-lg p-3 mt-4">
+                    <div className="flex items-start gap-2">
+                      <InfoIcon className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-blue-300">
+                        <p className="font-medium mb-1">How Group Mapping Works</p>
+                        <p className="opacity-90">Users are assigned the highest role their groups grant. If no groups match, they get basic user access. Group names are matched case-insensitively.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
