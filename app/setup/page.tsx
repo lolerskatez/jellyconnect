@@ -40,7 +40,8 @@ export default function SetupPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        router.push('/login')
+        // Add timestamp to force cache bypass
+        router.push('/login?setup=complete')
       } else {
         setError(data.error || 'Failed to save configuration')
         console.error('Setup error:', data)

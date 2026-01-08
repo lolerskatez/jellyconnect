@@ -20,6 +20,18 @@ function LoginPageContent() {
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
   const [enableRegistration, setEnableRegistration] = useState(true)
 
+  // Force reload if setup just completed to refresh config status
+  useEffect(() => {
+    const setupComplete = searchParams.get('setup') === 'complete'
+    if (setupComplete) {
+      // Setup just completed, force refresh to update isConfigured
+      const timer = setTimeout(() => {
+        window.location.reload()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     // Redirect to home if already logged in
     if (!isLoading && admin) {
