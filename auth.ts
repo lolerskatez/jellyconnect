@@ -239,6 +239,8 @@ const authOptions: NextAuthOptions = {
       } else {
         // Update existing user's groups and display name if they've changed
         const newGroups = profile.groups || profile.roles || profile.oidc_groups || []
+        const groupsChanged = JSON.stringify(newGroups.sort()) !== JSON.stringify((dbUser.oidcGroups || []).sort())
+        
         if (newGroups && Array.isArray(newGroups)) {
           dbUser.oidcGroups = newGroups
           authLogger.info('Updated groups for existing user', { email: profile.email, groups: newGroups })
@@ -248,6 +250,50 @@ const authOptions: NextAuthOptions = {
         if (profile.name && profile.name !== dbUser.displayName) {
           dbUser.displayName = profile.name
           authLogger.info('Updated display name for existing user', { email: profile.email, newName: profile.name })
+        }
+
+        // Re-apply Jellyfin policy if groups changed or if user should be admin but isn't
+        const currentRole = mapGroupsToRole(newGroups)
+        const shouldBeAdmin = currentRole === 'admin'
+        
+        if (groupsChanged || shouldBeAdmin) {
+          try {
+            const config = (await import('./app/lib/config')).getConfig()
+            if (config.jellyfinUrl && config.apiKey) {
+              const jellyfinAuth = new (await import('./app/lib/jellyfin')).JellyfinAuth(config.jellyfinUrl, config.apiKey)
+              const { getRolePolicyForJellyfin } = await import('./app/lib/oidc-group-mapping')
+              const policy = getRolePolicyForJellyfin(currentRole)
+              
+              const policyRes = await fetch(`${config.jellyfinUrl}/Users/${dbUser.jellyfinId}/Policy`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Emby-Token': config.apiKey,
+                },
+                body: JSON.stringify(policy),
+              })
+
+              if (policyRes.ok) {
+                authLogger.info('Updated Jellyfin policy for existing user', { 
+                  email: profile.email, 
+                  jellyfinId: dbUser.jellyfinId,
+                  role: currentRole,
+                  isAdmin: shouldBeAdmin 
+                })
+              } else {
+                authLogger.error('Failed to update Jellyfin policy for existing user', { 
+                  email: profile.email, 
+                  jellyfinId: dbUser.jellyfinId,
+                  status: policyRes.status 
+                })
+              }
+            }
+          } catch (error) {
+            authLogger.error('Error updating Jellyfin policy for existing user', { 
+              email: profile.email, 
+              error: error instanceof Error ? error.message : String(error) 
+            })
+          }
         }
 
         dbUser.updatedAt = new Date().toISOString()
