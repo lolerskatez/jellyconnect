@@ -16,9 +16,9 @@ export default function Navigation() {
   // Check if user is admin for role-based navigation
   const isAdmin = admin?.role === 'admin' || admin?.isAdmin === true
 
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
+  const handleLogout = async () => {
+    await logout()
+    // logout() already handles the redirect via window.location.href
   }
 
   // Show standard navigation for logged-out users
