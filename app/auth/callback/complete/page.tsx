@@ -25,17 +25,40 @@ export default function CallbackCompletePage() {
         if (sessionRes.ok) {
           const sessionData = await sessionRes.json()
           if (sessionData.user) {
-            // Session found, store in localStorage and redirect to home
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('jellyfin_token', sessionData.user.token)
+            let jellyfinToken = sessionData.user.token
+            let jellyfinUser = null
+
+            // For SSO users, authenticate with Jellyfin to get access token
+            if (sessionData.user.oidcProvider && !jellyfinToken) {
+              try {
+                const authRes = await fetch('/api/auth/sso-auth', {
+                  credentials: 'include',
+                })
+                if (authRes.ok) {
+                  const authData = await authRes.json()
+                  jellyfinToken = authData.token
+                  jellyfinUser = authData.user
+                } else {
+                  console.error('Failed to authenticate SSO user with Jellyfin:', authRes.status)
+                }
+              } catch (error) {
+                console.error('Error authenticating SSO user with Jellyfin:', error)
+              }
+            }
+
+            // Store in localStorage
+            if (typeof window !== 'undefined' && jellyfinToken) {
+              localStorage.setItem('jellyfin_token', jellyfinToken)
               localStorage.setItem('user_data', JSON.stringify({
                 id: sessionData.user.id,
-                name: sessionData.user.email?.split('@')[0] || 'User',
+                name: sessionData.user.name || sessionData.user.email?.split('@')[0] || 'User',
+                displayName: sessionData.user.name || sessionData.user.email?.split('@')[0] || 'User',
                 email: sessionData.user.email,
-                isAdmin: true,
+                isAdmin: jellyfinUser?.Policy?.IsAdministrator || true, // Assume admin for SSO users
                 role: 'admin',
                 permissions: {},
-                token: sessionData.user.token,
+                token: jellyfinToken,
+                oidcProvider: sessionData.user.oidcProvider,
               }))
             }
             
