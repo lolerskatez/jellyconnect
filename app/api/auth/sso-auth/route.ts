@@ -170,68 +170,51 @@ export async function GET(req: NextRequest) {
       })
     })
 
-    // Helper function to enable a disabled Jellyfin user
-    const enableJellyfinUser = async (): Promise<boolean> => {
+    // Helper function to check if Jellyfin user is disabled
+    const checkJellyfinUserDisabled = async (): Promise<boolean> => {
       if (!config.apiKey || !user.jellyfinId) return false
       
       try {
-        // First get the user's current policy
-        const policyRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}`, {
+        const res = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}`, {
           headers: { 'X-Emby-Token': config.apiKey }
         })
         
-        if (!policyRes.ok) {
-          authLogger.error('Failed to get Jellyfin user for enable check', { status: policyRes.status })
+        if (!res.ok) {
+          authLogger.error('Failed to get Jellyfin user status', { status: res.status })
           return false
         }
         
-        const jellyfinUser = await policyRes.json()
-        
-        // Check if user is disabled
-        if (jellyfinUser.Policy?.IsDisabled) {
-          authLogger.info('Jellyfin user is disabled, enabling...', { jellyfinId: user.jellyfinId })
-          
-          // Enable the user by updating their policy
-          const enableRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Policy`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Emby-Token': config.apiKey
-            },
-            body: JSON.stringify({
-              ...jellyfinUser.Policy,
-              IsDisabled: false
-            })
-          })
-          
-          if (enableRes.ok || enableRes.status === 204) {
-            authLogger.info('Jellyfin user enabled successfully', { jellyfinId: user.jellyfinId })
-            return true
-          } else {
-            authLogger.error('Failed to enable Jellyfin user', { status: enableRes.status })
-            return false
-          }
-        }
-        
-        return true // User was not disabled
+        const jellyfinUser = await res.json()
+        return jellyfinUser.Policy?.IsDisabled === true
       } catch (error) {
-        authLogger.error('Error checking/enabling Jellyfin user', { error: error instanceof Error ? error.message : String(error) })
+        authLogger.error('Error checking Jellyfin user status', { error: error instanceof Error ? error.message : String(error) })
         return false
       }
     }
 
-    // If authentication failed, try to enable the user and/or reset the password and retry
+    // If authentication failed, check if user is disabled first
     if (!authRes.ok) {
-      authLogger.warn('Jellyfin authentication failed, attempting recovery', {
+      // Check if user is disabled - this is a security measure, don't auto-enable
+      const isDisabled = await checkJellyfinUserDisabled()
+      if (isDisabled) {
+        authLogger.warn('SSO login attempted for disabled Jellyfin user', {
+          userId: user.id,
+          username: user.jellyfinUsername
+        })
+        return NextResponse.json({ 
+          error: 'Account disabled. Please contact your administrator or use the account unlock feature.',
+          code: 'ACCOUNT_DISABLED',
+          userId: user.id
+        }, { status: 403 })
+      }
+      
+      authLogger.warn('Jellyfin authentication failed, attempting password reset', {
         userId: user.id,
         username: user.jellyfinUsername,
         status: authRes.status
       })
       
-      // First, try to enable the user if they're disabled
-      await enableJellyfinUser()
-      
-      // Then reset the password
+      // Try to reset the password and retry
       const newPassword = await resetJellyfinPassword()
       if (newPassword) {
         // Retry authentication with the new password
@@ -249,7 +232,7 @@ export async function GET(req: NextRequest) {
         
         if (!authRes.ok) {
           const errorText = await authRes.text()
-          authLogger.error('Jellyfin authentication still failed after recovery attempt', {
+          authLogger.error('Jellyfin authentication still failed after password reset', {
             userId: user.id,
             username: user.jellyfinUsername,
             status: authRes.status,

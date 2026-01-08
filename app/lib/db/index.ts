@@ -14,6 +14,7 @@ interface Database {
   authSettings: AuthSettings[];
   scheduledTasks: ScheduledTask[];
   passwordResetTokens: PasswordResetToken[];
+  accountUnlockRequests: AccountUnlockRequest[];
 }
 
 interface User {
@@ -122,6 +123,16 @@ interface PasswordResetToken {
   createdBy?: string; // Admin who created the token
 }
 
+interface AccountUnlockRequest {
+  id: string;
+  userId: string;
+  email: string;
+  code: string;
+  expiresAt: string;
+  attempts: number;
+  createdAt: string;
+}
+
 // Initialize database
 function loadDatabase(): Database {
   try {
@@ -139,7 +150,8 @@ function loadDatabase(): Database {
         notificationSettings: parsed.notificationSettings || [],
         authSettings: parsed.authSettings || [],
         scheduledTasks: parsed.scheduledTasks || [],
-        passwordResetTokens: parsed.passwordResetTokens || []
+        passwordResetTokens: parsed.passwordResetTokens || [],
+        accountUnlockRequests: parsed.accountUnlockRequests || []
       };
       
       return db;
@@ -156,7 +168,8 @@ function loadDatabase(): Database {
     notificationSettings: [],
     authSettings: [],
     scheduledTasks: [],
-    passwordResetTokens: []
+    passwordResetTokens: [],
+    accountUnlockRequests: []
   };
 }
 
