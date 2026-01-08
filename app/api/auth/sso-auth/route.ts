@@ -5,6 +5,7 @@ import { database } from '@/app/lib/db'
 import { decrypt } from '@/app/lib/encryption'
 import { getConfig } from '@/app/lib/config'
 import { authLogger } from '@/app/lib/logger'
+import { verifyAccessToken } from '@/app/lib/auth'
 
 /**
  * Authenticate SSO user with Jellyfin and return access token
@@ -12,14 +13,31 @@ import { authLogger } from '@/app/lib/logger'
  */
 export async function GET(req: NextRequest) {
   try {
-    // Check if user has a valid session
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    // First try NextAuth session
+    let session = await getServerSession(authOptions)
+    let userEmail = session?.user?.email
+
+    // If no NextAuth session, check for custom JWT token (from OIDC callback)
+    if (!userEmail) {
+      const token = req.cookies.get('next-auth.session-token')?.value
+      if (token) {
+        const payload = await verifyAccessToken(token)
+        if (payload && payload.sub) {
+          // Find user in database
+          const dbUser = database.users.find(u => u.id === payload.sub)
+          if (dbUser) {
+            userEmail = dbUser.email
+          }
+        }
+      }
+    }
+
+    if (!userEmail) {
       return NextResponse.json({ error: 'No session' }, { status: 401 })
     }
 
     // Find user in database
-    const user = database.users.find(u => u.email === session.user!.email)
+    const user = database.users.find(u => u.email === userEmail)
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
