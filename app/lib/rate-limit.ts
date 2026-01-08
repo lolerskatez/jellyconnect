@@ -75,17 +75,17 @@ export function rateLimit(options: RateLimitOptions) {
         cleanupOldEntries();
       }
 
-      // Add rate limit headers to successful responses
-      const newResponse = NextResponse.json(response.body, {
-        status: response.status,
-        headers: response.headers,
+      // Clone the response and add rate limit headers
+      const clonedResponse = response.clone();
+      
+      clonedResponse.headers.set('X-RateLimit-Limit', maxRequests.toString());
+      clonedResponse.headers.set('X-RateLimit-Remaining', Math.max(0, maxRequests - rateLimitData.count).toString());
+      clonedResponse.headers.set('X-RateLimit-Reset', new Date(rateLimitData.resetTime).toISOString());
+
+      return new NextResponse(clonedResponse.body, {
+        status: clonedResponse.status,
+        headers: clonedResponse.headers,
       });
-
-      newResponse.headers.set('X-RateLimit-Limit', maxRequests.toString());
-      newResponse.headers.set('X-RateLimit-Remaining', Math.max(0, maxRequests - rateLimitData.count).toString());
-      newResponse.headers.set('X-RateLimit-Reset', new Date(rateLimitData.resetTime).toISOString());
-
-      return newResponse;
     } catch (error) {
       // For errors, we might still want to track them depending on configuration
       throw error;
