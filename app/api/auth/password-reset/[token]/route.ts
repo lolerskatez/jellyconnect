@@ -123,8 +123,9 @@ async function postPasswordResetHandler(
 
     const jellyfinUser = await jellyfinUserRes.json();
 
-    // Update password in Jellyfin
-    const updateRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Password`, {
+    // Update password in Jellyfin using the correct API format
+    // The correct endpoint is /Users/Password?userId=... not /Users/{id}/Password
+    const updateRes = await fetch(`${config.jellyfinUrl}/Users/Password?userId=${user.jellyfinId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

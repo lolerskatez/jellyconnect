@@ -75,9 +75,10 @@ export async function POST(
       }
     }
 
-    // Update the password in Jellyfin
+    // Update the password in Jellyfin using the correct API format
+    // The correct endpoint is /Users/Password?userId=... not /Users/{id}/Password
     try {
-      const updateRes = await fetch(`${config.jellyfinUrl}/Users/${id}/Password`, {
+      const updateRes = await fetch(`${config.jellyfinUrl}/Users/Password?userId=${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

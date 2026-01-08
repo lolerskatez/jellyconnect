@@ -76,9 +76,10 @@ export async function GET(req: NextRequest) {
       password = generateSecurePassword()
       
       // Reset the user's password in Jellyfin using the API
+      // The correct endpoint is /Users/Password?userId=... not /Users/{id}/Password
       if (config.apiKey && user.jellyfinId) {
         try {
-          const resetRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Password`, {
+          const resetRes = await fetch(`${config.jellyfinUrl}/Users/Password?userId=${user.jellyfinId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
             })
           })
           
-          if (resetRes.ok) {
+          if (resetRes.ok || resetRes.status === 204) {
             // Store the encrypted password
             user.jellyfinPasswordEncrypted = encrypt(password)
             user.updatedAt = new Date().toISOString()
