@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/auth'
-import { database } from '@/app/lib/db'
-import { decrypt } from '@/app/lib/encryption'
+import { database, saveDatabaseImmediate } from '@/app/lib/db'
+import { decrypt, encrypt } from '@/app/lib/encryption'
 import { getConfig } from '@/app/lib/config'
 import { authLogger } from '@/app/lib/logger'
 import { verifyAccessToken } from '@/app/lib/auth'
+import { generateSecurePassword } from '@/app/lib/secure-password'
 
 /**
  * Authenticate SSO user with Jellyfin and return access token
@@ -60,22 +61,62 @@ export async function GET(req: NextRequest) {
       authLogger.info('All users in database', { users: database.users.map(u => ({ id: u.id, email: u.email })) })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Check if user has stored Jellyfin credentials
-    if (!user.jellyfinPasswordEncrypted || !user.jellyfinUsername) {
-      return NextResponse.json({ error: 'No Jellyfin credentials stored' }, { status: 400 })
-    }
 
     const config = getConfig()
     if (!config.jellyfinUrl) {
       return NextResponse.json({ error: 'Jellyfin not configured' }, { status: 500 })
     }
 
-    // Decrypt password and authenticate with Jellyfin
-    const password = decrypt(user.jellyfinPasswordEncrypted)
+    // Check if user has stored Jellyfin credentials - if not, generate and store them
+    let password: string
+    if (!user.jellyfinPasswordEncrypted) {
+      authLogger.info('No stored password for SSO user, generating new one', { userId: user.id })
+      
+      // Generate a new secure password
+      password = generateSecurePassword()
+      
+      // Reset the user's password in Jellyfin using the API
+      if (config.apiKey && user.jellyfinId) {
+        try {
+          const resetRes = await fetch(`${config.jellyfinUrl}/Users/${user.jellyfinId}/Password`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Emby-Token': config.apiKey,
+            },
+            body: JSON.stringify({
+              NewPw: password,
+              ResetPassword: true
+            })
+          })
+          
+          if (resetRes.ok) {
+            // Store the encrypted password
+            user.jellyfinPasswordEncrypted = encrypt(password)
+            user.updatedAt = new Date().toISOString()
+            saveDatabaseImmediate()
+            authLogger.info('Password generated and stored for SSO user', { userId: user.id })
+          } else {
+            authLogger.error('Failed to reset password in Jellyfin', { status: resetRes.status, userId: user.id })
+            return NextResponse.json({ error: 'Failed to setup Jellyfin credentials' }, { status: 500 })
+          }
+        } catch (error) {
+          authLogger.error('Error resetting password in Jellyfin', { error: error instanceof Error ? error.message : String(error) })
+          return NextResponse.json({ error: 'Failed to setup Jellyfin credentials' }, { status: 500 })
+        }
+      } else {
+        authLogger.error('Cannot generate password - no API key or Jellyfin ID', { hasApiKey: !!config.apiKey, jellyfinId: user.jellyfinId })
+        return NextResponse.json({ error: 'No Jellyfin credentials stored and cannot generate' }, { status: 400 })
+      }
+    } else {
+      // Decrypt existing password
+      password = decrypt(user.jellyfinPasswordEncrypted)
+    }
+    
+    if (!user.jellyfinUsername) {
+      authLogger.error('No Jellyfin username for SSO user', { userId: user.id })
+      return NextResponse.json({ error: 'No Jellyfin username stored' }, { status: 400 })
+    }
 
     const authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
       method: 'POST',

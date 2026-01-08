@@ -6,6 +6,7 @@ import { database } from "./app/lib/db"
 import { generateSecurePassword, generateSecureUsername } from "./app/lib/secure-password"
 import { mapGroupsToRole } from "./app/lib/oidc-group-mapping"
 import { authLogger } from "./app/lib/logger"
+import { encrypt } from "./app/lib/encryption"
 
 declare module "next-auth" {
   interface Session {
@@ -92,6 +93,7 @@ async function autoCreateJellyfinUser(
       id: jellyfin_id,
       jellyfinId: jellyfin_id,
       jellyfinUsername,
+      jellyfinPasswordEncrypted: encrypt(securePassword),
       displayName: name || jellyfinUsername,
       email,
       createdAt: new Date().toISOString(),
