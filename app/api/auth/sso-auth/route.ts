@@ -157,19 +157,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Try to authenticate with existing or new password
-    let authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Emby-Authorization': 'MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0"'
-      },
-      body: JSON.stringify({
-        Username: user.jellyfinUsername,
-        Pw: password
-      })
-    })
-
     // Helper function to check if Jellyfin user is disabled
     const checkJellyfinUserDisabled = async (): Promise<boolean> => {
       if (!config.apiKey || !user.jellyfinId) return false
@@ -233,6 +220,19 @@ export async function GET(req: NextRequest) {
         return false
       }
     }
+
+    // Try to authenticate with existing or new password
+    let authRes = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Emby-Authorization': 'MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0"'
+      },
+      body: JSON.stringify({
+        Username: user.jellyfinUsername,
+        Pw: password
+      })
+    })
 
     // If authentication failed, check if user is disabled first
     if (!authRes.ok) {
