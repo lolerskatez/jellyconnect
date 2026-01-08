@@ -160,26 +160,28 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       })
 
       if (res.ok) {
-        const data = await res.json()
-        const isJellyfinAdmin = data.user.Policy?.IsAdministrator || false
+        const response = await res.json()
+        // API response is wrapped in successResponse format: { success, data: { user, token, displayName }, ... }
+        const responseData = response.data
+        const isJellyfinAdmin = responseData.user.Policy?.IsAdministrator || false
 
         // All users can log in, but admin features require admin role
         const role = isJellyfinAdmin ? UserRole.ADMIN : UserRole.USER
         const permissions = getRolePermissions(role)
 
         const adminUser: AdminUser = {
-          id: data.user.Id,
-          name: data.user.Name,
-          displayName: data.displayName,
+          id: responseData.user.Id,
+          name: responseData.user.Name,
+          displayName: responseData.displayName,
           isAdmin: isJellyfinAdmin,
           role,
           permissions,
-          token: data.token,
+          token: responseData.token,
           oidcProvider: undefined  // Explicitly undefined for local users
         }
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem('jellyfin_token', data.token)
+          localStorage.setItem('jellyfin_token', responseData.token)
           localStorage.setItem('user_data', JSON.stringify(adminUser))
         }
         setAdmin(adminUser)
