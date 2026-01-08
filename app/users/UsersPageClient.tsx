@@ -53,11 +53,18 @@ export default function UsersPageClient() {
       setError(null)
       const res = await fetch("/api/users")
       if (!res.ok) throw new Error("Failed to fetch users")
-      const data = await res.json()
+      const response = await res.json()
+      
+      // Extract users array from the API response wrapper
+      const usersArray = Array.isArray(response) ? response : (response.data || [])
+      
+      if (!Array.isArray(usersArray)) {
+        throw new Error("Invalid users data format")
+      }
 
       // Get additional information for each user
       const usersWithDetails = await Promise.all(
-        data.map(async (user: User) => {
+        usersArray.map(async (user: User) => {
           const userDetails = { ...user }
 
           // Fetch displayName from database
