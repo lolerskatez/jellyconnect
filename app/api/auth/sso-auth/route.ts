@@ -53,6 +53,13 @@ export async function GET(req: NextRequest) {
     // Find user in database
     const user = database.users.find(u => u.email === userEmail)
     authLogger.info('Database user lookup', { userEmail, found: !!user, userId: user?.id })
+
+    if (!user) {
+      authLogger.error('User not found in database by email', { userEmail })
+      // Log all users for debugging
+      authLogger.info('All users in database', { users: database.users.map(u => ({ id: u.id, email: u.email })) })
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
