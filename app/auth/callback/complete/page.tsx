@@ -57,14 +57,18 @@ export default function CallbackCompletePage() {
 
             // Store in localStorage
             if (typeof window !== 'undefined' && jellyfinToken) {
+              // Get admin status from Jellyfin policy - DO NOT default to true!
+              const isAdmin = jellyfinUser?.Policy?.IsAdministrator === true
+              const role = isAdmin ? 'admin' : 'user'
+              
               localStorage.setItem('jellyfin_token', jellyfinToken)
               localStorage.setItem('user_data', JSON.stringify({
                 id: sessionData.user.id,
                 name: sessionData.user.name || sessionData.user.email?.split('@')[0] || 'User',
                 displayName: sessionData.user.name || sessionData.user.email?.split('@')[0] || 'User',
                 email: sessionData.user.email,
-                isAdmin: jellyfinUser?.Policy?.IsAdministrator || true, // Assume admin for SSO users
-                role: 'admin',
+                isAdmin: isAdmin,
+                role: role,
                 permissions: {},
                 token: jellyfinToken,
                 oidcProvider: sessionData.user.oidcProvider,

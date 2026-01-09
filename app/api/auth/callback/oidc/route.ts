@@ -168,6 +168,10 @@ export async function GET(req: NextRequest) {
       sub: userinfo.sub,
       email: userinfo.email,
       name: userinfo.name || userinfo.preferred_username,
+      groups: userinfo.groups,
+      roles: userinfo.roles,
+      oidc_groups: userinfo.oidc_groups,
+      all_claims: Object.keys(userinfo),
     })
 
     if (!userinfo.email) {
@@ -333,6 +337,26 @@ export async function GET(req: NextRequest) {
         // Continue anyway - user is created, but log the policy application failure
       } else {
         authLogger.info('Policy applied successfully to new user', { role })
+        
+        // Verify policy was applied correctly by reading it back
+        try {
+          const verifyResponse = await fetch(`${config.jellyfinUrl}/Users/${userId}`, {
+            headers: {
+              'X-Emby-Token': config.apiKey,
+            },
+          })
+          if (verifyResponse.ok) {
+            const verifyUser = await verifyResponse.json()
+            authLogger.info('VERIFICATION: Jellyfin user policy after application', {
+              userId,
+              expectedRole: role,
+              actualIsAdministrator: verifyUser.Policy?.IsAdministrator,
+              actualEnableContentDeletion: verifyUser.Policy?.EnableContentDeletion,
+            })
+          }
+        } catch (e) {
+          authLogger.warn('Could not verify policy application', { error: e instanceof Error ? e.message : 'Unknown error' })
+        }
       }
 
       const newUser = {
@@ -466,10 +490,28 @@ export async function GET(req: NextRequest) {
       const newGroups = userinfo.groups || userinfo.roles || userinfo.oidc_groups || []
       const groupsArray = Array.isArray(newGroups) ? newGroups : (newGroups ? [newGroups] : [])
       
+      authLogger.info('Group extraction for existing user', {
+        email: user.email,
+        userinfo_groups: userinfo.groups,
+        userinfo_roles: userinfo.roles,
+        userinfo_oidc_groups: userinfo.oidc_groups,
+        extractedGroups: newGroups,
+        groupsArray,
+        existingOidcGroups: user.oidcGroups,
+      })
+      
       // Check if groups have changed
       const groupsChanged = 
         !user.oidcGroups || 
         JSON.stringify(user.oidcGroups?.sort()) !== JSON.stringify(groupsArray.sort())
+      
+      authLogger.info('Group change detection', {
+        email: user.email,
+        groupsChanged,
+        hasExistingGroups: !!user.oidcGroups,
+        existingGroupsLength: user.oidcGroups?.length || 0,
+        newGroupsLength: groupsArray.length,
+      })
       
       if (groupsChanged && groupsArray.length > 0) {
         user.oidcGroups = groupsArray

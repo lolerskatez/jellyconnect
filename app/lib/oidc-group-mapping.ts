@@ -253,7 +253,10 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
   }
 
   // No groups configured - fall back to default patterns
-  authLogger.debug('No group configuration found, using default fallback patterns');
+  authLogger.info('No group configuration found, using default fallback patterns', {
+    normalizedGroups,
+    checking: ['administrator', 'administrators', 'admin', 'admins']
+  });
 
   // Check for administrator groups (highest priority)
   // Matches: "Administrator", "Administrators", "Admin", "Admins"
@@ -263,7 +266,7 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
     g === 'admin' ||
     g === 'admins'
   )) {
-    authLogger.info('OIDC group mapped to admin role (fallback pattern)');
+    authLogger.info('OIDC group mapped to admin role (fallback pattern)', { matchedGroup: normalizedGroups.find(g => ['administrator', 'administrators', 'admin', 'admins'].includes(g)) });
     return 'admin';
   }
 
