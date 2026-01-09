@@ -39,14 +39,17 @@ async function getSessionHandler(req: NextRequest) {
           try {
             const config = getConfig()
             if (config.jellyfinUrl && config.apiKey) {
+              const baseUrl = buildJellyfinBaseUrl(config.jellyfinUrl)
               authLogger.info('Checking Jellyfin admin status for SSO user', { 
                 userId: user.id, 
                 email: user.email,
                 jellyfinId: user.jellyfinId,
                 oidcGroups: user.oidcGroups,
-                databaseRole: (user.oidcGroups && user.oidcGroups.length > 0) ? 'mapped from groups' : 'unknown'
+                databaseRole: (user.oidcGroups && user.oidcGroups.length > 0) ? 'mapped from groups' : 'unknown',
+                jellyfinUrl: config.jellyfinUrl,
+                processedBaseUrl: baseUrl
               })
-              const jellyfinAuth = new JellyfinAuth(buildJellyfinBaseUrl(config.jellyfinUrl), config.apiKey)
+              const jellyfinAuth = new JellyfinAuth(baseUrl, config.apiKey)
               const jellyfinUser = await jellyfinAuth.getUserById(user.jellyfinId)
               isAdmin = jellyfinUser.Policy?.IsAdministrator || false
               authLogger.info('Jellyfin user policy check result', { 

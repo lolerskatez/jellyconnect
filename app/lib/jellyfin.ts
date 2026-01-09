@@ -15,17 +15,42 @@ export const jellyfin = new Jellyfin({
 });
 
 export function buildJellyfinBaseUrl(url: string): string {
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return `http://${url}`;
+  if (!url) {
+    return '';
   }
-  return url;
+  
+  // If URL already has a scheme, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Add http:// scheme for URLs without one (like localIP:8096)
+  return `http://${url}`;
 }
 
 export class JellyfinAuth {
   private api: any;
+  private baseUrl: string;
+  private apiKey: string;
 
   constructor(baseUrl: string, apiKey: string) {
+    if (!baseUrl || !apiKey) {
+      jellyfinLogger.error('JellyfinAuth initialization failed', {
+        hasBaseUrl: !!baseUrl,
+        hasApiKey: !!apiKey,
+        baseUrl: baseUrl || 'EMPTY',
+        apiKeyLength: apiKey?.length || 0
+      });
+    }
+    jellyfinLogger.debug('Creating JellyfinAuth instance', { 
+      baseUrl, 
+      apiKeyLength: apiKey?.length || 0,
+      hasApiKey: !!apiKey
+    });
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
     this.api = jellyfin.createApi(baseUrl, apiKey);
+    jellyfinLogger.debug('JellyfinAuth instance created successfully');
   }
 
   async validateApiKey(): Promise<boolean> {
@@ -67,17 +92,59 @@ export class JellyfinAuth {
         is_admin: isAdmin,
       };
     } catch (error) {
-      jellyfinLogger.error('Authentication failed', { error: error instanceof Error ? error.message : 'Unknown error' })
+      const errorDetails: any = { username };
+      if (error instanceof Error) {
+        errorDetails.message = error.message;
+        errorDetails.name = error.name;
+        errorDetails.stack = error.stack;
+      } else if (typeof error === 'object' && error !== null) {
+        errorDetails.error = JSON.stringify(error);
+        if ('response' in error) {
+          errorDetails.status = (error as any).response?.status;
+          errorDetails.statusText = (error as any).response?.statusText;
+          errorDetails.responseData = (error as any).response?.data;
+        }
+        if ('config' in error) {
+          errorDetails.url = (error as any).config?.url;
+          errorDetails.method = (error as any).config?.method;
+        }
+      } else {
+        errorDetails.error = String(error);
+      }
+      jellyfinLogger.error('Authentication failed', errorDetails)
       throw error;
     }
   }
 
   async getUserById(userId: string): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.get(`/Users/${userId}`);
+      const response = await this.api.axiosInstance.get(`/Users/${userId}`, {
+        headers: {
+          'X-MediaBrowser-Token': this.apiKey
+        }
+      });
       return response.data;
     } catch (error) {
-      jellyfinLogger.error('Failed to get user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
+      const errorDetails: any = { userId };
+      if (error instanceof Error) {
+        errorDetails.message = error.message;
+        errorDetails.name = error.name;
+        errorDetails.stack = error.stack;
+      } else if (typeof error === 'object' && error !== null) {
+        errorDetails.error = JSON.stringify(error);
+        if ('response' in error) {
+          errorDetails.status = (error as any).response?.status;
+          errorDetails.statusText = (error as any).response?.statusText;
+          errorDetails.responseData = (error as any).response?.data;
+        }
+        if ('config' in error) {
+          errorDetails.url = (error as any).config?.url;
+          errorDetails.method = (error as any).config?.method;
+        }
+      } else {
+        errorDetails.error = String(error);
+      }
+      jellyfinLogger.error('Failed to get user', errorDetails)
       throw error;
     }
   }
@@ -87,6 +154,10 @@ export class JellyfinAuth {
       const response = await this.api.axiosInstance.post('/Users/New', {
         Name: username,
         Password: password || '',
+      }, {
+        headers: {
+          'X-MediaBrowser-Token': this.apiKey
+        }
       });
       return response.data;
     } catch (error) {
@@ -137,7 +208,11 @@ export class JellyfinAuth {
 
   async deleteUser(userId: string): Promise<void> {
     try {
-      await this.api.axiosInstance.delete(`/Users/${userId}`);
+      await this.api.axiosInstance.delete(`/Users/${userId}`, {
+        headers: {
+          'X-MediaBrowser-Token': this.apiKey
+        }
+      });
     } catch (error) {
       jellyfinLogger.error('Failed to delete user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
@@ -146,7 +221,11 @@ export class JellyfinAuth {
 
   async updateUserPolicy(userId: string, policy: any): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.post(`/Users/${userId}/Policy`, policy);
+      const response = await this.api.axiosInstance.post(`/Users/${userId}/Policy`, policy, {
+        headers: {
+          'X-MediaBrowser-Token': this.apiKey
+        }
+      });
       return response.data;
     } catch (error) {
       jellyfinLogger.error('Failed to update user policy', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
