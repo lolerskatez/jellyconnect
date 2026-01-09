@@ -172,8 +172,9 @@ const ROLE_POLICIES: Record<JellyfinRole, UserPolicy> = {
  * If groups are configured but user doesn't match any, returns null (deny access)
  */
 export function mapGroupsToRole(groups: string[] | string | undefined): JellyfinRole | null {
-  if (!groups) {
-    return null; // No groups provided - deny access if configuration requires groups
+  if (!groups || (Array.isArray(groups) && groups.length === 0)) {
+    authLogger.debug('No groups provided for mapping');
+    return null; // No groups provided - deny access
   }
 
   const groupArray = Array.isArray(groups) ? groups : [groups];
@@ -182,64 +183,78 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
   authLogger.debug('OIDC group mapping input', { inputGroups: groupArray, normalizedGroups });
 
   // Check if any groups are configured
+  let hasConfiguredGroups = false;
+  let authSettings: any = null;
+  
   try {
     const { getAuthSettings } = require('./auth-settings');
-    const authSettings = getAuthSettings();
+    authSettings = getAuthSettings();
 
-    const hasConfiguredGroups = (
+    hasConfiguredGroups = (
       (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) ||
       (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) ||
       (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0)
     );
 
-    if (hasConfiguredGroups) {
-      // Admin has configured groups - user MUST belong to at least one configured group
-
-      // Check admin groups first (highest priority)
-      if (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) {
-        const configuredAdminGroups = authSettings.oidcAdminGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-        if (normalizedGroups.some(g => configuredAdminGroups.includes(g))) {
-          authLogger.debug('OIDC group mapped to admin role (configured)');
-          return 'admin';
-        }
-      }
-
-      // Check power user groups (medium priority)
-      if (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) {
-        const configuredPowerUserGroups = authSettings.oidcPowerUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-        if (normalizedGroups.some(g => configuredPowerUserGroups.includes(g))) {
-          authLogger.debug('OIDC group mapped to powerUser role (configured)');
-          return 'powerUser';
-        }
-      }
-
-      // Check user groups (lowest priority, explicit configuration)
-      if (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0) {
-        const configuredUserGroups = authSettings.oidcUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-        if (normalizedGroups.some(g => configuredUserGroups.includes(g))) {
-          authLogger.debug('OIDC group mapped to user role (configured)');
-          return 'user';
-        }
-      }
-
-      // User has configured groups but doesn't belong to any - deny access
-      authLogger.info('Access denied: User does not belong to any configured groups', {
-        userGroups: normalizedGroups,
-        configuredAdminGroups: authSettings.oidcAdminGroups,
-        configuredPowerUserGroups: authSettings.oidcPowerUserGroups,
-        configuredUserGroups: authSettings.oidcUserGroups
-      });
-      return null;
-
-    } else {
-      // No groups configured - fall back to default behavior
-      authLogger.debug('No group configuration found, using defaults');
-    }
+    authLogger.debug('Group configuration check', { 
+      hasConfiguredGroups,
+      adminGroupsCount: authSettings.oidcAdminGroups?.length || 0,
+      powerUserGroupsCount: authSettings.oidcPowerUserGroups?.length || 0,
+      userGroupsCount: authSettings.oidcUserGroups?.length || 0
+    });
   } catch (error) {
-    authLogger.warn('Failed to load auth settings for group mapping, using defaults', { error: error instanceof Error ? error.message : String(error) });
+    authLogger.warn('Failed to load auth settings for group mapping', { error: error instanceof Error ? error.message : String(error) });
   }
 
-  // Fallback to default patterns if no configuration or error
+  if (hasConfiguredGroups && authSettings) {
+    // Admin has configured groups - user MUST belong to at least one configured group
+    authLogger.info('Using configured group mappings for role determination', {
+      userGroups: normalizedGroups,
+      configuredAdminGroups: authSettings.oidcAdminGroups,
+      configuredPowerUserGroups: authSettings.oidcPowerUserGroups,
+      configuredUserGroups: authSettings.oidcUserGroups
+    });
+
+    // Check admin groups first (highest priority)
+    if (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) {
+      const configuredAdminGroups = authSettings.oidcAdminGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredAdminGroups.includes(g))) {
+        authLogger.info('OIDC group mapped to admin role (configured)', { matchedGroup: normalizedGroups.find(g => configuredAdminGroups.includes(g)) });
+        return 'admin';
+      }
+    }
+
+    // Check power user groups (medium priority)
+    if (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) {
+      const configuredPowerUserGroups = authSettings.oidcPowerUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredPowerUserGroups.includes(g))) {
+        authLogger.info('OIDC group mapped to powerUser role (configured)', { matchedGroup: normalizedGroups.find(g => configuredPowerUserGroups.includes(g)) });
+        return 'powerUser';
+      }
+    }
+
+    // Check user groups (lowest priority, explicit configuration)
+    if (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0) {
+      const configuredUserGroups = authSettings.oidcUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+      if (normalizedGroups.some(g => configuredUserGroups.includes(g))) {
+        authLogger.info('OIDC group mapped to user role (configured)', { matchedGroup: normalizedGroups.find(g => configuredUserGroups.includes(g)) });
+        return 'user';
+      }
+    }
+
+    // User has configured groups but doesn't belong to any - DENY ACCESS
+    authLogger.warn('Access denied: User does not belong to any configured groups', {
+      userGroups: normalizedGroups,
+      configuredAdminGroups: authSettings.oidcAdminGroups,
+      configuredPowerUserGroups: authSettings.oidcPowerUserGroups,
+      configuredUserGroups: authSettings.oidcUserGroups
+    });
+    return null;
+  }
+
+  // No groups configured - fall back to default patterns
+  authLogger.debug('No group configuration found, using default fallback patterns');
+
   // Check for administrator groups (highest priority)
   // Matches: "Administrator", "Administrators", "Admin", "Admins"
   if (normalizedGroups.some(g =>
@@ -248,7 +263,7 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
     g === 'admin' ||
     g === 'admins'
   )) {
-    authLogger.debug('OIDC group mapped to admin role (fallback)');
+    authLogger.info('OIDC group mapped to admin role (fallback pattern)');
     return 'admin';
   }
 
@@ -262,13 +277,25 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
     g === 'power_user' ||
     g === 'power_users'
   )) {
-    authLogger.debug('OIDC group mapped to powerUser role (fallback)');
+    authLogger.info('OIDC group mapped to powerUser role (fallback pattern)');
     return 'powerUser';
   }
 
-  // Default to user
-  authLogger.debug('OIDC group mapped to user role (default)');
-  return 'user';
+  // Check for user groups (lowest priority in fallback)
+  // Matches: "User", "Users", "Member", "Members"
+  if (normalizedGroups.some(g =>
+    g === 'user' ||
+    g === 'users' ||
+    g === 'member' ||
+    g === 'members'
+  )) {
+    authLogger.info('OIDC group mapped to user role (fallback pattern)');
+    return 'user';
+  }
+
+  // No recognized groups in fallback - deny access
+  authLogger.warn('Access denied: No recognized groups found (fallback)', { userGroups: normalizedGroups });
+  return null;
 }
 
 /**

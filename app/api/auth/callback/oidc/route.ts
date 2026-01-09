@@ -197,15 +197,26 @@ export async function GET(req: NextRequest) {
       const groups = userinfo.groups || userinfo.roles || userinfo.oidc_groups || []
       const groupsArray = Array.isArray(groups) ? groups : [groups]
       
-      // Map OIDC groups to Jellyfin role
+      // Map OIDC groups to Jellyfin role BEFORE creating user
       const role = mapGroupsToRole(groupsArray)
       authLogger.info('Mapped role from groups', { role, groups: groupsArray })
+
+      // Check if user is authorized based on group mappings
+      if (role === null) {
+        authLogger.warn('Access denied: User does not belong to any configured groups', {
+          email: userinfo.email,
+          groups: groupsArray
+        })
+        return NextResponse.redirect(
+          new URL('/login?error=AccessDenied', baseUrl)
+        )
+      }
 
       // Use SSO provider's username (preferred_username or name), fallback to email prefix
       const jellyfinUsername = userinfo.preferred_username || userinfo.name || userinfo.email.split('@')[0]
       const securePassword = generateSecurePassword()
 
-      authLogger.info('Creating Jellyfin user', { jellyfinUsername, role })
+      authLogger.info('Creating Jellyfin user', { jellyfinUsername, role, email: userinfo.email })
 
       let userId: string | null = null
       let jellyfinUser: any = null
@@ -283,15 +294,6 @@ export async function GET(req: NextRequest) {
       }
 
       // Apply the role-based policy merged with required fields from current policy
-      if (role === null) {
-        authLogger.error('Access denied: User does not belong to any configured groups', {
-          email: userinfo.email,
-          groups: groupsArray
-        })
-        return NextResponse.redirect(
-          new URL('/login?error=AccessDenied', baseUrl)
-        )
-      }
       const rolePolicy = getRolePolicyForJellyfin(role)
       const policy = {
         ...rolePolicy,
