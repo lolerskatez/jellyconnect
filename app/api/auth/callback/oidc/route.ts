@@ -201,9 +201,21 @@ export async function GET(req: NextRequest) {
       const groups = userinfo.groups || userinfo.roles || userinfo.oidc_groups || []
       const groupsArray = Array.isArray(groups) ? groups : [groups]
       
+      authLogger.info('Groups extracted from OIDC userinfo', {
+        email: userinfo.email,
+        rawGroups: groups,
+        groupsArray,
+        hasGroups: groupsArray.length > 0
+      })
+      
       // Map OIDC groups to Jellyfin role BEFORE creating user
       const role = mapGroupsToRole(groupsArray)
-      authLogger.info('Mapped role from groups', { role, groups: groupsArray })
+      authLogger.info('Mapped role from groups', { 
+        email: userinfo.email,
+        role, 
+        groups: groupsArray,
+        roleIsNull: role === null
+      })
 
       // Check if user is authorized based on group mappings
       if (role === null) {

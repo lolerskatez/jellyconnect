@@ -196,11 +196,14 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
       (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0)
     );
 
-    authLogger.debug('Group configuration check', { 
+    authLogger.info('Group configuration check', { 
       hasConfiguredGroups,
       adminGroupsCount: authSettings.oidcAdminGroups?.length || 0,
       powerUserGroupsCount: authSettings.oidcPowerUserGroups?.length || 0,
-      userGroupsCount: authSettings.oidcUserGroups?.length || 0
+      userGroupsCount: authSettings.oidcUserGroups?.length || 0,
+      adminGroupsList: authSettings.oidcAdminGroups,
+      powerUserGroupsList: authSettings.oidcPowerUserGroups,
+      userGroupsList: authSettings.oidcUserGroups
     });
   } catch (error) {
     authLogger.warn('Failed to load auth settings for group mapping', { error: error instanceof Error ? error.message : String(error) });
