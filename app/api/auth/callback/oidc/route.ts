@@ -173,6 +173,11 @@ export async function GET(req: NextRequest) {
       oidc_groups: userinfo.oidc_groups,
       all_claims: Object.keys(userinfo),
     })
+    
+    // Log the complete userinfo for debugging
+    authLogger.debug('Complete OIDC userinfo', {
+      userinfo: JSON.stringify(userinfo, null, 2)
+    })
 
     if (!userinfo.email) {
       authLogger.error('No email in user info')
