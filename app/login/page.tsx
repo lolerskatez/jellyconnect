@@ -44,6 +44,17 @@ function LoginPageContent() {
     if (message) {
       setSuccessMessage(message)
     }
+
+    // Check for NextAuth error parameters
+    const error = searchParams.get('error')
+    if (error) {
+      // Handle specific access denied error
+      if (error === 'AccessDenied' || error === 'Configuration') {
+        setError('Access Restricted. Please contact your system administrator to gain entry.')
+      } else {
+        setError('Authentication failed. Please try again.')
+      }
+    }
   }, [searchParams])
 
   useEffect(() => {

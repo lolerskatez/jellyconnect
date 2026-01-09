@@ -283,6 +283,15 @@ export async function GET(req: NextRequest) {
       }
 
       // Apply the role-based policy merged with required fields from current policy
+      if (role === null) {
+        authLogger.error('Access denied: User does not belong to any configured groups', {
+          email: userinfo.email,
+          groups: groupsArray
+        })
+        return NextResponse.redirect(
+          new URL('/login?error=AccessDenied', baseUrl)
+        )
+      }
       const rolePolicy = getRolePolicyForJellyfin(role)
       const policy = {
         ...rolePolicy,
@@ -482,6 +491,17 @@ export async function GET(req: NextRequest) {
           
           if (config.jellyfinUrl && config.apiKey && user.jellyfinId) {
             const newRole = mapGroupsToRole(groupsArray)
+            if (newRole === null) {
+              authLogger.error('Access denied: Existing user no longer belongs to any configured groups', {
+                email: user.email,
+                userId: user.jellyfinId,
+                oldGroups: user.oidcGroups,
+                newGroups: groupsArray
+              })
+              return NextResponse.redirect(
+                new URL('/login?error=AccessDenied', baseUrl)
+              )
+            }
             const rolePolicy = getRolePolicyForJellyfin(newRole)
             
             // Get current policy to preserve auth provider IDs

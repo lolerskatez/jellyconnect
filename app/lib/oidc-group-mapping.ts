@@ -167,11 +167,13 @@ const ROLE_POLICIES: Record<JellyfinRole, UserPolicy> = {
 
 /**
  * Maps OIDC groups to Jellyfin roles
- * Uses configurable mappings from database, falls back to default patterns if not configured
+ * If admin has configured any groups, user MUST belong to at least one configured group
+ * If no groups are configured, falls back to default patterns
+ * If groups are configured but user doesn't match any, returns null (deny access)
  */
-export function mapGroupsToRole(groups: string[] | string | undefined): JellyfinRole {
+export function mapGroupsToRole(groups: string[] | string | undefined): JellyfinRole | null {
   if (!groups) {
-    return 'user'; // Default to user if no groups
+    return null; // No groups provided - deny access if configuration requires groups
   }
 
   const groupArray = Array.isArray(groups) ? groups : [groups];
@@ -179,36 +181,59 @@ export function mapGroupsToRole(groups: string[] | string | undefined): Jellyfin
 
   authLogger.debug('OIDC group mapping input', { inputGroups: groupArray, normalizedGroups });
 
-  // Try to get configured mappings from database
+  // Check if any groups are configured
   try {
     const { getAuthSettings } = require('./auth-settings');
     const authSettings = getAuthSettings();
 
-    // Check admin groups first (highest priority)
-    if (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) {
-      const configuredAdminGroups = authSettings.oidcAdminGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-      if (normalizedGroups.some(g => configuredAdminGroups.includes(g))) {
-        authLogger.debug('OIDC group mapped to admin role (configured)');
-        return 'admin';
-      }
-    }
+    const hasConfiguredGroups = (
+      (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) ||
+      (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) ||
+      (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0)
+    );
 
-    // Check power user groups (medium priority)
-    if (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) {
-      const configuredPowerUserGroups = authSettings.oidcPowerUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-      if (normalizedGroups.some(g => configuredPowerUserGroups.includes(g))) {
-        authLogger.debug('OIDC group mapped to powerUser role (configured)');
-        return 'powerUser';
-      }
-    }
+    if (hasConfiguredGroups) {
+      // Admin has configured groups - user MUST belong to at least one configured group
 
-    // Check user groups (lowest priority, explicit configuration)
-    if (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0) {
-      const configuredUserGroups = authSettings.oidcUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
-      if (normalizedGroups.some(g => configuredUserGroups.includes(g))) {
-        authLogger.debug('OIDC group mapped to user role (configured)');
-        return 'user';
+      // Check admin groups first (highest priority)
+      if (authSettings.oidcAdminGroups && authSettings.oidcAdminGroups.length > 0) {
+        const configuredAdminGroups = authSettings.oidcAdminGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+        if (normalizedGroups.some(g => configuredAdminGroups.includes(g))) {
+          authLogger.debug('OIDC group mapped to admin role (configured)');
+          return 'admin';
+        }
       }
+
+      // Check power user groups (medium priority)
+      if (authSettings.oidcPowerUserGroups && authSettings.oidcPowerUserGroups.length > 0) {
+        const configuredPowerUserGroups = authSettings.oidcPowerUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+        if (normalizedGroups.some(g => configuredPowerUserGroups.includes(g))) {
+          authLogger.debug('OIDC group mapped to powerUser role (configured)');
+          return 'powerUser';
+        }
+      }
+
+      // Check user groups (lowest priority, explicit configuration)
+      if (authSettings.oidcUserGroups && authSettings.oidcUserGroups.length > 0) {
+        const configuredUserGroups = authSettings.oidcUserGroups.map((g: string) => g.toLowerCase().trim().replace(/\s+/g, ''));
+        if (normalizedGroups.some(g => configuredUserGroups.includes(g))) {
+          authLogger.debug('OIDC group mapped to user role (configured)');
+          return 'user';
+        }
+      }
+
+      // User has configured groups but doesn't belong to any - deny access
+      authLogger.info('Access denied: User does not belong to any configured groups', {
+        userGroups: normalizedGroups,
+        configuredAdminGroups: authSettings.oidcAdminGroups,
+        configuredPowerUserGroups: authSettings.oidcPowerUserGroups,
+        configuredUserGroups: authSettings.oidcUserGroups
+      });
+      return null;
+
+    } else {
+      // No groups configured - fall back to default behavior
+      authLogger.debug('No group configuration found, using defaults');
     }
   } catch (error) {
     authLogger.warn('Failed to load auth settings for group mapping, using defaults', { error: error instanceof Error ? error.message : String(error) });

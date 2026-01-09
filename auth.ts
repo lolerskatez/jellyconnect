@@ -41,6 +41,10 @@ async function autoCreateJellyfinUser(
 
     // Map OIDC groups to Jellyfin role
     const role = mapGroupsToRole(groups)
+    if (role === null) {
+      authLogger.error('Cannot create user: no valid role mapped from groups', { email, groups })
+      return null
+    }
     authLogger.info('Creating new Jellyfin user', { email, role, groups })
 
     // Generate a secure username and password
@@ -219,6 +223,10 @@ const authOptions: NextAuthOptions = {
 
         // Map groups to role and log the result
         const mappedRole = mapGroupsToRole(Array.isArray(groups) ? groups : [groups])
+        if (mappedRole === null) {
+          authLogger.info('Access denied: User does not belong to any configured groups', { email: profile.email, groups })
+          return false // Deny access
+        }
         authLogger.info('OIDC role mapping result', { 
           email: profile.email, 
           groups, 
@@ -260,37 +268,49 @@ const authOptions: NextAuthOptions = {
           try {
             const config = (await import('./app/lib/config')).getConfig()
             if (config.jellyfinUrl && config.apiKey) {
-              const jellyfinAuth = new (await import('./app/lib/jellyfin')).JellyfinAuth(config.jellyfinUrl, config.apiKey)
-              const { getRolePolicyForJellyfin } = await import('./app/lib/oidc-group-mapping')
-              const policy = getRolePolicyForJellyfin(currentRole)
-              
-              const policyRes = await fetch(`${config.jellyfinUrl}/Users/${dbUser.jellyfinId}/Policy`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Emby-Token': config.apiKey,
-                },
-                body: JSON.stringify(policy),
-              })
-
-              if (policyRes.ok) {
-                authLogger.info('Updated Jellyfin policy for existing user', { 
-                  email: profile.email, 
-                  jellyfinId: dbUser.jellyfinId,
-                  role: currentRole,
-                  isAdmin: shouldBeAdmin 
+              if (currentRole === null) {
+                authLogger.error('Cannot update user policy: user no longer belongs to any configured groups', {
+                  email: dbUser.email,
+                  userId: dbUser.jellyfinId,
+                  oldGroups: dbUser.oidcGroups,
+                  newGroups
                 })
+                // User is no longer authorized - they should be denied access on next login
+                // For now, just log the issue and continue
+                authLogger.warn('User policy update skipped due to group membership change', { email: dbUser.email })
               } else {
-                authLogger.error('Failed to update Jellyfin policy for existing user', { 
-                  email: profile.email, 
-                  jellyfinId: dbUser.jellyfinId,
-                  status: policyRes.status 
+                const jellyfinAuth = new (await import('./app/lib/jellyfin')).JellyfinAuth(config.jellyfinUrl, config.apiKey)
+                const { getRolePolicyForJellyfin } = await import('./app/lib/oidc-group-mapping')
+                const policy = getRolePolicyForJellyfin(currentRole)
+                
+                const policyRes = await fetch(`${config.jellyfinUrl}/Users/${dbUser.jellyfinId}/Policy`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Emby-Token': config.apiKey,
+                  },
+                  body: JSON.stringify(policy),
                 })
+
+                if (policyRes.ok) {
+                  authLogger.info('Updated Jellyfin policy for existing user', { 
+                    email: dbUser.email, 
+                    jellyfinId: dbUser.jellyfinId,
+                    role: currentRole,
+                    isAdmin: shouldBeAdmin 
+                  })
+                } else {
+                  authLogger.error('Failed to update Jellyfin policy for existing user', { 
+                    email: dbUser.email, 
+                    jellyfinId: dbUser.jellyfinId,
+                    status: policyRes.status 
+                  })
+                }
               }
             }
           } catch (error) {
             authLogger.error('Error updating Jellyfin policy for existing user', { 
-              email: profile.email, 
+              email: dbUser.email, 
               error: error instanceof Error ? error.message : String(error) 
             })
           }
