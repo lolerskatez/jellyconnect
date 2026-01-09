@@ -3,6 +3,7 @@ import { pluginLogger } from '@/app/lib/logger'
 import { successResponse, errorResponse, validationErrorResponse } from '@/app/lib/api-response'
 import { database } from '@/app/lib/db'
 import { getConfig } from '@/app/lib/config'
+import { mapGroupsToRole } from '@/app/lib/oidc-group-mapping'
 
 /**
  * Validates an OIDC access token and returns user information
@@ -60,10 +61,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user groups from database
+    // Get user groups from database and map to role using centralized function
     const groups = user.oidcGroups || []
-    const isAdmin = groups.some(g => g.toLowerCase() === 'admin')
-    const roles = isAdmin ? ['admin'] : ['user']
+    const mappedRole = mapGroupsToRole(groups)
+    // Determine if admin based on mapped role, not just group name
+    const isAdmin = mappedRole === 'admin'
+    const roles = mappedRole ? [mappedRole] : ['user']
 
     pluginLogger.info('Token validated successfully', {
       userId: user.id,

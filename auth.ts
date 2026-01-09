@@ -78,7 +78,30 @@ async function autoCreateJellyfinUser(
 
     // Apply the role-based policy
     const { getRolePolicyForJellyfin } = await import('./app/lib/oidc-group-mapping')
-    const policy = getRolePolicyForJellyfin(role)
+    const rolePolicy = getRolePolicyForJellyfin(role)
+    
+    // Get current policy to preserve required Jellyfin fields
+    let currentPolicy: any = {}
+    try {
+      const currentUserResponse = await fetch(`${config.jellyfinUrl}/Users/${jellyfin_id}`, {
+        headers: {
+          'X-Emby-Token': config.apiKey,
+        },
+      })
+      if (currentUserResponse.ok) {
+        const currentUser = await currentUserResponse.json()
+        currentPolicy = currentUser.Policy || {}
+      }
+    } catch (error) {
+      authLogger.warn('Failed to get current user policy', { error: error instanceof Error ? error.message : 'Unknown error' })
+    }
+    
+    // Merge role policy with required Jellyfin fields
+    const policy = {
+      ...rolePolicy,
+      AuthenticationProviderId: currentPolicy.AuthenticationProviderId || 'Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider',
+      PasswordResetProviderId: currentPolicy.PasswordResetProviderId || 'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
+    }
 
     const policyRes = await fetch(`${config.jellyfinUrl}/Users/${jellyfin_id}/Policy`, {
       method: 'POST',
@@ -280,7 +303,30 @@ const authOptions: NextAuthOptions = {
               } else {
                 const jellyfinAuth = new (await import('./app/lib/jellyfin')).JellyfinAuth(config.jellyfinUrl, config.apiKey)
                 const { getRolePolicyForJellyfin } = await import('./app/lib/oidc-group-mapping')
-                const policy = getRolePolicyForJellyfin(currentRole)
+                const rolePolicy = getRolePolicyForJellyfin(currentRole)
+                
+                // Get current policy to preserve required Jellyfin fields
+                let currentPolicy: any = {}
+                try {
+                  const currentUserResponse = await fetch(`${config.jellyfinUrl}/Users/${dbUser.jellyfinId}`, {
+                    headers: {
+                      'X-Emby-Token': config.apiKey,
+                    },
+                  })
+                  if (currentUserResponse.ok) {
+                    const currentUser = await currentUserResponse.json()
+                    currentPolicy = currentUser.Policy || {}
+                  }
+                } catch (error) {
+                  authLogger.warn('Failed to get current user policy for update', { error: error instanceof Error ? error.message : 'Unknown error' })
+                }
+                
+                // Merge role policy with required Jellyfin fields
+                const policy = {
+                  ...rolePolicy,
+                  AuthenticationProviderId: currentPolicy.AuthenticationProviderId || 'Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider',
+                  PasswordResetProviderId: currentPolicy.PasswordResetProviderId || 'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
+                }
                 
                 const policyRes = await fetch(`${config.jellyfinUrl}/Users/${dbUser.jellyfinId}/Policy`, {
                   method: 'POST',

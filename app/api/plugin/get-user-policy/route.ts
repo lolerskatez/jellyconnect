@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pluginLogger } from '@/app/lib/logger'
 import { successResponse, errorResponse, validationErrorResponse } from '@/app/lib/api-response'
 import { database } from '@/app/lib/db'
-import { getRolePolicyForJellyfin } from '@/app/lib/oidc-group-mapping'
+import { getRolePolicyForJellyfin, mapGroupsToRole } from '@/app/lib/oidc-group-mapping'
 
 /**
  * Gets Jellyfin user policies based on OIDC groups
  * Called by plugin to set appropriate permissions for the user
+ * Uses the centralized mapGroupsToRole() function to respect configured group mappings
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,13 +27,16 @@ export async function POST(request: NextRequest) {
 
     pluginLogger.info('Getting user policy', { groups, userId, email })
 
-    // Determine role based on groups
+    // Use centralized mapGroupsToRole() to respect configured group mappings
+    const mappedRole = mapGroupsToRole(groups)
+    
+    // If no valid role mapped (user not in any configured groups), deny with 'user' as default
+    // but log a warning
     let role: 'admin' | 'powerUser' | 'user' = 'user'
-
-    if (groups.some(g => g.toLowerCase() === 'admin' || g.toLowerCase() === 'administrators')) {
-      role = 'admin'
-    } else if (groups.some(g => g.toLowerCase() === 'power user' || g.toLowerCase() === 'power users' || g.toLowerCase() === 'powerusers')) {
-      role = 'powerUser'
+    if (mappedRole === null) {
+      pluginLogger.warn('User does not belong to any configured groups, defaulting to user role', { groups, userId, email })
+    } else {
+      role = mappedRole
     }
 
     // Get the policy object for this role
