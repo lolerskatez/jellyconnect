@@ -55,7 +55,8 @@ export class JellyfinAuth {
 
   async validateApiKey(): Promise<boolean> {
     try {
-      const response = await this.api.axiosInstance.get('/System/Info/Public');
+      // Use /System/Info endpoint which requires authentication
+      const response = await this.api.axiosInstance.get('/System/Info');
       jellyfinLogger.info('API key validation successful', { 
         status: response.status,
         serverName: response.data?.ServerName 
