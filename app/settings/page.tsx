@@ -7,6 +7,7 @@ import AuthSettingsComponent from "../../components/AuthSettingsComponent"
 
 interface Settings {
   jellyfinUrl: string
+  apiKey: string
   smtp: {
     host: string
     port: number
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState<Settings>({
     jellyfinUrl: '',
+    apiKey: '',
     smtp: {
       host: '',
       port: 587,
@@ -190,6 +192,13 @@ export default function SettingsPage() {
     }))
   }
 
+  const updateApiKey = (value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      apiKey: value
+    }))
+  }
+
   if (!admin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -339,6 +348,22 @@ export default function SettingsPage() {
                     />
                     <p className="mt-1 text-xs text-slate-400">
                       The URL of your Jellyfin server. Used for user creation and invite flows.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">
+                      Jellyfin API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.apiKey}
+                      onChange={(e) => updateApiKey(e.target.value)}
+                      placeholder="Your Jellyfin API key"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-slate-400">
+                      Your Jellyfin API key for authentication. Get this from Jellyfin Settings → Devices and Sessions.
                     </p>
                   </div>
                 </div>

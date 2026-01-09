@@ -55,10 +55,33 @@ export class JellyfinAuth {
 
   async validateApiKey(): Promise<boolean> {
     try {
-      await this.api.axiosInstance.get('/System/Info/Public');
+      const response = await this.api.axiosInstance.get('/System/Info/Public');
+      jellyfinLogger.info('API key validation successful', { 
+        status: response.status,
+        serverName: response.data?.ServerName 
+      });
       return true;
     } catch (error) {
-      jellyfinLogger.error('API key validation failed', { error: error instanceof Error ? error.message : 'Unknown error' })
+      const errorDetails: any = {};
+      if (error instanceof Error) {
+        errorDetails.message = error.message;
+        errorDetails.name = error.name;
+      } else if (typeof error === 'object' && error !== null) {
+        if ('response' in error) {
+          errorDetails.status = (error as any).response?.status;
+          errorDetails.statusText = (error as any).response?.statusText;
+          errorDetails.responseData = (error as any).response?.data;
+        }
+        if ('config' in error) {
+          errorDetails.url = (error as any).config?.url;
+          errorDetails.method = (error as any).config?.method;
+          errorDetails.headers = (error as any).config?.headers;
+        }
+        if ('code' in error) {
+          errorDetails.code = (error as any).code;
+        }
+      }
+      jellyfinLogger.error('API key validation failed', errorDetails);
       return false;
     }
   }

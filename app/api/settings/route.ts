@@ -7,9 +7,10 @@ export async function GET() {
   try {
     const config = getConfig();
 
-    // Return only the notification-related settings
+    // Return settings including Jellyfin configuration
     const settings = {
       jellyfinUrl: config.jellyfinUrl || '',
+      apiKey: config.apiKey || '',
       smtp: config.smtp || {
         host: '',
         port: 587,
@@ -46,13 +47,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { jellyfinUrl, smtp, discord } = validationResult.data;
+    const { jellyfinUrl, apiKey, smtp, discord } = validationResult.data;
 
-    // Get current config and update only the notification settings
+    // Get current config and update settings
     const currentConfig = getConfig();
     const updatedConfig = {
       ...currentConfig,
       jellyfinUrl: jellyfinUrl,
+      apiKey: apiKey || currentConfig.apiKey,
       smtp: smtp,
       discord: discord
     };
