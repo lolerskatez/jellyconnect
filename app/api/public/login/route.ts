@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { JellyfinAuth } from '@/app/lib/jellyfin'
+import { JellyfinAuth, buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
 import { getConfig } from '@/app/lib/config'
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   const config = getConfig()
-  const jellyfin = new JellyfinAuth(config.jellyfinUrl, config.apiKey)
+  const jellyfin = new JellyfinAuth(buildJellyfinBaseUrl(config.jellyfinUrl), config.apiKey)
 
   try {
     const authResponse = await jellyfin.authenticate(username, password)

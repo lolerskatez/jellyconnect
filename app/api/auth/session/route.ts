@@ -6,7 +6,7 @@ import { authLogger } from '@/app/lib/logger'
 import { verifyAccessToken } from '@/app/lib/auth'
 import { database } from '@/app/lib/db'
 import { getConfig } from '@/app/lib/config'
-import { JellyfinAuth } from '@/app/lib/jellyfin'
+import { JellyfinAuth, buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
 
 /**
  * Get current user session
@@ -46,7 +46,7 @@ async function getSessionHandler(req: NextRequest) {
                 oidcGroups: user.oidcGroups,
                 databaseRole: (user.oidcGroups && user.oidcGroups.length > 0) ? 'mapped from groups' : 'unknown'
               })
-              const jellyfinAuth = new JellyfinAuth(config.jellyfinUrl, config.apiKey)
+              const jellyfinAuth = new JellyfinAuth(buildJellyfinBaseUrl(config.jellyfinUrl), config.apiKey)
               const jellyfinUser = await jellyfinAuth.getUserById(user.jellyfinId)
               isAdmin = jellyfinUser.Policy?.IsAdministrator || false
               authLogger.info('Jellyfin user policy check result', { 
