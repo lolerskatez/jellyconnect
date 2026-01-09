@@ -37,21 +37,21 @@ export const createInviteSchema = z.object({
 
 // Settings validation
 const smtpSchema = z.object({
-  host: z.string().min(1, 'SMTP host is required').max(253, 'SMTP host too long'),
+  host: z.string().max(253, 'SMTP host too long'),
   port: z.number().int().min(1, 'Port must be positive').max(65535, 'Invalid port number'),
   secure: z.boolean(),
   user: z.string().max(254, 'SMTP user too long'),
   pass: z.string().max(128, 'SMTP password too long'),
-  from: z.string().email('Invalid from email').max(254, 'From email too long')
+  from: z.string().max(254, 'From email too long').or(z.literal(''))
 });
 
 const discordSchema = z.object({
-  botToken: z.string().min(50, 'Discord bot token too short').max(100, 'Discord bot token too long')
+  botToken: z.string().max(100, 'Discord bot token too long').or(z.literal(''))
 });
 
 export const updateSettingsSchema = z.object({
   jellyfinUrl: z.string().url('Invalid Jellyfin URL').max(2048, 'URL too long'),
-  apiKey: z.string().min(1, 'API key is required').max(500, 'API key too long').optional(),
+  apiKey: z.string().max(500, 'API key too long').optional().or(z.literal('')),
   smtp: smtpSchema,
   discord: discordSchema
 });

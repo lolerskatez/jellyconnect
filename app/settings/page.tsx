@@ -120,6 +120,7 @@ export default function SettingsPage() {
     setSuccess(false)
 
     try {
+      console.log('Sending settings:', settings)
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
