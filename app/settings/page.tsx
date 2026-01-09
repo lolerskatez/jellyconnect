@@ -127,7 +127,9 @@ export default function SettingsPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save settings')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || errorData.details || 'Failed to save settings'
+        throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage))
       }
 
       setSuccess(true)
@@ -400,6 +402,16 @@ export default function SettingsPage() {
                   <li>Look for your device or create a new API key</li>
                   <li>Copy the API key and paste it above</li>
                 </ol>
+              </div>
+
+              <div className="p-4 bg-blue-900 border border-blue-700 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-200 mb-2">Troubleshooting:</h3>
+                <ul className="text-sm text-blue-100 space-y-1">
+                  <li>• Make sure your Jellyfin server is running and accessible at the URL above</li>
+                  <li>• Verify the API key is correct - it should be a long alphanumeric string</li>
+                  <li>• If using a local IP, ensure your network connectivity is stable</li>
+                  <li>• Click &quot;Test Connection&quot; to validate your settings before saving</li>
+                </ul>
               </div>
 
               <button

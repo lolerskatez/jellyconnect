@@ -37,10 +37,12 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
+    settingsLogger.info('Received settings update request', { body });
 
     // Validate input
     const validationResult = updateSettingsSchema.safeParse(body);
     if (!validationResult.success) {
+      settingsLogger.error('Validation failed', { issues: validationResult.error.issues });
       return NextResponse.json(
         { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
