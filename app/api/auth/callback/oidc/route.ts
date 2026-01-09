@@ -287,7 +287,11 @@ export async function GET(req: NextRequest) {
         if (currentUserResponse.ok) {
           const currentUser = await currentUserResponse.json()
           currentPolicy = currentUser.Policy || {}
-          authLogger.info('Got current user policy', { authProviderId: currentPolicy.AuthenticationProviderId })
+          authLogger.info('Got current user policy from Jellyfin', { 
+            authProviderId: currentPolicy.AuthenticationProviderId,
+            isAdministrator: currentPolicy.IsAdministrator,
+            userId
+          })
         }
       } catch (error) {
         authLogger.error('Failed to get current user policy', { error: error instanceof Error ? error.message : 'Unknown error' })
@@ -307,7 +311,8 @@ export async function GET(req: NextRequest) {
         role,
         isAdministrator: policy.IsAdministrator,
         enableContentDeletion: policy.EnableContentDeletion,
-        authProviderId: policy.AuthenticationProviderId
+        authProviderId: policy.AuthenticationProviderId,
+        policyKeys: Object.keys(policy).length
       })
       
       const policyResponse = await fetch(`${config.jellyfinUrl}/Users/${userId}/Policy`, {

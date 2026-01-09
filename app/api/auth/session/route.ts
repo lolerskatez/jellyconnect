@@ -43,7 +43,8 @@ async function getSessionHandler(req: NextRequest) {
                 userId: user.id, 
                 email: user.email,
                 jellyfinId: user.jellyfinId,
-                oidcGroups: user.oidcGroups 
+                oidcGroups: user.oidcGroups,
+                databaseRole: (user.oidcGroups && user.oidcGroups.length > 0) ? 'mapped from groups' : 'unknown'
               })
               const jellyfinAuth = new JellyfinAuth(config.jellyfinUrl, config.apiKey)
               const jellyfinUser = await jellyfinAuth.getUserById(user.jellyfinId)
@@ -54,7 +55,9 @@ async function getSessionHandler(req: NextRequest) {
                 policyIsAdministrator: jellyfinUser.Policy?.IsAdministrator,
                 isAdmin,
                 jellyfinUserName: jellyfinUser.Name,
-                hasPolicy: !!jellyfinUser.Policy
+                hasPolicy: !!jellyfinUser.Policy,
+                policyEnableContentDeletion: jellyfinUser.Policy?.EnableContentDeletion,
+                policyEnableAllFolders: jellyfinUser.Policy?.EnableAllFolders
               })
             } else {
               authLogger.warn('Cannot check Jellyfin admin status - missing config', { userId: user.id })

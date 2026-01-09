@@ -260,11 +260,10 @@ const authOptions: NextAuthOptions = {
           authLogger.info('Updated display name for existing user', { email: profile.email, newName: profile.name })
         }
 
-        // Re-apply Jellyfin policy if groups changed or if user should be admin but isn't
+        // Re-apply Jellyfin policy if groups changed
         const currentRole = mapGroupsToRole(newGroups)
-        const shouldBeAdmin = currentRole === 'admin'
         
-        if (groupsChanged || shouldBeAdmin) {
+        if (groupsChanged) {
           try {
             const config = (await import('./app/lib/config')).getConfig()
             if (config.jellyfinUrl && config.apiKey) {
@@ -297,7 +296,7 @@ const authOptions: NextAuthOptions = {
                     email: dbUser.email, 
                     jellyfinId: dbUser.jellyfinId,
                     role: currentRole,
-                    isAdmin: shouldBeAdmin 
+                    isAdmin: currentRole === 'admin'
                   })
                 } else {
                   authLogger.error('Failed to update Jellyfin policy for existing user', { 
