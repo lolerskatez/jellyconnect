@@ -39,10 +39,23 @@ async function getSessionHandler(req: NextRequest) {
           try {
             const config = getConfig()
             if (config.jellyfinUrl && config.apiKey) {
+              authLogger.info('Checking Jellyfin admin status for SSO user', { 
+                userId: user.id, 
+                email: user.email,
+                jellyfinId: user.jellyfinId,
+                oidcGroups: user.oidcGroups 
+              })
               const jellyfinAuth = new JellyfinAuth(config.jellyfinUrl, config.apiKey)
               const jellyfinUser = await jellyfinAuth.getUserById(user.jellyfinId)
               isAdmin = jellyfinUser.Policy?.IsAdministrator || false
-              authLogger.debug('Checked Jellyfin admin status', { userId: user.id, isAdmin })
+              authLogger.info('Jellyfin user policy check result', { 
+                userId: user.id,
+                jellyfinId: user.jellyfinId,
+                policyIsAdministrator: jellyfinUser.Policy?.IsAdministrator,
+                isAdmin,
+                jellyfinUserName: jellyfinUser.Name,
+                hasPolicy: !!jellyfinUser.Policy
+              })
             } else {
               authLogger.warn('Cannot check Jellyfin admin status - missing config', { userId: user.id })
             }
