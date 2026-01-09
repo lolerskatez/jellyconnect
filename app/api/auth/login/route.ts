@@ -21,7 +21,19 @@ async function loginHandler(request: NextRequest) {
     const { username, password } = validationResult.data
 
     const config = getConfig()
+    authLogger.debug('Login attempt', { 
+      username, 
+      hasJellyfinUrl: !!config.jellyfinUrl,
+      hasApiKey: !!config.apiKey,
+      jellyfinUrl: config.jellyfinUrl || 'EMPTY',
+      apiKeyLength: config.apiKey?.length || 0
+    })
+    
     if (!config.jellyfinUrl || !config.apiKey) {
+      authLogger.error('Jellyfin not configured', {
+        hasJellyfinUrl: !!config.jellyfinUrl,
+        hasApiKey: !!config.apiKey
+      })
       return NextResponse.json(
         errorResponse('Jellyfin not configured', 'JELLYFIN_CONFIG_ERROR', 500),
         { status: 500 }
