@@ -91,12 +91,14 @@ export default function SetupPage() {
   const isStep2Valid = !config.smtpHost || (config.smtpHost && config.smtpUser && config.smtpPass)
   const isStep3Valid = true // Discord is optional
   const isStep4Valid = !config.oidcEnabled || (config.oidcEnabled && config.oidcDiscoveryUrl && config.oidcClientId && config.oidcClientSecret)
+  const isStep5Valid = true // Review step, always valid
 
   const canProceed = () => {
     if (step === 1) return isStep1Valid
     if (step === 2) return isStep2Valid
     if (step === 3) return isStep3Valid
     if (step === 4) return isStep4Valid
+    if (step === 5) return isStep5Valid
     return false
   }
 
@@ -202,7 +204,7 @@ export default function SetupPage() {
             Setup JellyConnect
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
-            Step {step} of 4 • {step === 1 ? 'Jellyfin Configuration' : step === 2 ? 'Email Notifications' : step === 3 ? 'Discord Notifications' : 'SSO/OIDC'}
+            Step {step} of 5 • {step === 1 ? 'Jellyfin Configuration' : step === 2 ? 'Email Notifications' : step === 3 ? 'Discord Notifications' : step === 4 ? 'SSO/OIDC' : 'Review & Confirm'}
           </p>
         </div>
 
@@ -600,6 +602,61 @@ export default function SetupPage() {
             </div>
           )}
 
+          {/* STEP 5: Review & Confirmation */}
+          {step === 5 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600 pb-2">Review Configuration</h3>
+              <p className="text-sm text-slate-400">Please review your configuration before completing setup</p>
+
+              {/* Jellyfin Summary */}
+              <div className="bg-slate-700 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-orange-400">Jellyfin Configuration</h4>
+                <div className="text-sm text-slate-300 space-y-1">
+                  <p><span className="text-slate-400">App URL:</span> {config.appUrl}</p>
+                  <p><span className="text-slate-400">Jellyfin URL:</span> {config.jellyfinUrl}</p>
+                  <p><span className="text-slate-400">Admin Username:</span> {config.adminUsername}</p>
+                </div>
+              </div>
+
+              {/* Email Summary */}
+              {config.smtpHost && (
+                <div className="bg-slate-700 rounded-lg p-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-orange-400">Email Notifications</h4>
+                  <div className="text-sm text-slate-300 space-y-1">
+                    <p><span className="text-slate-400">SMTP Host:</span> {config.smtpHost}:{config.smtpPort}</p>
+                    <p><span className="text-slate-400">Security:</span> {config.smtpSecure ? 'SSL/TLS' : 'STARTTLS'}</p>
+                    <p><span className="text-slate-400">From Address:</span> {config.smtpFrom || config.smtpUser}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Discord Summary */}
+              {config.discordBotToken && (
+                <div className="bg-slate-700 rounded-lg p-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-orange-400">Discord Notifications</h4>
+                  <div className="text-sm text-slate-300">
+                    <p>✓ Discord bot token configured</p>
+                  </div>
+                </div>
+              )}
+
+              {/* OIDC Summary */}
+              {config.oidcEnabled && (
+                <div className="bg-slate-700 rounded-lg p-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-orange-400">SSO/OIDC Configuration</h4>
+                  <div className="text-sm text-slate-300 space-y-1">
+                    <p><span className="text-slate-400">Provider:</span> {config.oidcProviderName || 'Custom'}</p>
+                    <p><span className="text-slate-400">Discovery URL:</span> {config.oidcDiscoveryUrl}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-slate-900 border border-slate-600 rounded-lg p-4">
+                <p className="text-sm text-slate-300">Click the &quot;Complete Setup&quot; button below to save your configuration and proceed to the login page.</p>
+              </div>
+            </div>
+          )}
+
           {/* Success Message */}
           {success && (
             <div className="rounded-lg bg-green-900 border border-green-700 p-6 mb-6 text-center">
@@ -636,7 +693,7 @@ export default function SetupPage() {
               >
                 Finish
               </button>
-            ) : step < 4 ? (
+            ) : step < 5 ? (
               <button
                 type="button"
                 onClick={() => {
