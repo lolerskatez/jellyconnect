@@ -151,11 +151,11 @@ function analyzeKeyFormat(apiKey: string | undefined): any {
   const issues: string[] = []
   const warnings: string[] = []
 
-  // Check length
-  if (apiKey.length < 40) {
-    issues.push(`API key is too short (${apiKey.length} chars, need 40+)`)
+  // Check length - Jellyfin API keys are typically 32 or 40 characters
+  if (apiKey.length < 32) {
+    issues.push(`API key is too short (${apiKey.length} chars, need 32+)`)
   } else if (apiKey.length > 50) {
-    issues.push(`API key is too long (${apiKey.length} chars, should be ~40)`)
+    issues.push(`API key is too long (${apiKey.length} chars, should be 32-40)`)
   }
 
   // Check for whitespace
@@ -178,7 +178,7 @@ function analyzeKeyFormat(apiKey: string | undefined): any {
     issues,
     warnings,
     length: apiKey.length,
-    format: 'Appears to be hexadecimal'
+    format: 'Jellyfin API key (hexadecimal, 32-40 chars)'
   }
 }
 
