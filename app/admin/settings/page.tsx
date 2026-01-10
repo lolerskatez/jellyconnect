@@ -381,7 +381,7 @@ export default function SettingsPage() {
                       <strong>Critical for QuickConnect:</strong> This must match your public URL exactly (with protocol, no trailing slash). Example: <code className="bg-slate-900 px-2 py-1 rounded">https://jc.tanjiro.one</code>
                     </p>
                     <p className="mt-2 text-xs text-slate-400">
-                      NextAuth uses this to set session cookies properly. Without this, QuickConnect authorization will fail with "Not authenticated" errors.
+                      NextAuth uses this to set session cookies properly. Without this, QuickConnect authorization will fail with &quot;Not authenticated&quot; errors.
                     </p>
                   </div>
                 </div>
