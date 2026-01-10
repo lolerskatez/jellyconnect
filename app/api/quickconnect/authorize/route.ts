@@ -33,12 +33,15 @@ export async function POST(request: NextRequest) {
       || request.cookies.get('__Secure-next-auth.session-token')?.value
     
     if (!sessionCookie) {
-      quickConnectLogger.warn('No session cookie found', { 
+      quickConnectLogger.warn('No session cookie found - user must be logged in first', { 
         availableCookies: cookies.map(c => c.name),
         cookieCount: cookies.length,
         code 
       })
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+      return NextResponse.json({ 
+        error: 'Not authenticated - please log in first to authorize this session',
+        errorCode: 'NO_SESSION'
+      }, { status: 401 })
     }
 
     const payload = await verifyAccessToken(sessionCookie)

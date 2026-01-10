@@ -42,32 +42,21 @@ export function getRolePermissions(role: UserRole): UserPermissions {
   return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS[UserRole.USER];
 }
 
-// Get secure secret key - prioritize environment variable
+// Get secure secret key - MUST match NEXTAUTH_SECRET in auth.ts
 function getSecretKey(): string {
-  // First try environment variable (most secure)
+  // Must use the same secret as NextAuth for JWT verification to work
+  // NextAuth uses: process.env.NEXTAUTH_SECRET || 'dev-fallback-secret-not-for-production'
   if (process.env.NEXTAUTH_SECRET) {
     return process.env.NEXTAUTH_SECRET;
   }
   
-  // Then try config (for flexibility)
-  try {
-    const { getConfig } = require('./config');
-    const config = getConfig();
-    if (config.nextAuthSecret) {
-      return config.nextAuthSecret;
-    }
-  } catch (e) {
-    // Config not available yet
+  // Development fallback - must match what auth.ts uses
+  if (process.env.NODE_ENV !== 'production') {
+    return 'dev-fallback-secret-not-for-production';
   }
   
-  // In production, fail if no secret is configured
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('NEXTAUTH_SECRET environment variable must be set in production!');
-  }
-  
-  // Development fallback - log warning
-  console.warn('[AUTH] WARNING: Using development fallback secret. Set NEXTAUTH_SECRET for production!');
-  return 'dev-fallback-secret-not-for-production';
+  // In production, NEXTAUTH_SECRET is required
+  throw new Error('NEXTAUTH_SECRET environment variable must be set in production!');
 }
 
 // Server-side only functions

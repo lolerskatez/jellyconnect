@@ -12,13 +12,19 @@ import { JellyfinAuth, buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
  */
 async function getSessionHandler(req: NextRequest) {
   try {
-    authLogger.debug('Checking session')
+    authLogger.debug('Checking session', {
+      cookieCount: req.cookies.getAll().length,
+      cookieNames: req.cookies.getAll().map(c => c.name),
+      hasSessionToken: !!req.cookies.get('next-auth.session-token')?.value,
+      hasSecureToken: !!req.cookies.get('__Secure-next-auth.session-token')?.value,
+    })
 
     // Check for custom JWT token (from OIDC callback or NextAuth)
     const token = req.cookies.get('next-auth.session-token')?.value 
       || req.cookies.get('__Secure-next-auth.session-token')?.value
 
     if (token) {
+      authLogger.debug('Found session token in cookies', { tokenLength: token.length })
       const payload = await verifyAccessToken(token)
       if (payload && payload.sub) {
         // Find user in database
@@ -86,7 +92,9 @@ async function getSessionHandler(req: NextRequest) {
     }
 
     authLogger.debug('No active session found - no session token in cookies')
-    return NextResponse.json({ user: null }, { status: 401 })
+    // Return 200 with null user instead of 401 when no session exists
+    // This allows the frontend to distinguish between "no session" vs "invalid session"
+    return NextResponse.json({ user: null })
   } catch (error) {
     authLogger.error('Session check error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ user: null }, { status: 401 })
