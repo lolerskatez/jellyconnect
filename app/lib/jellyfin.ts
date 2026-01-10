@@ -55,34 +55,38 @@ export class JellyfinAuth {
 
   async validateApiKey(): Promise<boolean> {
     try {
-      // Use /System/Info endpoint which requires authentication
-      const response = await this.api.axiosInstance.get('/System/Info');
-      jellyfinLogger.info('API key validation successful', { 
-        status: response.status,
-        serverName: response.data?.ServerName 
+      // Use native fetch instead of SDK's axiosInstance for better reliability
+      const response = await fetch(`${this.baseUrl}/System/Info`, {
+        method: 'GET',
+        headers: {
+          'X-Emby-Token': this.apiKey,
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(10000)
       });
-      return true;
-    } catch (error) {
-      const errorDetails: any = {};
-      if (error instanceof Error) {
-        errorDetails.message = error.message;
-        errorDetails.name = error.name;
-      } else if (typeof error === 'object' && error !== null) {
-        if ('response' in error) {
-          errorDetails.status = (error as any).response?.status;
-          errorDetails.statusText = (error as any).response?.statusText;
-          errorDetails.responseData = (error as any).response?.data;
-        }
-        if ('config' in error) {
-          errorDetails.url = (error as any).config?.url;
-          errorDetails.method = (error as any).config?.method;
-          errorDetails.headers = (error as any).config?.headers;
-        }
-        if ('code' in error) {
-          errorDetails.code = (error as any).code;
-        }
+
+      if (response.ok) {
+        const data = await response.json();
+        jellyfinLogger.info('API key validation successful', { 
+          status: response.status,
+          serverName: data?.ServerName 
+        });
+        return true;
+      } else {
+        jellyfinLogger.error('API key validation failed', { 
+          status: response.status,
+          statusText: response.statusText,
+          url: `${this.baseUrl}/System/Info`
+        });
+        return false;
       }
-      jellyfinLogger.error('API key validation failed', errorDetails);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      jellyfinLogger.error('API key validation error', { 
+        error: errorMsg,
+        baseUrl: this.baseUrl,
+        apiKeyLength: this.apiKey?.length || 0
+      });
       return false;
     }
   }
