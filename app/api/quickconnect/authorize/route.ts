@@ -27,14 +27,21 @@ export async function POST(request: NextRequest) {
     const cookies = request.cookies.getAll()
     quickConnectLogger.debug('Available cookies on request', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
 
-    // Get the currently logged-in user from the session
-    // Try multiple cookie names for different environments
+    // Enhanced session cookie retrieval with fallback
     const sessionCookie = request.cookies.get('next-auth.session-token')?.value 
       || request.cookies.get('__Secure-next-auth.session-token')?.value
-    
+      || request.cookies.get('auth-token')?.value; // Fallback for custom token names
+
+    quickConnectLogger.debug('Session cookie check', {
+      cookieNames: cookies.map(c => c.name),
+      cookieCount: cookies.length,
+      sessionCookieFound: !!sessionCookie,
+      sessionCookieLength: sessionCookie ? sessionCookie.length : 0
+    });
+
     if (!sessionCookie) {
-      quickConnectLogger.warn('No session cookie found - user must be logged in first', { code })
-      return NextResponse.json({ error: 'Not authenticated - please log in first to authorize this session' }, { status: 401 })
+      quickConnectLogger.warn('No session cookie found - user must be logged in first', { code });
+      return NextResponse.json({ error: 'Not authenticated - please log in first to authorize this session' }, { status: 401 });
     }
 
     const payload = await verifyAccessToken(sessionCookie)
