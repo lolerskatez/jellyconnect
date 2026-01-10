@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/auth'
 import { apiRateLimit } from '@/app/lib/rate-limit'
 import { authLogger } from '@/app/lib/logger'
 import { verifyAccessToken } from '@/app/lib/auth'
@@ -16,23 +14,17 @@ async function getSessionHandler(req: NextRequest) {
   try {
     authLogger.debug('Checking session')
 
-    // First try NextAuth session
-    const session = await getServerSession(authOptions)
+    // Check for custom JWT token (from OIDC callback or NextAuth)
+    const token = req.cookies.get('next-auth.session-token')?.value 
+      || req.cookies.get('__Secure-next-auth.session-token')?.value
 
-    if (session?.user) {
-      authLogger.info('NextAuth session found', { userEmail: session.user.email })
-      return NextResponse.json({ user: session.user })
-    }
-
-    // If no NextAuth session, check for custom JWT token (from OIDC callback)
-    const token = req.cookies.get('next-auth.session-token')?.value
     if (token) {
       const payload = await verifyAccessToken(token)
       if (payload && payload.sub) {
         // Find user in database
         const user = database.users.find(u => u.id === payload.sub)
         if (user) {
-          authLogger.info('Custom JWT session found', { userEmail: user.email, jellyfinId: user.jellyfinId })
+          authLogger.info('JWT session found', { userEmail: user.email, jellyfinId: user.jellyfinId })
 
           // Check Jellyfin policy to determine admin status
           let isAdmin = false
@@ -86,14 +78,14 @@ async function getSessionHandler(req: NextRequest) {
 
           return NextResponse.json({ user: userData })
         } else {
-          authLogger.warn('Custom JWT valid but user not found in database', { sub: payload.sub })
+          authLogger.warn('JWT valid but user not found in database', { sub: payload.sub })
         }
       } else {
-        authLogger.debug('Custom JWT invalid or expired')
+        authLogger.debug('JWT invalid or expired')
       }
     }
 
-    authLogger.debug('No active session found')
+    authLogger.debug('No active session found - no session token in cookies')
     return NextResponse.json({ user: null }, { status: 401 })
   } catch (error) {
     authLogger.error('Session check error', { error: error instanceof Error ? error.message : String(error) })
