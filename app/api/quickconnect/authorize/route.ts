@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Log all cookies for debugging
-    const allCookies = request.cookies.getSetCookie()
     const cookies = request.cookies.getAll()
     quickConnectLogger.debug('Available cookies', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
 
