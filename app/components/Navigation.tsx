@@ -137,16 +137,6 @@ export default function Navigation() {
               >
                 Notifications
               </Link>
-              {permissions.canViewSettings && (
-                <Link
-                  href="/settings"
-                  className={`px-3 py-2 rounded-lg transition-colors ${
-                    pathname === '/settings' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                  }`}
-                >
-                  Settings
-                </Link>
-              )}
               {admin.isAdmin && (
                 <div className="relative group">
                   <button className="px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-1">
@@ -333,17 +323,6 @@ export default function Navigation() {
             >
               Notifications
             </Link>
-            {permissions.canViewSettings && (
-              <Link
-                href="/settings"
-                className={`block px-3 py-2 rounded-lg transition-colors ${
-                  pathname === '/settings' ? 'bg-orange-600' : 'hover:bg-slate-700'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Settings
-              </Link>
-            )}
             {admin.isAdmin && (
               <>
                 <div className="border-t border-slate-700 pt-2 mt-2">
