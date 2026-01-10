@@ -1,7 +1,65 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '../../../lib/email';
 import { discordService } from '../../../lib/discord';
 import { servicesLogger } from '@/app/lib/logger';
+import nodemailer from 'nodemailer';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { service, config } = body;
+
+    if (service === 'email' && config) {
+      // Test email configuration with provided credentials
+      try {
+        const transporter = nodemailer.createTransport({
+          host: config.host,
+          port: config.port,
+          secure: config.secure,
+          auth: {
+            user: config.user,
+            pass: config.pass,
+          },
+        });
+
+        // Verify connection
+        await transporter.verify();
+
+        return NextResponse.json({
+          success: true,
+          message: 'SMTP connection successful',
+          service: 'email',
+        });
+      } catch (error) {
+        servicesLogger.error('SMTP test failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'SMTP test failed',
+            message: error instanceof Error ? error.message : String(error),
+            service: 'email',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid service or missing configuration' },
+      { status: 400 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Test request failed',
+        message: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function GET() {
   // Reinitialize services to pick up latest config
