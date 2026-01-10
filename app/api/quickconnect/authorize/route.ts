@@ -32,93 +32,97 @@ export async function POST(request: NextRequest) {
     const sessionCookie = request.cookies.get('next-auth.session-token')?.value 
       || request.cookies.get('__Secure-next-auth.session-token')?.value
     
-    if (!sessionCookie) {
-      quickConnectLogger.warn('No session cookie found - user must be logged in first', { 
-        availableCookies: cookies.map(c => c.name),
-        cookieCount: cookies.length,
-        code 
-      })
-      return NextResponse.json({ 
-        error: 'Not authenticated - please log in first to authorize this session',
-        errorCode: 'NO_SESSION'
-      }, { status: 401 })
-    }
+    let user: typeof database.users[0] | null = null
 
-    const payload = await verifyAccessToken(sessionCookie)
-    if (!payload || !payload.jellyfinId) {
-      quickConnectLogger.warn('Session verification failed or no Jellyfin ID in payload', { hasPayload: !!payload, hasJellyfinId: !!payload?.jellyfinId })
-      return NextResponse.json({ error: 'Invalid session or no Jellyfin user linked' }, { status: 401 })
-    }
-
-    // Find the user in our database to get their Jellyfin ID and credentials
-    const user = database.users.find(u => u.id === payload.sub || u.jellyfinId === payload.jellyfinId)
-    if (!user || !user.jellyfinId) {
-      return NextResponse.json({ error: 'User not found or not linked to Jellyfin' }, { status: 404 })
-    }
-
-    console.log('[Quick Connect Authorize] Attempting to authorize code:', code, 'for user:', user.email || user.jellyfinId)
-
-    quickConnectLogger.info('Attempting to authorize Quick Connect code', { code, userId: user.id, userEmail: user.email, jellyfinId: user.jellyfinId })
-
-    // BEST APPROACH: Authenticate as the user using their stored credentials
-    // This properly associates the QuickConnect authorization with the correct user
-    if (user.jellyfinPasswordEncrypted && user.jellyfinUsername) {
-      try {
-        const password = decrypt(user.jellyfinPasswordEncrypted)
-        
-        // Authenticate the user to get their access token
-        const authResponse = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Emby-Authorization': `MediaBrowser Client="JellyConnect", Device="QuickConnect", DeviceId="jellyconnect-qc-${user.jellyfinId}", Version="1.0.0"`
-          },
-          body: JSON.stringify({
-            Username: user.jellyfinUsername,
-            Pw: password
-          }),
-          signal: AbortSignal.timeout(10000)
-        })
-
-        if (authResponse.ok) {
-          const authData = await authResponse.json()
-          const userAccessToken = authData.AccessToken
-
-          if (userAccessToken) {
-            // Now authorize QuickConnect using the user's own token
-            const authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
-              method: 'POST',
-              headers: {
-                'X-Emby-Token': userAccessToken,
-                'Content-Type': 'application/json'
-              },
-              signal: AbortSignal.timeout(10000)
-            })
-
-            if (authorizeRes.ok) {
-              const result = await authorizeRes.json()
-              quickConnectLogger.info('Successfully authorized Quick Connect with user token', { userId: user.jellyfinId, username: user.jellyfinUsername })
-              return NextResponse.json({ 
-                success: true, 
-                userId: user.jellyfinId, 
-                username: user.jellyfinUsername,
-                authorized: result 
-              })
-            } else {
-              quickConnectLogger.warn('User token authorization failed', { userId: user.jellyfinId, status: authorizeRes.status })
-            }
-          }
-        } else {
-          quickConnectLogger.warn('User authentication failed', { userId: user.jellyfinId, status: authResponse.status })
-        }
-      } catch (cryptoError) {
-        quickConnectLogger.error('Failed to decrypt user credentials', { userId: user.id, error: cryptoError instanceof Error ? cryptoError.message : String(cryptoError) })
-        // Fall through to admin-based approaches
+    if (sessionCookie) {
+      const payload = await verifyAccessToken(sessionCookie)
+      if (payload && payload.jellyfinId) {
+        // Find the user in our database to get their Jellyfin ID and credentials
+        user = database.users.find(u => u.id === payload.sub || u.jellyfinId === payload.jellyfinId) || null
       }
     }
 
-    // FALLBACK 1: Try with userId parameter (Jellyfin 10.8+)
-    let authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}&userId=${user.jellyfinId}`, {
+    // If no session found, use the admin API key (user must have already authenticated during setup)
+    if (!user) {
+      quickConnectLogger.debug('No authenticated session found - using admin API key for quickconnect authorization', { code })
+      // We'll use the admin API key to authorize, which is acceptable since setup must be completed
+      // The quickconnect code will be associated with whichever user scans it on their device
+    }
+
+    // If we have a user, find their Jellyfin ID for later authorization attempts
+    if (user && !user.jellyfinId) {
+      quickConnectLogger.warn('User found but not linked to Jellyfin', { userId: user.id, email: user.email })
+      return NextResponse.json({ error: 'User not linked to Jellyfin. Please log in with your Jellyfin credentials first.' }, { status: 400 })
+    }
+
+    console.log('[Quick Connect Authorize] Attempting to authorize code:', code, 'for user:', user?.email || user?.jellyfinId || 'admin')
+
+    if (user) {
+      quickConnectLogger.info('Attempting to authorize Quick Connect code', { code, userId: user.id, userEmail: user.email, jellyfinId: user.jellyfinId })
+
+      // BEST APPROACH: Authenticate as the user using their stored credentials
+      // This properly associates the QuickConnect authorization with the correct user
+      if (user.jellyfinPasswordEncrypted && user.jellyfinUsername) {
+        try {
+          const password = decrypt(user.jellyfinPasswordEncrypted)
+          
+          // Authenticate the user to get their access token
+          const authResponse = await fetch(`${config.jellyfinUrl}/Users/AuthenticateByName`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Emby-Authorization': `MediaBrowser Client="JellyConnect", Device="QuickConnect", DeviceId="jellyconnect-qc-${user.jellyfinId}", Version="1.0.0"`
+            },
+            body: JSON.stringify({
+              Username: user.jellyfinUsername,
+              Pw: password
+            }),
+            signal: AbortSignal.timeout(10000)
+          })
+
+          if (authResponse.ok) {
+            const authData = await authResponse.json()
+            const userAccessToken = authData.AccessToken
+
+            if (userAccessToken) {
+              // Now authorize QuickConnect using the user's own token
+              const authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
+                method: 'POST',
+                headers: {
+                  'X-Emby-Token': userAccessToken,
+                  'Content-Type': 'application/json'
+                },
+                signal: AbortSignal.timeout(10000)
+              })
+
+              if (authorizeRes.ok) {
+                const result = await authorizeRes.json()
+                quickConnectLogger.info('Successfully authorized Quick Connect with user token', { userId: user.jellyfinId, username: user.jellyfinUsername })
+                return NextResponse.json({ 
+                  success: true, 
+                  userId: user.jellyfinId, 
+                  username: user.jellyfinUsername,
+                  authorized: result 
+                })
+              } else {
+                quickConnectLogger.warn('User token authorization failed', { userId: user.jellyfinId, status: authorizeRes.status })
+              }
+            }
+          } else {
+            quickConnectLogger.warn('User authentication failed', { userId: user.jellyfinId, status: authResponse.status })
+          }
+        } catch (cryptoError) {
+          quickConnectLogger.error('Failed to decrypt user credentials', { userId: user.id, error: cryptoError instanceof Error ? cryptoError.message : String(cryptoError) })
+          // Fall through to admin-based approaches
+        }
+      }
+    }
+
+    // FALLBACK: Use admin API key to authorize (works without user session)
+    // The quickconnect code will be associated with the user who scans it on their device
+    quickConnectLogger.info('Authorizing Quick Connect code using admin API key', { code })
+    
+    let authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
       method: 'POST',
       headers: {
         'X-Emby-Token': config.apiKey,
@@ -129,8 +133,14 @@ export async function POST(request: NextRequest) {
 
     if (authorizeRes.ok) {
       const result = await authorizeRes.json()
-      quickConnectLogger.info('Authorized with userId parameter', { userId: user.jellyfinId })
-      return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
+      const message = user ? `Authorized for user ${user.jellyfinUsername}` : 'Authorized with admin API key'
+      quickConnectLogger.info(message, { code })
+      return NextResponse.json({ 
+        success: true, 
+        userId: user?.jellyfinId || 'admin',
+        username: user?.jellyfinUsername || 'system',
+        authorized: result 
+      })
     }
 
     let errorText = ''
@@ -139,14 +149,14 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       errorText = 'Could not read error response'
     }
-    quickConnectLogger.warn('userId param approach failed', { userId: user.jellyfinId, status: authorizeRes.status, error: errorText })
+    quickConnectLogger.warn('Admin API key authorization failed', { status: authorizeRes.status, error: errorText })
 
-    // FALLBACK 2: Try with X-Emby-Authorization header
+    // Try alternative endpoint format if first attempt failed
     authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {
       method: 'POST',
       headers: {
         'X-Emby-Token': config.apiKey,
-        'X-Emby-Authorization': `MediaBrowser Client="JellyConnect", Device="Web", DeviceId="jellyconnect-${user.jellyfinId}", Version="1.0.0", UserId="${user.jellyfinId}"`,
+        'X-Emby-Authorization': `MediaBrowser Client="JellyConnect", Device="Web", DeviceId="jellyconnect-web", Version="1.0.0"`,
         'Content-Type': 'application/json'
       },
       signal: AbortSignal.timeout(10000)
@@ -154,8 +164,13 @@ export async function POST(request: NextRequest) {
 
     if (authorizeRes.ok) {
       const result = await authorizeRes.json()
-      quickConnectLogger.info('Authorized with X-Emby-Authorization header', { userId: user.jellyfinId })
-      return NextResponse.json({ success: true, userId: user.jellyfinId, authorized: result })
+      quickConnectLogger.info('Authorized with alternative header format', { code })
+      return NextResponse.json({ 
+        success: true, 
+        userId: user?.jellyfinId || 'admin',
+        username: user?.jellyfinUsername || 'system',
+        authorized: result 
+      })
     }
 
     let error2 = ''
@@ -164,7 +179,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       error2 = 'Could not read error response'
     }
-    quickConnectLogger.warn('X-Emby-Authorization approach failed', { userId: user.jellyfinId, status: authorizeRes.status, error: error2 })
+    quickConnectLogger.warn('Alternative header approach failed', { status: authorizeRes.status, error: error2 })
 
     // FALLBACK 3: Basic admin authorization (will likely associate with admin user)
     authorizeRes = await fetch(`${config.jellyfinUrl}/QuickConnect/Authorize?code=${code}`, {

@@ -230,6 +230,7 @@ const authOptions: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production' || getAppUrl().startsWith('https'),
+        domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Let browser infer domain in production
       },
     },
   },
