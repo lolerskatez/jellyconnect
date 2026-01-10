@@ -10,6 +10,7 @@ interface Config {
   oidcClientSecret?: string
   oidcIssuer?: string
   nextAuthSecret?: string
+  nextAuthUrl?: string
   setupComplete?: boolean
   enableRegistration?: boolean
   smtp?: {
@@ -46,6 +47,7 @@ const defaultConfig: Config = {
   oidcClientSecret: process.env.OIDC_CLIENT_SECRET || '',
   oidcIssuer: process.env.OIDC_ISSUER || '',
   nextAuthSecret: process.env.NEXTAUTH_SECRET || '',
+  nextAuthUrl: process.env.NEXTAUTH_URL || '',
   enableRegistration: true,
   smtp: {
     host: process.env.SMTP_HOST || '',
@@ -76,6 +78,7 @@ export function getConfig(): Config {
       oidcClientSecret: parsed.oidcClientSecret || '',
       oidcIssuer: parsed.oidcIssuer || '',
       nextAuthSecret: parsed.nextAuthSecret || '',
+      nextAuthUrl: parsed.nextAuthUrl || '',
       setupComplete: parsed.setupComplete ?? false,
       enableRegistration: parsed.enableRegistration ?? true,
       smtp: {

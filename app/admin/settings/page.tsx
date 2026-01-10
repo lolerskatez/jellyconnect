@@ -9,6 +9,7 @@ interface Settings {
   jellyfinUrl: string
   publishedUrl: string
   apiKey: string
+  nextAuthUrl: string
   smtp: {
     host: string
     port: number
@@ -29,6 +30,7 @@ export default function SettingsPage() {
     jellyfinUrl: '',
     publishedUrl: '',
     apiKey: '',
+    nextAuthUrl: '',
     smtp: {
       host: '',
       port: 587,
@@ -92,18 +94,39 @@ export default function SettingsPage() {
     setSuccess(false)
 
     try {
-      // Only save registration setting
+      // Save registration setting
       const regResponse = await fetch('/api/config/registration', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'authorization': 'admin' // Simple auth check
+          'authorization': 'admin'
         },
         body: JSON.stringify({ enableRegistration })
       })
 
       if (!regResponse.ok) {
         throw new Error('Failed to save registration setting')
+      }
+
+      // Save NextAuth URL with other settings
+      const settingsResponse = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jellyfinUrl: settings.jellyfinUrl,
+          publishedUrl: settings.publishedUrl,
+          apiKey: settings.apiKey,
+          nextAuthUrl: settings.nextAuthUrl,
+          smtp: settings.smtp,
+          discord: settings.discord
+        })
+      })
+
+      if (!settingsResponse.ok) {
+        const errorData = await settingsResponse.json()
+        throw new Error(errorData.error || 'Failed to save settings')
       }
 
       setSuccess(true)
@@ -205,6 +228,13 @@ export default function SettingsPage() {
     setSettings(prev => ({
       ...prev,
       publishedUrl: value
+    }))
+  }
+
+  const updateNextAuthUrl = (value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      nextAuthUrl: value
     }))
   }
 
@@ -327,6 +357,32 @@ export default function SettingsPage() {
                       className="w-5 h-5 rounded accent-orange-500 bg-slate-600 border-slate-500 cursor-pointer"
                       aria-label="Enable or disable user registration"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* NextAuth Configuration */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">NextAuth Session Configuration</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">
+                      NextAuth URL (NEXTAUTH_URL)
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.nextAuthUrl}
+                      onChange={(e) => updateNextAuthUrl(e.target.value)}
+                      placeholder="https://jc.tanjiro.one"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                    <p className="mt-2 text-xs text-slate-400">
+                      <strong>Critical for QuickConnect:</strong> This must match your public URL exactly (with protocol, no trailing slash). Example: <code className="bg-slate-900 px-2 py-1 rounded">https://jc.tanjiro.one</code>
+                    </p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      NextAuth uses this to set session cookies properly. Without this, QuickConnect authorization will fail with "Not authenticated" errors.
+                    </p>
                   </div>
                 </div>
               </div>

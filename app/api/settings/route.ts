@@ -12,6 +12,7 @@ export async function GET() {
       jellyfinUrl: config.jellyfinUrl || '',
       publishedUrl: config.publishedUrl || '',
       apiKey: config.apiKey || '',
+      nextAuthUrl: config.nextAuthUrl || '',
       smtp: config.smtp || {
         host: '',
         port: 587,
@@ -50,7 +51,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { jellyfinUrl, publishedUrl, apiKey, smtp, discord } = validationResult.data;
+    const { jellyfinUrl, publishedUrl, apiKey, nextAuthUrl, smtp, discord } = validationResult.data;
 
     // Get current config and update settings
     const currentConfig = getConfig();
@@ -59,6 +60,7 @@ export async function PUT(request: NextRequest) {
       jellyfinUrl: jellyfinUrl,
       publishedUrl: publishedUrl || currentConfig.publishedUrl,
       apiKey: apiKey || currentConfig.apiKey,
+      nextAuthUrl: nextAuthUrl || currentConfig.nextAuthUrl,
       smtp: smtp,
       discord: discord
     };
