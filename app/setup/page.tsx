@@ -75,9 +75,6 @@ export default function SetupPage() {
       const data = await res.json()
       if (res.ok) {
         setSuccess(true)
-        setTimeout(() => {
-          router.push('/login?setup=complete')
-        }, 2000)
       } else {
         const errorMessage = data.error || data.details || 'Failed to save configuration'
         setError(errorMessage)
@@ -101,6 +98,10 @@ export default function SetupPage() {
     if (step === 3) return isStep3Valid
     if (step === 4) return isStep4Valid
     return false
+  }
+
+  const handleFinish = () => {
+    router.push('/login?setup=complete')
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -599,18 +600,43 @@ export default function SetupPage() {
             </div>
           )}
 
+          {/* Success Message */}
+          {success && (
+            <div className="rounded-lg bg-green-900 border border-green-700 p-6 mb-6 text-center">
+              <div className="mb-4">
+                <div className="inline-block">
+                  <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-green-200 mb-2">✓ Setup completed successfully!</h3>
+              <p className="text-green-300">Click the Finish button below to proceed to the login page.</p>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex gap-4 pt-6">
-            <button
-              type="button"
-              onClick={() => setStep(Math.max(1, step - 1))}
-              disabled={step === 1}
-              className="flex-1 py-2 px-4 border border-slate-600 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
+            {!success && (
+              <button
+                type="button"
+                onClick={() => setStep(Math.max(1, step - 1))}
+                disabled={step === 1}
+                className="flex-1 py-2 px-4 border border-slate-600 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+            )}
 
-            {step < 4 ? (
+            {success ? (
+              <button
+                type="button"
+                onClick={handleFinish}
+                className="flex-1 py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-lg hover:shadow-xl"
+              >
+                Finish
+              </button>
+            ) : step < 4 ? (
               <button
                 type="button"
                 onClick={() => {
