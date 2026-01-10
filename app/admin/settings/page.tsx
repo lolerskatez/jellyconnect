@@ -7,6 +7,7 @@ import AuthSettingsComponent from "../../../components/AuthSettingsComponent"
 
 interface Settings {
   jellyfinUrl: string
+  apiKey: string
   smtp: {
     host: string
     port: number
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState<Settings>({
     jellyfinUrl: '',
+    apiKey: '',
     smtp: {
       host: '',
       port: 587,
@@ -190,6 +192,13 @@ export default function SettingsPage() {
     }))
   }
 
+  const updateApiKey = (value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      apiKey: value
+    }))
+  }
+
   if (!admin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -224,10 +233,10 @@ export default function SettingsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-6 border-b border-slate-700">
+        <div className="flex space-x-2 mb-6 border-b border-slate-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'general'
                 ? 'border-orange-500 text-orange-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
@@ -236,8 +245,18 @@ export default function SettingsPage() {
             General
           </button>
           <button
+            onClick={() => setActiveTab('jellyfin')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'jellyfin'
+                ? 'border-orange-500 text-orange-400'
+                : 'border-transparent text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            Jellyfin
+          </button>
+          <button
             onClick={() => setActiveTab('notifications')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'notifications'
                 ? 'border-orange-500 text-orange-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
@@ -247,7 +266,7 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={() => setActiveTab('auth')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'auth'
                 ? 'border-orange-500 text-orange-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
@@ -304,11 +323,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {activeTab === 'auth' && (
-          <AuthSettingsComponent />
-        )}
-
-        {activeTab === 'notifications' && (
+        {activeTab === 'jellyfin' && (
           <>
             {error && (
               <div className="bg-red-900 text-red-200 p-4 rounded-lg border border-red-700 mb-6">{error}</div>
