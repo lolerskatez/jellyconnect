@@ -7,8 +7,121 @@ import { setupLogger } from '@/app/lib/logger'
  * Tests connectivity and authentication with Jellyfin server
  * 
  * Example usage:
- * GET /api/debug/jellyfin-connection
+ * GET /api/debug/jellyfin-connection - Uses configured values
+ * POST /api/debug/jellyfin-connection - Uses provided credentials in request body
  */
+
+// Handle POST requests from setup page with custom credentials
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { jellyfinUrl, adminUsername, adminPassword } = body
+    
+    if (!jellyfinUrl || !adminUsername || !adminPassword) {
+      return NextResponse.json({
+        error: 'Missing required fields',
+        details: 'jellyfinUrl, adminUsername, and adminPassword are required'
+      }, { status: 400 })
+    }
+
+    const result: any = {
+      timestamp: new Date().toISOString(),
+      configuration: {
+        jellyfinUrl,
+        hasCredentials: true
+      },
+      tests: []
+    }
+
+    // Test 1: Network connectivity
+    result.tests.push({
+      name: 'Network Connectivity',
+      status: 'TESTING',
+      message: 'Attempting to connect to Jellyfin server...'
+    })
+
+    let connectivityTest: any = { name: 'Network Connectivity' }
+    try {
+      const connectStart = Date.now()
+      const response = await fetch(`${jellyfinUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'JellyConnect-Setup/1.0'
+        },
+        signal: AbortSignal.timeout(10000)
+      })
+      const connectEnd = Date.now()
+      
+      connectivityTest.responseTime = `${connectEnd - connectStart}ms`
+      connectivityTest.httpStatus = response.status
+      
+      if (response.ok || response.status === 200) {
+        connectivityTest.status = 'OK'
+        connectivityTest.message = `Successfully connected (HTTP ${response.status})`
+      } else {
+        connectivityTest.status = 'WARNING'
+        connectivityTest.message = `Connected but received HTTP ${response.status}`
+      }
+    } catch (error) {
+      connectivityTest.status = 'FAILED'
+      connectivityTest.error = error instanceof Error ? error.message : String(error)
+      connectivityTest.severity = 'CRITICAL'
+    }
+    result.tests.push(connectivityTest)
+
+    // Test 2: Try to get system info (tests if server is responsive)
+    let systemTest: any = { name: 'System Check' }
+    try {
+      const response = await fetch(`${jellyfinUrl}/System/Info`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'JellyConnect-Setup/1.0'
+        },
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        systemTest.status = 'OK'
+        systemTest.message = `Server responding correctly`
+        systemTest.serverInfo = {
+          serverName: data.ServerName || 'Unknown',
+          version: data.Version || 'Unknown'
+        }
+      } else {
+        systemTest.status = 'WARNING'
+        systemTest.message = `Server returned HTTP ${response.status}`
+      }
+    } catch (error) {
+      systemTest.status = 'FAILED'
+      systemTest.error = error instanceof Error ? error.message : String(error)
+      systemTest.severity = 'HIGH'
+    }
+    result.tests.push(systemTest)
+
+    // Summary
+    const failedTests = result.tests.filter((t: any) => t.status === 'FAILED')
+    const criticalTests = result.tests.filter((t: any) => t.severity === 'CRITICAL')
+
+    result.summary = {
+      totalTests: result.tests.length,
+      passed: result.tests.filter((t: any) => t.status === 'OK').length,
+      failed: failedTests.length,
+      overallStatus: criticalTests.length > 0 ? 'FAILED' : failedTests.length > 0 ? 'PARTIAL' : 'OK'
+    }
+
+    const httpStatus = criticalTests.length > 0 ? 400 : 200
+    return NextResponse.json(result, { status: httpStatus })
+
+  } catch (error) {
+    setupLogger.error('Jellyfin test endpoint error', { error: error instanceof Error ? error.message : String(error) })
+    return NextResponse.json({
+      error: 'Test failed',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 })
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
