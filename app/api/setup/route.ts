@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
       jellyfinUrl: processedUrl,
       apiKey,
       nextAuthSecret,
+      publishedUrl: appUrl, // Save the app URL as the published URL for public access
       setupComplete: true,
       smtp: smtpHost ? {
         host: smtpHost,
