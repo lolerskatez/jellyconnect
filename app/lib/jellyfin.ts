@@ -93,8 +93,18 @@ export class JellyfinAuth {
 
   async getUsers(): Promise<any[]> {
     try {
-      const response = await this.api.axiosInstance.get('/Users');
-      return response.data;
+      const response = await fetch(`${this.baseUrl}/Users`, {
+        method: 'GET',
+        headers: {
+          'X-Emby-Token': this.apiKey,
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to get users: HTTP ${response.status}`);
+      }
+      return response.json();
     } catch (error) {
       jellyfinLogger.error('Failed to get users', { error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
@@ -103,15 +113,22 @@ export class JellyfinAuth {
 
   async authenticate(username: string, password: string): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.post('/Users/AuthenticateByName', {
-        Username: username,
-        Pw: password,
-      }, {
+      const response = await fetch(`${this.baseUrl}/Users/AuthenticateByName`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'X-Emby-Authorization': 'MediaBrowser Client="JellyConnect", Device="Web App", DeviceId="web-app-1", Version="1.0.0"'
-        }
+        },
+        body: JSON.stringify({
+          Username: username,
+          Pw: password
+        }),
+        signal: AbortSignal.timeout(10000)
       });
-      const data = response.data;
+      if (!response.ok) {
+        throw new Error(`Authentication failed: HTTP ${response.status}`);
+      }
+      const data = await response.json();
       const user = data.User;
       const isAdmin = user.Policy?.IsAdministrator || false;
       return {
@@ -146,12 +163,18 @@ export class JellyfinAuth {
 
   async getUserById(userId: string): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.get(`/Users/${userId}`, {
+      const response = await fetch(`${this.baseUrl}/Users/${userId}`, {
+        method: 'GET',
         headers: {
-          'X-MediaBrowser-Token': this.apiKey
-        }
+          'X-Emby-Token': this.apiKey,
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(10000)
       });
-      return response.data;
+      if (!response.ok) {
+        throw new Error(`Failed to get user: HTTP ${response.status}`);
+      }
+      return response.json();
     } catch (error) {
       const errorDetails: any = { userId };
       if (error instanceof Error) {
@@ -179,15 +202,22 @@ export class JellyfinAuth {
 
   async createUser(username: string, password?: string): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.post('/Users/New', {
-        Name: username,
-        Password: password || '',
-      }, {
+      const response = await fetch(`${this.baseUrl}/Users/New`, {
+        method: 'POST',
         headers: {
-          'X-MediaBrowser-Token': this.apiKey
-        }
+          'Content-Type': 'application/json',
+          'X-Emby-Token': this.apiKey
+        },
+        body: JSON.stringify({
+          Name: username,
+          Password: password || ''
+        }),
+        signal: AbortSignal.timeout(10000)
       });
-      return response.data;
+      if (!response.ok) {
+        throw new Error(`Failed to create user: HTTP ${response.status}`);
+      }
+      return response.json();
     } catch (error) {
       jellyfinLogger.error('Failed to create user', { username, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
@@ -236,11 +266,16 @@ export class JellyfinAuth {
 
   async deleteUser(userId: string): Promise<void> {
     try {
-      await this.api.axiosInstance.delete(`/Users/${userId}`, {
+      const response = await fetch(`${this.baseUrl}/Users/${userId}`, {
+        method: 'DELETE',
         headers: {
-          'X-MediaBrowser-Token': this.apiKey
-        }
+          'X-Emby-Token': this.apiKey
+        },
+        signal: AbortSignal.timeout(10000)
       });
+      if (!response.ok) {
+        throw new Error(`Failed to delete user: HTTP ${response.status}`);
+      }
     } catch (error) {
       jellyfinLogger.error('Failed to delete user', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
@@ -249,12 +284,19 @@ export class JellyfinAuth {
 
   async updateUserPolicy(userId: string, policy: any): Promise<any> {
     try {
-      const response = await this.api.axiosInstance.post(`/Users/${userId}/Policy`, policy, {
+      const response = await fetch(`${this.baseUrl}/Users/${userId}/Policy`, {
+        method: 'POST',
         headers: {
-          'X-MediaBrowser-Token': this.apiKey
-        }
+          'Content-Type': 'application/json',
+          'X-Emby-Token': this.apiKey
+        },
+        body: JSON.stringify(policy),
+        signal: AbortSignal.timeout(10000)
       });
-      return response.data;
+      if (!response.ok) {
+        throw new Error(`Failed to update user policy: HTTP ${response.status}`);
+      }
+      return response.json();
     } catch (error) {
       jellyfinLogger.error('Failed to update user policy', { userId, error: error instanceof Error ? error.message : 'Unknown error' })
       throw error;
