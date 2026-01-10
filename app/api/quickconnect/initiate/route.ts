@@ -7,6 +7,7 @@ export async function POST() {
     const config = getConfig();
     const res = await fetch(`${config.jellyfinUrl}/QuickConnect/Initiate`, {
       method: 'POST',
+      signal: AbortSignal.timeout(10000)
     });
     if (!res.ok) throw new Error('Failed to initiate');
     const data = await res.json();

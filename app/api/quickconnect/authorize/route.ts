@@ -15,8 +15,18 @@ export async function POST(request: NextRequest) {
 
     const config = getConfig()
     if (!config.jellyfinUrl || !config.apiKey) {
+      quickConnectLogger.error('Jellyfin not configured', { 
+        hasUrl: !!config.jellyfinUrl, 
+        hasApiKey: !!config.apiKey,
+        apiKeyLength: config.apiKey?.length || 0
+      })
       return NextResponse.json({ error: 'Jellyfin not configured' }, { status: 500 })
     }
+
+    // Log all cookies for debugging
+    const allCookies = request.cookies.getSetCookie()
+    const cookies = request.cookies.getAll()
+    quickConnectLogger.debug('Available cookies', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
 
     // Get the currently logged-in user from the session
     // Try multiple cookie names for different environments
@@ -24,11 +34,13 @@ export async function POST(request: NextRequest) {
       || request.cookies.get('__Secure-next-auth.session-token')?.value
     
     if (!sessionCookie) {
+      quickConnectLogger.warn('No session cookie found', { availableCookies: cookies.map(c => c.name) })
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     const payload = await verifyAccessToken(sessionCookie)
     if (!payload || !payload.jellyfinId) {
+      quickConnectLogger.warn('Session verification failed or no Jellyfin ID in payload', { hasPayload: !!payload, hasJellyfinId: !!payload?.jellyfinId })
       return NextResponse.json({ error: 'Invalid session or no Jellyfin user linked' }, { status: 401 })
     }
 
@@ -58,7 +70,8 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             Username: user.jellyfinUsername,
             Pw: password
-          })
+          }),
+          signal: AbortSignal.timeout(10000)
         })
 
         if (authResponse.ok) {
@@ -72,7 +85,8 @@ export async function POST(request: NextRequest) {
               headers: {
                 'X-Emby-Token': userAccessToken,
                 'Content-Type': 'application/json'
-              }
+              },
+              signal: AbortSignal.timeout(10000)
             })
 
             if (authorizeRes.ok) {
@@ -103,7 +117,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'X-Emby-Token': config.apiKey,
         'Content-Type': 'application/json'
-      }
+      },
+      signal: AbortSignal.timeout(10000)
     })
 
     if (authorizeRes.ok) {
@@ -127,7 +142,8 @@ export async function POST(request: NextRequest) {
         'X-Emby-Token': config.apiKey,
         'X-Emby-Authorization': `MediaBrowser Client="JellyConnect", Device="Web", DeviceId="jellyconnect-${user.jellyfinId}", Version="1.0.0", UserId="${user.jellyfinId}"`,
         'Content-Type': 'application/json'
-      }
+      },
+      signal: AbortSignal.timeout(10000)
     })
 
     if (authorizeRes.ok) {
@@ -150,7 +166,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'X-Emby-Token': config.apiKey,
         'Content-Type': 'application/json'
-      }
+      },
+      signal: AbortSignal.timeout(10000)
     })
 
     if (authorizeRes.ok) {

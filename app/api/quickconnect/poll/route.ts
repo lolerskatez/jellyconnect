@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const res = await fetch(`${config.jellyfinUrl}/QuickConnect/Connect?secret=${secret}`, {
       method: 'GET',
+      signal: AbortSignal.timeout(10000)
     });
     if (!res.ok) throw new Error('Failed to poll');
     const data = await res.json();
