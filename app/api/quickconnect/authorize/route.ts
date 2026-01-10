@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Log all cookies for debugging
     const cookies = request.cookies.getAll()
-    quickConnectLogger.debug('Available cookies on request', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
+    quickConnectLogger.debug('Available cookies on request', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length, cookieDetails: cookies.map(c => ({ name: c.name, valueLength: c.value.length })) })
 
     // Enhanced session cookie retrieval with fallback
     const sessionCookie = request.cookies.get('next-auth.session-token')?.value 
