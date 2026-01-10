@@ -603,7 +603,7 @@ export default function SetupPage() {
           )}
 
           {/* STEP 5: Review & Confirmation */}
-          {step === 5 && (
+          {step === 5 && !success && (
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600 pb-2">Review Configuration</h3>
               <p className="text-sm text-slate-400">Please review your configuration before completing setup</p>

@@ -20,13 +20,15 @@ function LoginPageContent() {
   const [oidcSigningIn, setOIDCSigningIn] = useState<string | null>(null)
   const [enableRegistration, setEnableRegistration] = useState(true)
 
-  // Force reload if setup just completed to refresh config status
+  // Handle setup completion - show success message instead of reloading
   useEffect(() => {
     const setupComplete = searchParams.get('setup') === 'complete'
     if (setupComplete) {
-      // Setup just completed, force refresh to update isConfigured
+      // Setup just completed, show success message
+      setSuccessMessage('Setup completed successfully! You can now log in.')
+      // Clean up the URL param
       const timer = setTimeout(() => {
-        window.location.reload()
+        window.history.replaceState({}, '', '/login')
       }, 100)
       return () => clearTimeout(timer)
     }

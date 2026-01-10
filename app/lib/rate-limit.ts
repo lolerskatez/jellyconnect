@@ -17,9 +17,9 @@ export function rateLimit(options: RateLimitOptions) {
     windowMs,
     maxRequests,
     keyGenerator = (req) => {
-      // Default key: IP address
+      // Default key: IP address with fallback
       const forwarded = req.headers.get('x-forwarded-for');
-      const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+      const ip = forwarded ? forwarded.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown';
       return ip;
     },
     skipSuccessfulRequests = false,
@@ -32,7 +32,6 @@ export function rateLimit(options: RateLimitOptions) {
   ): Promise<NextResponse> {
     const key = keyGenerator(request);
     const now = Date.now();
-    const windowStart = now - windowMs;
 
     // Get current rate limit data
     let rateLimitData = rateLimitStore.get(key);
@@ -62,7 +61,7 @@ export function rateLimit(options: RateLimitOptions) {
       );
     }
 
-    // Increment counter
+    // Increment counter BEFORE executing handler
     rateLimitData.count++;
     rateLimitStore.set(key, rateLimitData);
 
@@ -75,16 +74,24 @@ export function rateLimit(options: RateLimitOptions) {
         cleanupOldEntries();
       }
 
-      // Clone the response and add rate limit headers
-      const clonedResponse = response.clone();
-      
-      clonedResponse.headers.set('X-RateLimit-Limit', maxRequests.toString());
-      clonedResponse.headers.set('X-RateLimit-Remaining', Math.max(0, maxRequests - rateLimitData.count).toString());
-      clonedResponse.headers.set('X-RateLimit-Reset', new Date(rateLimitData.resetTime).toISOString());
+      // Only count failed requests if skipFailedRequests is true
+      if (skipFailedRequests && response.status >= 400) {
+        rateLimitData.count--;
+        rateLimitStore.set(key, rateLimitData);
+      }
 
-      return new NextResponse(clonedResponse.body, {
-        status: clonedResponse.status,
-        headers: clonedResponse.headers,
+      const resetTime = new Date(rateLimitData.resetTime);
+      const remaining = Math.max(0, maxRequests - rateLimitData.count);
+
+      // Return response with rate limit headers
+      const headers = new Headers(response.headers);
+      headers.set('X-RateLimit-Limit', maxRequests.toString());
+      headers.set('X-RateLimit-Remaining', remaining.toString());
+      headers.set('X-RateLimit-Reset', resetTime.toISOString());
+
+      return new NextResponse(response.body, {
+        status: response.status,
+        headers: headers,
       });
     } catch (error) {
       // For errors, we might still want to track them depending on configuration
@@ -105,7 +112,8 @@ function cleanupOldEntries() {
 // Pre-configured rate limiters for common use cases
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 20, // 20 attempts per 15 minutes (relaxed for testing)
+  maxRequests: 50, // 50 attempts per 15 minutes (increased for testing)
+  skipFailedRequests: true, // Don't count failed auth attempts against the limit
 });
 
 export const apiRateLimit = rateLimit({
