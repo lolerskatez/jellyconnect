@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Log all cookies for debugging
     const cookies = request.cookies.getAll()
-    quickConnectLogger.debug('Available cookies', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
+    quickConnectLogger.debug('Available cookies on request', { cookieNames: cookies.map(c => c.name), cookieCount: cookies.length })
 
     // Get the currently logged-in user from the session
     // Try multiple cookie names for different environments
@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
       || request.cookies.get('__Secure-next-auth.session-token')?.value
     
     if (!sessionCookie) {
-      quickConnectLogger.warn('No session cookie found', { availableCookies: cookies.map(c => c.name) })
+      quickConnectLogger.warn('No session cookie found', { 
+        availableCookies: cookies.map(c => c.name),
+        cookieCount: cookies.length,
+        code 
+      })
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
