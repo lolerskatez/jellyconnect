@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 export default function SetupPage() {
@@ -27,10 +27,36 @@ export default function SetupPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [setupAlreadyComplete, setSetupAlreadyComplete] = useState(false)
   const router = useRouter()
+
+  // Check if setup has already been completed
+  useEffect(() => {
+    const checkSetupStatus = async () => {
+      try {
+        const res = await fetch('/api/setup')
+        const data = await res.json()
+        if (!data.setupNeeded && data.setupComplete) {
+          setSetupAlreadyComplete(true)
+          setError('Setup has already been completed. You cannot run setup again.')
+        }
+      } catch (err) {
+        // If we can't check, allow setup to proceed
+        console.warn('Could not check setup status:', err)
+      }
+    }
+    checkSetupStatus()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent submission if setup is already complete
+    if (setupAlreadyComplete) {
+      setError('Setup has already been completed. You cannot run setup again.')
+      return
+    }
+    
     setLoading(true)
     setError('')
     try {

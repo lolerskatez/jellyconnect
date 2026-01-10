@@ -9,6 +9,24 @@ import { authLogger } from "./app/lib/logger"
 import { encrypt } from "./app/lib/encryption"
 import { getAppUrl } from "./app/lib/auth-settings"
 
+// Get NEXTAUTH_SECRET from config file if not set in environment
+function getConfigSecret(): string {
+  try {
+    const { getConfig } = require("./app/lib/config")
+    const config = getConfig()
+    if (config.nextAuthSecret) {
+      return config.nextAuthSecret
+    }
+  } catch (e) {
+    // Config not available yet
+  }
+  // Fallback for development
+  if (process.env.NODE_ENV !== 'production') {
+    return 'dev-fallback-secret-not-for-production'
+  }
+  throw new Error('NEXTAUTH_SECRET not configured - run setup first')
+}
+
 declare module "next-auth" {
   interface Session {
     user?: {
@@ -186,7 +204,7 @@ if (typeof window === 'undefined') {
   authLogger.info('All providers configured', { count: allProviders.length })
 }
 const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || 'dev-fallback-secret-not-for-production',
+  secret: process.env.NEXTAUTH_SECRET || getConfigSecret(),
   debug: process.env.NODE_ENV === 'development',
   pages: {
     signIn: '/login',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { saveConfig } from '@/app/lib/config'
+import { saveConfig, generateNextAuthSecret } from '@/app/lib/config'
 import { buildJellyfinBaseUrl } from '@/app/lib/jellyfin'
 import { updateAuthSettings } from '@/app/lib/auth-settings'
 import { saveDatabaseImmediate } from '@/app/lib/db'
@@ -10,6 +10,16 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if setup has already been completed
+    const config = (await import('@/app/lib/config')).getConfig()
+    if (config.setupComplete) {
+      setupLogger.warn('Setup endpoint accessed after initial setup was already completed')
+      return NextResponse.json(
+        { error: 'Setup has already been completed. This endpoint is only available on first-time setup.' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
 
     // Validate input
@@ -137,9 +147,16 @@ export async function POST(request: NextRequest) {
     const apiKey = token
 
     setupLogger.info('API key created successfully')
+    
+    // Generate a secure NextAuth secret for JWT signing (only on initial setup)
+    const nextAuthSecret = generateNextAuthSecret()
+    setupLogger.info('Generated NEXTAUTH_SECRET for JWT token signing')
+    
     saveConfig({
       jellyfinUrl: processedUrl,
       apiKey,
+      nextAuthSecret,
+      setupComplete: true,
       smtp: smtpHost ? {
         host: smtpHost,
         port: smtpPort || 587,
@@ -177,5 +194,37 @@ export async function POST(request: NextRequest) {
       error: 'An unexpected error occurred during setup',
       details: errorMessage
     }, { status: 500 })
+  }
+}
+
+/**
+ * GET endpoint to check if setup has been completed
+ * Used by frontend to determine if setup page should be shown
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { getConfig } = await import('@/app/lib/config')
+    const config = getConfig()
+    
+    const setupNeeded = !config.setupComplete || !config.jellyfinUrl || !config.apiKey
+    
+    setupLogger.debug('Setup status check', { 
+      setupComplete: config.setupComplete,
+      hasJellyfinUrl: !!config.jellyfinUrl,
+      hasApiKey: !!config.apiKey,
+      setupNeeded
+    })
+    
+    return NextResponse.json({ 
+      setupNeeded,
+      setupComplete: config.setupComplete
+    })
+  } catch (error) {
+    setupLogger.error('Error checking setup status', { error: error instanceof Error ? error.message : String(error) })
+    // If there's an error reading config, setup is needed
+    return NextResponse.json({ 
+      setupNeeded: true,
+      setupComplete: false
+    })
   }
 }

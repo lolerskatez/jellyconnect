@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { randomBytes } from 'crypto'
 
 interface Config {
   jellyfinUrl: string
@@ -9,6 +10,7 @@ interface Config {
   oidcClientSecret?: string
   oidcIssuer?: string
   nextAuthSecret?: string
+  setupComplete?: boolean
   enableRegistration?: boolean
   smtp?: {
     host: string
@@ -27,6 +29,15 @@ interface Config {
 }
 
 const configPath = path.join(process.cwd(), 'data', 'config.json')
+
+/**
+ * Generate a secure random secret for NextAuth JWT signing
+ * Uses 32 bytes (256 bits) of cryptographically secure random data
+ * and encodes it as hex for use as a JWT signing secret
+ */
+export function generateNextAuthSecret(): string {
+  return randomBytes(32).toString('hex')
+}
 
 const defaultConfig: Config = {
   jellyfinUrl: process.env.JELLYFIN_SERVER_URL || '',
@@ -65,6 +76,7 @@ export function getConfig(): Config {
       oidcClientSecret: parsed.oidcClientSecret || '',
       oidcIssuer: parsed.oidcIssuer || '',
       nextAuthSecret: parsed.nextAuthSecret || '',
+      setupComplete: parsed.setupComplete ?? false,
       enableRegistration: parsed.enableRegistration ?? true,
       smtp: {
         host: parsed.smtp?.host || defaultConfig.smtp!.host,
