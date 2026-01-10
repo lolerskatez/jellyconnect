@@ -10,28 +10,82 @@ export async function GET() {
     const config = getConfig();
 
     if (!config.jellyfinUrl) {
+      usersLogger.error('Jellyfin URL not configured');
       return NextResponse.json(
-        errorResponse('Jellyfin server URL not configured', 'JELLYFIN_CONFIG_ERROR', 500),
+        errorResponse('Jellyfin server URL not configured. Please configure it in settings.', 'JELLYFIN_CONFIG_ERROR', 500),
         { status: 500 }
       );
     }
 
     if (!config.apiKey) {
+      usersLogger.error('Jellyfin API key not configured');
       return NextResponse.json(
-        errorResponse('Jellyfin API key not configured', 'JELLYFIN_CONFIG_ERROR', 500),
+        errorResponse('Jellyfin API key not configured. Please generate an API key in Jellyfin admin panel and configure it in settings.', 'JELLYFIN_CONFIG_ERROR', 500),
         { status: 500 }
       );
     }
 
-    const usersRes = await fetch(`${config.jellyfinUrl}/Users`, {
-      headers: { 'X-Emby-Token': config.apiKey }
+    usersLogger.debug('Fetching users from Jellyfin', { 
+      url: config.jellyfinUrl,
+      apiKeyPrefix: config.apiKey.substring(0, 8) + '...'
     });
 
-    if (!usersRes.ok) {
-      usersLogger.error('Jellyfin API error fetching users', { status: usersRes.status, statusText: usersRes.statusText });
+    let usersRes: Response;
+    try {
+      usersRes = await fetch(`${config.jellyfinUrl}/Users`, {
+        headers: { 'X-Emby-Token': config.apiKey },
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+    } catch (fetchError) {
+      const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      usersLogger.error('Failed to connect to Jellyfin server', { 
+        error: errorMsg,
+        url: config.jellyfinUrl,
+        errorType: fetchError instanceof Error ? fetchError.name : 'Unknown'
+      });
+
+      let hint = '';
+      if (errorMsg.includes('ECONNREFUSED')) {
+        hint = 'Jellyfin server is not responding. Verify it is running and the URL is correct.';
+      } else if (errorMsg.includes('ENOTFOUND') || errorMsg.includes('getaddrinfo')) {
+        hint = 'Cannot resolve Jellyfin hostname. Verify the URL is correct and the server is accessible.';
+      } else if (errorMsg.includes('timeout')) {
+        hint = 'Connection timeout. Jellyfin server may be slow or unreachable.';
+      }
+
       return NextResponse.json(
-        errorResponse(`Failed to fetch users from Jellyfin: ${usersRes.status} ${usersRes.statusText}`, 'JELLYFIN_API_ERROR', 500),
+        errorResponse(
+          `Failed to connect to Jellyfin server: ${errorMsg}${hint ? ' - ' + hint : ''}`,
+          'JELLYFIN_CONNECTION_ERROR',
+          500
+        ),
         { status: 500 }
+      );
+    }
+
+    if (!usersRes.ok) {
+      const responseText = await usersRes.text();
+      usersLogger.error('Jellyfin API error fetching users', { 
+        status: usersRes.status, 
+        statusText: usersRes.statusText,
+        response: responseText.substring(0, 200), // Log first 200 chars
+        apiKeyPrefix: config.apiKey.substring(0, 8) + '...'
+      });
+
+      let hint = '';
+      if (usersRes.status === 401 || usersRes.status === 403) {
+        hint = 'API key is invalid or has been revoked. Generate a new API key in Jellyfin admin panel.';
+      } else if (usersRes.status === 404) {
+        hint = 'Jellyfin API endpoint not found. Verify the server URL is correct.';
+      }
+
+      return NextResponse.json(
+        errorResponse(
+          `Failed to fetch users from Jellyfin: ${usersRes.status} ${usersRes.statusText}${hint ? ' - ' + hint : ''}`,
+          'JELLYFIN_API_ERROR',
+          usersRes.status === 401 ? 401 : 500
+        ),
+        { status: usersRes.status === 401 ? 401 : 500 }
       );
     }
 
