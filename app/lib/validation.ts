@@ -51,6 +51,7 @@ const discordSchema = z.object({
 
 export const updateSettingsSchema = z.object({
   jellyfinUrl: z.string().url('Invalid Jellyfin URL').max(2048, 'URL too long'),
+  publishedUrl: z.string().url('Invalid published URL').max(2048, 'URL too long').optional().or(z.literal('')),
   apiKey: z.string().max(500, 'API key too long').optional().or(z.literal('')),
   smtp: smtpSchema,
   discord: discordSchema

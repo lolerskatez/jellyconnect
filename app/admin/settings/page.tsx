@@ -7,6 +7,7 @@ import AuthSettingsComponent from "../../../components/AuthSettingsComponent"
 
 interface Settings {
   jellyfinUrl: string
+  publishedUrl: string
   apiKey: string
   smtp: {
     host: string
@@ -26,6 +27,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState<Settings>({
     jellyfinUrl: '',
+    publishedUrl: '',
     apiKey: '',
     smtp: {
       host: '',
@@ -199,6 +201,13 @@ export default function SettingsPage() {
     }))
   }
 
+  const updatePublishedUrl = (value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      publishedUrl: value
+    }))
+  }
+
   if (!admin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -255,14 +264,24 @@ export default function SettingsPage() {
             Jellyfin
           </button>
           <button
-            onClick={() => setActiveTab('notifications')}
+            onClick={() => setActiveTab('email')}
             className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'notifications'
+              activeTab === 'email'
                 ? 'border-orange-500 text-orange-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
             }`}
           >
-            Notifications
+            Email
+          </button>
+          <button
+            onClick={() => setActiveTab('discord')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'discord'
+                ? 'border-orange-500 text-orange-400'
+                : 'border-transparent text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            Discord
           </button>
           <button
             onClick={() => setActiveTab('auth')}
@@ -277,7 +296,7 @@ export default function SettingsPage() {
         </div>
 
         {activeTab === 'general' && (
-          <div className="space-y-6">
+          <>
             {error && (
               <div className="bg-red-900 text-red-200 p-4 rounded-lg border border-red-700 mb-6">{error}</div>
             )}
@@ -320,7 +339,7 @@ export default function SettingsPage() {
                 {saving ? 'Saving...' : 'Save General Settings'}
               </button>
             </form>
-          </div>
+          </>
         )}
 
         {activeTab === 'jellyfin' && (
@@ -349,16 +368,109 @@ export default function SettingsPage() {
                       type="url"
                       value={settings.jellyfinUrl}
                       onChange={(e) => updateJellyfinUrl(e.target.value)}
-                      placeholder="http://localhost:8096"
+                      placeholder="http://192.168.1.183:8096"
                       className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-slate-400">
-                      The URL of your Jellyfin server. Used for user creation and invite flows.
+                      The internal URL of your Jellyfin server for API communication.
                     </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">
+                      Jellyfin Published URL
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.publishedUrl}
+                      onChange={(e) => updatePublishedUrl(e.target.value)}
+                      placeholder="https://jellyfin.example.com"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-slate-400">
+                      The public/external URL that users access Jellyfin from. Leave empty if same as server URL.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">
+                      Jellyfin API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.apiKey}
+                      onChange={(e) => updateApiKey(e.target.value)}
+                      placeholder="Your Jellyfin API key"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-slate-400">
+                      Your Jellyfin API key for authentication. Get this from Jellyfin Settings → Devices and Sessions.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-white mb-1">Test Connection</h3>
+                      <p className="text-xs text-slate-400">Verify your Jellyfin server is reachable and the API key is valid</p>
+                    </div>
+                    <a
+                      href="/api/test/jellyfin-connection"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-md transition-all duration-200 transform hover:scale-105 text-sm shadow-lg"
+                    >
+                      Test Connection
+                    </a>
                   </div>
                 </div>
               </div>
 
+              <div className="mt-4 p-4 bg-slate-900 border border-slate-700 rounded-lg">
+                <h3 className="text-sm font-medium text-orange-400 mb-2">How to get your API Key:</h3>
+                <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
+                  <li>Log in to your Jellyfin server</li>
+                  <li>Go to Settings → Devices and Sessions</li>
+                  <li>Look for your device or create a new API key</li>
+                  <li>Copy the API key and paste it above</li>
+                </ol>
+              </div>
+
+              <div className="p-4 bg-blue-900 border border-blue-700 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-200 mb-2">Troubleshooting:</h3>
+                <ul className="text-sm text-blue-100 space-y-1">
+                  <li>• Make sure your Jellyfin server is running and accessible at the server URL above</li>
+                  <li>• Verify the API key is correct - it should be a long alphanumeric string</li>
+                  <li>• If using a local IP, ensure your network connectivity is stable</li>
+                  <li>• Click &quot;Test Connection&quot; to validate your settings before saving</li>
+                </ul>
+              </div>
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+              >
+                {saving ? 'Saving...' : 'Save Jellyfin Settings'}
+              </button>
+            </form>
+          </>
+        )}
+
+        {activeTab === 'email' && (
+          <>
+            {error && (
+              <div className="bg-red-900 text-red-200 p-4 rounded-lg border border-red-700 mb-6">{error}</div>
+            )}
+
+            {success && (
+              <div className="bg-green-900 text-green-200 p-4 rounded-lg border border-green-700 mb-6">
+                Settings saved successfully
+              </div>
+            )}
+
+            <form onSubmit={saveSettings} className="space-y-6">
               {/* SMTP Settings */}
               <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-4">
@@ -469,6 +581,30 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+              >
+                {saving ? 'Saving...' : 'Save Email Settings'}
+              </button>
+            </form>
+          </>
+        )}
+
+        {activeTab === 'discord' && (
+          <>
+            {error && (
+              <div className="bg-red-900 text-red-200 p-4 rounded-lg border border-red-700 mb-6">{error}</div>
+            )}
+
+            {success && (
+              <div className="bg-green-900 text-green-200 p-4 rounded-lg border border-green-700 mb-6">
+                Settings saved successfully
+              </div>
+            )}
+
+            <form onSubmit={saveSettings} className="space-y-6">
               {/* Discord Settings */}
               <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-4">
@@ -518,18 +654,19 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-2 rounded-md transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:bg-slate-700 disabled:hover:scale-100 shadow-lg"
-                >
-                  {saving ? 'Saving...' : 'Save Settings'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+              >
+                {saving ? 'Saving...' : 'Save Discord Settings'}
+              </button>
             </form>
           </>
+        )}
+
+        {activeTab === 'auth' && (
+          <AuthSettingsComponent />
         )}
       </div>
     </div>

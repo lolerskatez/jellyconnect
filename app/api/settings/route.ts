@@ -10,6 +10,7 @@ export async function GET() {
     // Return settings including Jellyfin configuration
     const settings = {
       jellyfinUrl: config.jellyfinUrl || '',
+      publishedUrl: config.publishedUrl || '',
       apiKey: config.apiKey || '',
       smtp: config.smtp || {
         host: '',
@@ -49,13 +50,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { jellyfinUrl, apiKey, smtp, discord } = validationResult.data;
+    const { jellyfinUrl, publishedUrl, apiKey, smtp, discord } = validationResult.data;
 
     // Get current config and update settings
     const currentConfig = getConfig();
     const updatedConfig = {
       ...currentConfig,
       jellyfinUrl: jellyfinUrl,
+      publishedUrl: publishedUrl || currentConfig.publishedUrl,
       apiKey: apiKey || currentConfig.apiKey,
       smtp: smtp,
       discord: discord

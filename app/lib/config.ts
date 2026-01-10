@@ -3,6 +3,7 @@ import path from 'path'
 
 interface Config {
   jellyfinUrl: string
+  publishedUrl?: string
   apiKey: string
   oidcClientId?: string
   oidcClientSecret?: string
@@ -58,6 +59,7 @@ export function getConfig(): Config {
     // Return the parsed config with defaults
     return {
       jellyfinUrl: parsed.jellyfinUrl || '',
+      publishedUrl: parsed.publishedUrl || '',
       apiKey: parsed.apiKey || '',
       oidcClientId: parsed.oidcClientId || '',
       oidcClientSecret: parsed.oidcClientSecret || '',
