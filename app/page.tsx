@@ -156,11 +156,11 @@ export default function Home() {
 
     try {
       const response = await fetch('/api/quickconnect/authorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ code: quickConnectCode.trim() })
-      })
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({ code: quickConnectCode.trim() })
+})
 
       if (response.ok) {
         setApproveMessage('✓ Session approved! You can now use Jellyfin in the other tab.')
