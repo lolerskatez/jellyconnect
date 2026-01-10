@@ -118,6 +118,7 @@ export async function GET(request: NextRequest) {
         method: 'GET',
         headers: {
           'X-Emby-Token': config.apiKey,
+          'Accept': 'application/json',
           'User-Agent': 'JellyConnect-Debug/1.0'
         },
         signal: AbortSignal.timeout(10000)
@@ -141,6 +142,11 @@ export async function GET(request: NextRequest) {
         authTest.error = `Authentication failed (HTTP ${response.status})`
         authTest.severity = 'CRITICAL'
         authTest.hint = 'API key is invalid or has been revoked. Please generate a new API key.'
+        authTest.debugging = {
+          apiKeyLength: config.apiKey?.length || 0,
+          apiKeyPrefix: config.apiKey ? config.apiKey.substring(0, 8) + '...' : 'NONE',
+          headerSent: 'X-Emby-Token: [' + (config.apiKey?.length || 0) + ' chars]'
+        }
         const errorBody = await response.text()
         authTest.serverError = errorBody
       } else {
