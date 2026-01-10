@@ -123,9 +123,9 @@ export default function Home() {
       
       console.log('[Open Jellyfin] Config response:', config)
       
-      if (config.isConfigured && config.jellyfinUrl) {
+      if (config.isConfigured && config.publishedUrl) {
         // Open Jellyfin with Quick Connect login page
-        window.open(`${config.jellyfinUrl}/web/index.html#!/login.html`, '_blank')
+        window.open(`${config.publishedUrl}/web/index.html#!/login.html`, '_blank')
         
         // Show modal to enter Quick Connect code
         setShowQuickConnectModal(true)
